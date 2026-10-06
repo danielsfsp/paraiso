@@ -2185,7 +2185,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v218 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v220 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4718,18 +4718,28 @@
     return child.classList.contains('lyric-row') && child.textContent === ' ';
   }
 
+  // AJUSTE À TELA: em colunas, se a música não cabe na largura da tela, a
+  // fonte diminui 1 ponto por vez (até 70% do tamanho escolhido, mínimo 10)
+  // até caber — o tamanho escolhido em FONTE vira o máximo.
+  let fitShrink = 0, fitPass = false;
   function renderCifra(){
     const song = currentSong();
     if(!song) return;
+    const isFitPass = fitPass; fitPass = false;
+    if(!isFitPass) fitShrink = 0;
     const shift = liveShift;
     const frag = buildCifraLines(expandColorMarkupAcrossLines(getEffectiveBody(song)), shift);
 
     cifraBody.innerHTML = '';
     cifraBody.appendChild(frag);
     cifraBody.className = 'cifra-body';
-    void cifraBody.offsetWidth; // força reflow para reiniciar a animação
-    cifraBody.classList.add('fade-in');
-    cifraBody.style.fontSize = fontSize + 'px';
+    if(!isFitPass){
+      void cifraBody.offsetWidth; // força reflow para reiniciar a animação
+      cifraBody.classList.add('fade-in');
+    }
+    cifraBody.style.fontSize = (fontSize - fitShrink) + 'px';
+    const fsd = document.getElementById('fontSizeDisplay');
+    if(fsd){ fsd.textContent = fitShrink ? (fontSize - fitShrink) + '*' : fontSize; fsd.title = fitShrink ? 'Fonte reduzida automaticamente para a música caber na tela (escolhida: ' + fontSize + ')' : 'Tamanho da fonte'; }
 
     // Não existe mais um número de colunas escolhido pela pessoa — só a
     // LARGURA de cada coluna (esse slider) e o tamanho da tela é que
@@ -4771,6 +4781,13 @@
       // Colunas adaptativas primeiro: cada coluna cresce até a sua linha mais
       // longa, então normalmente nenhuma linha precisa encolher.
       if(!singleColumn) adaptReadingColumns();
+      if(!singleColumn && cifraBody.offsetParent){
+        const vp = cifraViewport;
+        const minFs = Math.max(10, Math.round(fontSize * 0.7));
+        if(vp.scrollWidth > vp.clientWidth + 2 && fontSize - fitShrink - 1 >= minFs){
+          fitShrink++; fitPass = true; renderCifra(); return;
+        }
+      }
       lines.forEach(el => {
         if(el.scrollWidth <= el.clientWidth + 1 || !el.clientWidth) return;
         const fs = parseFloat(getComputedStyle(el).fontSize) || 16;
@@ -8501,7 +8518,13 @@
   function escCanOnline(){ return spCanUse(); } // mesmo critério do Spotify: só no site (https), não dentro do Claude
   function escH(s){ return escapeHtml(String(s == null ? '' : s)); }
   function escFnIcon(f){ return ESC_FN_ICON[f] || '🎵'; }
-  function escProfile(id){ return esc.profiles.find(p => p.id === id) || null; }
+  function escProfile(id){
+    if(typeof id === 'string' && id.startsWith('pre:')){
+      const x = (esc.pre || []).find(y => 'pre:' + y.id === id);
+      return x ? { id, name: x.name, email: x.email, phone: x.phone || '', photo_url: '', functions: x.functions || [], is_minister: x.is_minister, is_leader: false, approved: true, active: true, is_pre: true } : null;
+    }
+    return esc.profiles.find(p => p.id === id) || null;
+  }
   function escName(id){ const p = escProfile(id); return p ? (p.name || p.email || 'Sem nome') : '—'; }
   function escFirst(id){ return escName(id).split(' ')[0]; }
   function escCanSchedule(){ return !!(esc.me && (esc.me.is_leader || esc.me.is_minister)); }
@@ -8587,7 +8610,7 @@
   async function escLoadPre(){
     esc.pre = []; esc.preMissing = false;
     const me = esc.profiles.find(p => esc.user && p.id === esc.user.id);
-    if(!me || !me.is_leader) return;
+    if(!me) return;
     try{
       const r = await esc.sb.from('pre_profiles').select('*').order('name');
       if(r.error){ esc.preMissing = /pre_profiles|does not exist|schema cache/i.test(r.error.message || ''); return; }
@@ -8661,7 +8684,7 @@
     esc.assignments = [];
     if(ids.length){
       const as = await sb.from('assignments').select('*').in('event_id', ids);
-      if(!as.error) esc.assignments = as.data || [];
+      if(!as.error) esc.assignments = (as.data || []).map(a => (!a.profile_id && a.pre_id) ? Object.assign({}, a, { profile_id: 'pre:' + a.pre_id }) : a);
     }
     esc.me = esc.profiles.find(p => p.id === esc.user.id) || null;
     esc.loading = false;
@@ -8893,9 +8916,11 @@
     const unavOn = pid => esc.unav.some(u => u.profile_id === pid && u.date === d.date);
     const busyOn = pid => esc.assignments.some(a => a.profile_id === pid && a.event_id !== d.id && (esc.events.find(e => e.id === a.event_id) || {}).date === d.date);
     const does = (p, fn) => p.functions.includes(fn) || (fn === 'Ministro' && p.is_minister);
-    const personOpts = (sel, fn) => '<option value="">— escolher —</option>' + people
+    // Pré-cadastrados (ainda não entraram no app) também podem ser escalados — menos como Ministro.
+    const prePeople = escPreOpen().map(x => escProfile('pre:' + x.id)).filter(Boolean);
+    const personOpts = (sel, fn) => '<option value="">— escolher —</option>' + people.concat(fn === 'Ministro' ? [] : prePeople)
       .slice().sort((a, b) => (does(b, fn) - does(a, fn)) || a.name.localeCompare(b.name, 'pt-BR'))
-      .map(p => '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + escH(p.name) + (does(p, fn) ? '' : ' (outra função)') + (unavOn(p.id) ? ' ⚠ indisponível' : '') + (busyOn(p.id) ? ' • já escalado no dia' : '') + '</option>').join('');
+      .map(p => '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + escH(p.name) + (p.is_pre ? ' · pré-cadastro' : '') + (does(p, fn) ? '' : ' (outra função)') + (unavOn(p.id) ? ' ⚠ indisponível' : '') + (busyOn(p.id) ? ' • já escalado no dia' : '') + '</option>').join('');
     const fnOpts = sel => ESC_FUNCTIONS.map(f => '<option' + (f === sel ? ' selected' : '') + '>' + escH(f) + '</option>').join('');
     if(d.playlistId === undefined && d.playlist){ const m = playlists.find(p => p.name === d.playlist.name); d.playlistId = m ? m.id : ''; }
     const plOpts = '<option value="">— nenhuma —</option>' + sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '"' + (p.id === d.playlistId ? ' selected' : '') + '>' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + '</option>').join('');
@@ -8981,7 +9006,10 @@
         const toDelete = oldIds.filter(x => !keptIds.includes(x));
         if(toDelete.length){ const r = await esc.sb.from('assignments').delete().in('id', toDelete); if(r.error) throw r.error; }
         for(const r of keep){
-          const row = { event_id: evId, profile_id: r.profile_id, function: r.function, status: r.status || 'pendente' };
+          const isPre = String(r.profile_id).startsWith('pre:');
+          const row = { event_id: evId, profile_id: isPre ? null : r.profile_id, function: r.function, status: r.status || 'pendente' };
+          const orig = r.id ? esc.assignments.find(x => x.id === r.id) : null;
+          if(isPre) row.pre_id = r.profile_id.slice(4); else if(orig && orig.pre_id) row.pre_id = null;
           if(r.status === 'pendente'){ row.reason = ''; row.responded_at = null; }
           const q = r.id ? esc.sb.from('assignments').update(row).eq('id', r.id) : esc.sb.from('assignments').insert(row);
           const res = await q; if(res.error) throw res.error;
@@ -9073,7 +9101,7 @@
         if(pre.is_leader) upd.is_leader = true;
       }
       const { error } = await esc.sb.from('profiles').update(upd).eq('id', b.dataset.approve);
-      if(!error && pre) await esc.sb.from('pre_profiles').update({ linked_profile: b.dataset.approve }).eq('id', pre.id);
+      if(!error && pre){ await esc.sb.from('pre_profiles').update({ linked_profile: b.dataset.approve }).eq('id', pre.id); await esc.sb.from('assignments').update({ profile_id: b.dataset.approve, pre_id: null }).eq('pre_id', pre.id); }
       if(!error && prof) Object.assign(prof, upd);
       if(error){ showAlert('Equipe', error.message); return; }
       const p = escProfile(b.dataset.approve); if(p){ p.approved = true; p.active = true; }
