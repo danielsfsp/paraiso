@@ -1308,6 +1308,7 @@
     background:var(--accent-soft); border:1px solid var(--accent-dim); border-radius:9px;
     padding:9px 14px; margin:-4px 0 16px; font-size:12.5px; color:var(--text);
   }
+  #inputKey[readonly]{opacity:.75; cursor:not-allowed; background:var(--surface); border-style:dashed;}
   .original-key-note{
     font-size:12px; color:var(--text-dim); margin:-10px 0 16px;
   }
@@ -1820,7 +1821,7 @@
         <input type="text" id="inputArtist" placeholder="Nome do artista" required>
       </div>
       <div class="field" style="max-width:110px;">
-        <label for="inputKey">Tom *</label>
+        <label for="inputKey" id="inputKeyLabel">Tom *</label>
         <input type="text" id="inputKey" placeholder="G, Am..." required>
       </div>
       <div class="field" style="max-width:110px;">
@@ -2181,7 +2182,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v213 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v214 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7456,6 +7457,11 @@
       inputTitle.value = meta.title;
       inputArtist.value = meta.artist || '';
       inputKey.value = meta.key;
+      // Tom TRAVADO na edição: é sempre o tom original em que a cifra está
+      // escrita. Para tocar em outro tom, usa-se TOM − / + na própria música.
+      inputKey.readOnly = true;
+      inputKey.title = 'Tom original da cifra (não muda). Para tocar em outro tom, use TOM − / + na música.';
+      document.getElementById('inputKeyLabel').textContent = '🔒 Tom original';
       inputCapo.value = meta.capo || '';
       document.getElementById('inputBpm').value = meta.bpm || '';
       document.getElementById('inputBeats').value = validBeats(meta.bpmBeats) ? String(validBeats(meta.bpmBeats)) : '';
@@ -7491,7 +7497,7 @@
       // visualização, pergunta se quer salvar o tom transposto como o novo
       // tom original, ou manter o original e continuar transpondo por cima.
       const shift = liveShift;
-      if(shift !== 0){
+      if(shift !== 0 && !inputKey.readOnly){
         const transposedKey = transposeChord(meta.key, shift) || meta.key;
         document.getElementById('transposeBannerText').textContent =
           'O tom em uso está transposto para ' + transposedKey + ' (original: ' + meta.key + ').';
@@ -7501,6 +7507,8 @@
       }
     } else {
       modalTitle.textContent = 'Nova música';
+      inputKey.readOnly = false; inputKey.title = '';
+      document.getElementById('inputKeyLabel').textContent = 'Tom *';
       document.getElementById('ccImportUrl').value = '';
       document.getElementById('ccPasteArea').hidden = true;
       document.getElementById('ccBmHelp').hidden = true;
