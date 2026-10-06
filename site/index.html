@@ -1007,7 +1007,8 @@
   .cifra-body.fade-in{animation:cifraFadeIn .3s var(--ease);}
   @keyframes cifraFadeIn{ from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
   .cifra-line{break-inside:avoid; white-space:pre; margin-bottom:1px; max-width:100%;}
-  .cifra-line.line-overflow{overflow-x:auto; scrollbar-width:thin;}
+  .cifra-line.line-overflow{overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;}
+  .cifra-line.line-overflow::-webkit-scrollbar{display:none; height:0;}
   .chord-row{color:var(--chord); font-weight:700; white-space:pre;}
   .lyric-row{color:var(--lyric-color, var(--text)); white-space:pre;}
   .section-line{color:#1CADE4; font-weight:700; margin-top:14px; margin-bottom:2px; white-space:pre-wrap;}
@@ -2170,7 +2171,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v206 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v207 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4739,9 +4740,19 @@
     // que REALMENTE ultrapassam a coluna. Espera o navegador aplicar o
     // layout de verdade (requestAnimationFrame) antes de medir — medir
     // cedo demais podia deixar passar linha cortada sem rolagem nenhuma.
+    // Na leitura, a linha que não cabe na coluna é REDUZIDA só o
+    // necessário pra caber inteira (acorde e letra juntos, mantendo o
+    // alinhamento) — sem barra de rolagem. Só se precisar encolher demais
+    // (abaixo de 60%) ela fica com rolagem lateral, mas sem barra visível.
     requestAnimationFrame(() => {
-      cifraBody.querySelectorAll('.cifra-line').forEach(el => {
-        el.classList.toggle('line-overflow', el.scrollWidth > el.clientWidth + 1);
+      const lines = cifraBody.querySelectorAll('.cifra-line');
+      lines.forEach(el => { el.style.fontSize = ''; el.classList.remove('line-overflow'); });
+      lines.forEach(el => {
+        if(el.scrollWidth <= el.clientWidth + 1 || !el.clientWidth) return;
+        const fs = parseFloat(getComputedStyle(el).fontSize) || 16;
+        const nf = Math.max(fs * (el.clientWidth / el.scrollWidth) * 0.98, fs * 0.6);
+        el.style.fontSize = nf.toFixed(2) + 'px';
+        if(el.scrollWidth > el.clientWidth + 1) el.classList.add('line-overflow');
       });
     });
 

@@ -1,1 +1,1 @@
-v206 · 06/10/2026 · perfil no canto superior direito
+v207 · 06/10/2026 · linhas longas sem barra de rolagem
