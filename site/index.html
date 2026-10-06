@@ -2185,7 +2185,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v217 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v218 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -2280,7 +2280,7 @@
 <div class="modal-overlay" id="escalaOverlay">
   <div class="modal esc-modal">
     <div class="esc-head">
-      <h2>📅 Escala</h2>
+      <h2 id="escalaTitle">📅 Escala</h2>
       <div class="esc-user" id="escalaUser"></div>
       <button class="icon-btn" id="btnCloseEscala" type="button" aria-label="Fechar">✕</button>
     </div>
@@ -2288,7 +2288,6 @@
       <button type="button" data-tab="escalas">📅 Escalas</button>
       <button type="button" data-tab="minhas">🙋 Minhas</button>
       <button type="button" data-tab="equipe">👥 Equipe</button>
-      <button type="button" data-tab="perfil">👤 Perfil</button>
     </div>
     <div class="esc-body" id="escalaBody"></div>
   </div>
@@ -8693,6 +8692,7 @@
     const tabsEl = document.getElementById('escalaTabs');
     const userEl = document.getElementById('escalaUser');
     tabsEl.style.display = 'none'; userEl.innerHTML = '';
+    document.getElementById('escalaTitle').textContent = '📅 Escala';
     if(!escCanOnline()){
       body.innerHTML = '<div class="esc-empty">A <strong>Escala</strong> funciona no <strong>site do Paraíso</strong> (cep-minist-louvor.netlify.app), com login pelo Google — aqui dentro do Claude o login não é permitido.</div>';
       return;
@@ -8720,12 +8720,12 @@
     }
     if(esc.loading && !esc.profiles.length){ body.innerHTML = '<div class="esc-empty">⏳ Carregando…</div>'; return; }
     const me = esc.me;
-    userEl.innerHTML = (me && me.photo_url ? '<img src="' + escH(me.photo_url) + '" alt="">' : '') +
-      '<span>' + escH(me ? me.name : esc.user.email) + (escRoleName(me) ? ' · ' + escRoleName(me) : '') + '</span>' +
-      '<button type="button" class="esc-link" id="escLogout">Sair</button>';
-    document.getElementById('escLogout').onclick = () => escGuard(escSignOut);
+    // Perfil e "Sair" ficam só no menu da foto (tela inicial).
+    userEl.innerHTML = '';
     if(me && !me.functions.length && esc.tab !== 'perfil' && !esc._askedProfile){ esc._askedProfile = true; esc.tab = 'perfil'; }
-    tabsEl.style.display = '';
+    const isProfile = esc.tab === 'perfil' && !esc.editing;
+    document.getElementById('escalaTitle').textContent = isProfile ? '👤 Meu perfil' : '📅 Escala';
+    tabsEl.style.display = isProfile ? 'none' : '';
     tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === esc.tab));
     if(esc.editing){ renderEscEditor(body); return; }
     if(esc.tab === 'escalas') renderEscEvents(body, false);
@@ -9281,7 +9281,7 @@
     gateCheck(false);
   }
 
-  document.getElementById('btnEscala').addEventListener('click', () => openEscala());
+  document.getElementById('btnEscala').addEventListener('click', () => { if(esc.tab === 'perfil') esc.tab = 'escalas'; openEscala(); });
   document.getElementById('btnCloseEscala').addEventListener('click', () => escGuard(closeEscala));
   document.getElementById('escalaTabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => escGuard(() => { esc.tab = b.dataset.tab; renderEscala(); })));
   escOverlay().addEventListener('click', (e) => { if(e.target === escOverlay()) escGuard(closeEscala); });
