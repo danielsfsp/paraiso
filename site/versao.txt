@@ -1,1 +1,1 @@
-v209 · 06/10/2026 · espaço igual dos dois lados da divisória
+v210 · 06/10/2026 · sem controle de largura

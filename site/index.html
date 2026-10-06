@@ -1608,7 +1608,7 @@
         <span class="capo-badge" id="capoBadge" style="display:none;"></span>
       </div>
 
-      <div class="control-group resumo-hide-group">
+      <div class="control-group resumo-hide-group" id="colWidthGroup" style="display:none;">
         <span class="control-label">LARGURA</span>
         <input type="range" class="colwidth-slider" id="colWidthSlider" min="90" max="420" step="10" value="225">
       </div>
@@ -2030,7 +2030,7 @@
       <ul>
         <li><strong>⛶ Tela cheia</strong> deixa só a cifra na tela. Use <strong>◀ ▶</strong> para a música anterior/próxima (na ordem da playlist, das favoritas ou da biblioteca).</li>
         <li><strong>▶ Rolagem automática:</strong> liga e pausa no botão ▶ (ou na tecla Espaço). Se a música está em colunas, a rolagem vai para o lado.</li>
-        <li><strong>TOM − / +</strong> transpõe a cifra inteira. Na barra também ficam <strong>Largura</strong> e <strong>Altura</strong> das colunas, <strong>1 coluna</strong>, <strong>Cifra</strong>: <em>Completa</em>, <em>Simplificada</em> (só os acordes básicos — Bm7(11) vira Bm, E/G# vira E, A2 vira A) ou <em>Contrabaixo</em> (igual à simplificada, mas acorde com baixo mostra só a nota do baixo — E/G# vira G#, D/F# vira F#); a cifra salva não muda, <strong>Fonte</strong>, <strong>🎨 Cores</strong>, <strong>Rolagem</strong> e, no fim, <strong>✏️ Editar</strong> (título, artista, tom, capotraste, links, anotações e letra/cifra).</li>
+        <li><strong>TOM − / +</strong> transpõe a cifra inteira. Na barra também ficam <strong>Altura</strong> das colunas (a largura de cada coluna se ajusta sozinha ao tamanho das frases), <strong>1 coluna</strong>, <strong>Cifra</strong>: <em>Completa</em>, <em>Simplificada</em> (só os acordes básicos — Bm7(11) vira Bm, E/G# vira E, A2 vira A) ou <em>Contrabaixo</em> (igual à simplificada, mas acorde com baixo mostra só a nota do baixo — E/G# vira G#, D/F# vira F#); a cifra salva não muda, <strong>Fonte</strong>, <strong>🎨 Cores</strong>, <strong>Rolagem</strong> e, no fim, <strong>✏️ Editar</strong> (título, artista, tom, capotraste, links, anotações e letra/cifra).</li>
         <li>Mudou tom ou formatação? Aparecem <strong>↺</strong> (descartar) e <strong>💾</strong> (salvar só para esta música).</li>
         <li>No celular, essa barra fica recolhida: toque em <strong>⚙️ Ajustes</strong> para abrir.</li>
       </ul>
@@ -2177,7 +2177,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v209 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v210 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4824,7 +4824,9 @@
   // leitura calculou (as colunas ficam idênticas).
   function fitExactColumnWidth(el, useReadingWidth){
     el.style.width = '';
-    const effW = (useReadingWidth && lastReadingColWidth) ? lastReadingColWidth : Math.max(colWidth, minColumnWidthFor(el));
+    // Sem controle LARGURA: a largura base vem só do tamanho das linhas da
+    // música (e na leitura cada coluna ainda se ajusta à sua frase mais longa).
+    const effW = (useReadingWidth && lastReadingColWidth) ? lastReadingColWidth : Math.max(120, minColumnWidthFor(el));
     if(el === cifraBody) lastReadingColWidth = effW;
     el.style.columnWidth = effW + 'px';
     const cs = getComputedStyle(el);
