@@ -433,6 +433,7 @@
   .home-artist-back{background:var(--surface-2); border:1px solid var(--border); color:var(--accent); border-radius:8px; padding:5px 10px; font:inherit; font-size:13px; cursor:pointer;}
   .home-artist-title{font-weight:700; font-size:15px;}
   body.lib-readonly #btnHomeNewSong, body.lib-readonly #btnBatchImport, body.lib-readonly #btnUpdateRepertoire{display:none !important;}
+  .env-badge{position:fixed; left:50%; transform:translateX(-50%); bottom:6px; z-index:6000; background:#c0392b; color:#fff; font:700 11px/1 var(--font-ui, sans-serif); letter-spacing:.5px; padding:5px 10px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.4); pointer-events:none; opacity:.92;}
   .esc-open-btn{margin:0 14px 10px; padding:9px 12px; border-radius:10px; border:1px solid var(--accent-dim); background:var(--surface-2); color:var(--accent); font:inherit; font-weight:700; font-size:14px; cursor:pointer; text-align:left;}
   .esc-open-btn:hover{background:var(--surface-3);}
   .esc-modal{max-width:640px; width:100%; display:flex; flex-direction:column; max-height:92vh; padding-bottom:12px;}
@@ -2131,7 +2132,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v204 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v205 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9171,6 +9172,20 @@
     const sg = currentSong(); if(!sg) return;
     showConfirm('Versão do ministério', 'Descartar a sua edição de "' + sg.title + '" e voltar para a cifra oficial do ministério?', () => libRevertSong(sg.id), { okLabel: '↺ Voltar à versão oficial' });
   });
+
+  // ================= AMBIENTE: TH (teste) x PRODUÇÃO =================
+  // No site de teste aparece uma faixa "TH" para ninguém confundir com a PRODUÇÃO.
+  (function envBadge(){
+    try{
+      if(!/paraiso-teste|workers\.dev/.test(location.hostname)) return;
+      const b = document.createElement('div');
+      b.className = 'env-badge';
+      b.textContent = 'TH · ambiente de teste';
+      b.title = 'Este é o ambiente de TESTE (TH). A PRODUÇÃO é cep-minist-louvor.netlify.app';
+      document.body.appendChild(b);
+      document.title = '[TH] ' + document.title;
+    }catch(e){}
+  })();
 
   // ================= COMPARTILHAR O APP =================
   const APP_PUBLIC_URL = 'https://cep-minist-louvor.netlify.app/';
