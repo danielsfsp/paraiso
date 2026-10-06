@@ -1471,6 +1471,7 @@
   /* ===== REPAGINADA 1: menu lateral e tela inicial ===== */
   .brand span{font-style:normal; color:var(--text); font-weight:700; letter-spacing:0;}
   .brand-mark{background:linear-gradient(135deg,#F3C26B,var(--accent)); color:#1A1206; border-radius:9px; padding:6px; width:32px; height:32px; box-sizing:border-box;}
+  .brand, .side-nav, .sidebar-footer{user-select:none; -webkit-user-select:none;}
   .side-nav{display:flex; flex-direction:column; gap:2px; padding:4px 10px 6px;}
   .side-nav .sidebar-tabs{display:flex; flex-direction:column; gap:2px; padding:0;}
   .side-nav-item, .side-nav .sidebar-tabs button.side-nav-item, .side-nav .esc-open-btn.side-nav-item{
@@ -1592,8 +1593,8 @@
     .home-searchbar .home-new-song::after{content:'＋'; font-size:20px;}
     .home-searchbar .home-song-search{min-width:0;}
   }
-  body.home-on .side-nav .sidebar-tabs button.side-nav-item.active{background:transparent !important; color:var(--text-dim) !important;}
-  body.home-on .side-nav .sidebar-tabs button.side-nav-item.active .sn-count{background:var(--surface-2); color:var(--text-dim);}
+  body.nav-home .side-nav .sidebar-tabs button.side-nav-item.active{background:transparent !important; color:var(--text-dim) !important;}
+  body.nav-home .side-nav .sidebar-tabs button.side-nav-item.active .sn-count{background:var(--surface-2); color:var(--text-dim);}
 
   /* ===== REPAGINADA 2: tela da música ===== */
   .title-block h1{font-size:23px; line-height:1.15; letter-spacing:-0.01em;}
@@ -2452,7 +2453,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v224 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v225 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3276,6 +3277,7 @@
   // ================= TELA INICIAL (clique no logo) =================
   function showHomeView(){
     showingHome = true;
+    navSel = 'home';
     if(typeof stopMetro === 'function' && metro.on) stopMetro();
     metroPanel.hidden = true;
     renderViewer();
@@ -3516,10 +3518,15 @@
     box.querySelectorAll('[data-hc-mode]').forEach(b => b.onclick = () => { homeMode = b.dataset.hcMode; homeArtist = null; lsSet('homeMode', homeMode); renderHomeView(); document.getElementById('homeModeSeg').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }
   // Menu lateral: item ativo e contadores.
+  // Item marcado no menu lateral = a última opção escolhida (Início,
+  // Playlists ou Favoritas).
+  var navSel = 'home';
   function syncNavActive(){
+    if(!showingHome && navSel === 'home') navSel = sidebarTab;
     const nh = document.getElementById('navHome');
-    if(nh) nh.classList.toggle('active', !!showingHome);
+    if(nh) nh.classList.toggle('active', navSel === 'home');
     document.body.classList.toggle('home-on', !!showingHome);
+    document.body.classList.toggle('nav-home', navSel === 'home');
     const pc = document.getElementById('navCountPl'); if(pc){ const n = playlists.filter(p => !p.archived).length; pc.textContent = n || ''; }
     const fc = document.getElementById('navCountFav'); if(fc){ const n = songs.filter(s => s.favorite).length; fc.textContent = n || ''; }
     const ec = document.getElementById('navCountEsc');
@@ -10986,6 +10993,7 @@
       guardIfDirty(() => {
         activeView = btn.dataset.view;
         openPlaylistId = null;
+        navSel = btn.dataset.view;
         renderSidebar();
       });
     });
@@ -11364,13 +11372,13 @@
     if(window.innerWidth > 820) setSidebarCollapsed(true);
     else sidebar.classList.remove('open');
   });
-  document.getElementById('navHome').addEventListener('click', () => guardIfDirty(() => showHomeView()));
+  document.getElementById('navHome').addEventListener('click', () => guardIfDirty(() => { navSel = 'home'; showHomeView(); }));
   // Barra de navegação de baixo (celular)
   document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.addEventListener('click', () => {
     const t = b.dataset.tb;
     if(t === 'home'){ guardIfDirty(() => showHomeView()); sidebar.classList.remove('open'); return; }
     if(t === 'escala'){ if(esc.tab === 'perfil') esc.tab = 'escalas'; openEscala(); return; }
-    if(t === 'playlists' || t === 'favorites'){ guardIfDirty(() => { activeView = t; openPlaylistId = null; renderSidebar(); sidebar.classList.add('open'); }); return; }
+    if(t === 'playlists' || t === 'favorites'){ guardIfDirty(() => { activeView = t; openPlaylistId = null; navSel = t; renderSidebar(); sidebar.classList.add('open'); }); return; }
     if(t === 'mais'){ sidebar.classList.add('open'); setTimeout(() => { const m = document.getElementById('moreMenu'); m.hidden = false; document.getElementById('btnMore').setAttribute('aria-expanded', 'true'); }, 50); }
   }));
   (function moreMenuWire(){
