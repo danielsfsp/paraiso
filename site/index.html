@@ -1627,6 +1627,76 @@
     .main-panel:not(.fullscreen-mode) #controlsBar .single-column-toggle{padding-right:8px;}
     .main-panel:not(.fullscreen-mode) .viewer-header .icon-btn, .main-panel:not(.fullscreen-mode) .viewer-header .options-menu-btn{border-radius:11px;}
   }
+
+  /* ===== REPAGINADA 3: Escala ===== */
+  .esc-modal{border-radius:22px;}
+  .esc-head h2{font-family:var(--font-display); font-weight:700;}
+  .esc-tabs{background:var(--surface); border:1px solid var(--border-soft); border-radius:13px; padding:4px; gap:4px;}
+  .esc-tabs button{border:none !important; background:transparent !important; color:var(--text-dim) !important; border-radius:10px !important; font-weight:700;}
+  .esc-tabs button.active{background:var(--surface-3) !important; color:var(--text) !important;}
+  .esc-body{position:relative;}
+  .ev-card{background:var(--surface); border:1px solid var(--border-soft); border-radius:16px; padding:0; margin-bottom:10px; overflow:hidden;}
+  .ev-card .esc-card-head{padding:12px 14px; cursor:pointer; display:block;}
+  .ev-hero{background:linear-gradient(150deg, var(--accent-soft), var(--surface) 70%); border-color:var(--accent-dim); border-radius:20px;}
+  .ev-hero .esc-card-head{padding:16px;}
+  .ev-eyebrow{font-size:10.5px; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:var(--accent); margin-bottom:10px;}
+  .ev-row{display:flex; align-items:center; gap:12px;}
+  .ev-date{width:46px; flex-shrink:0; text-align:center; background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:4px 0;}
+  .ev-date.big{width:56px; border-radius:14px; padding:6px 0;}
+  .ev-date .w{font-size:9.5px; font-weight:800; color:var(--accent); letter-spacing:.06em;}
+  .ev-date .d{font-family:var(--font-display); font-size:20px; font-weight:700; line-height:1.05; color:var(--text);}
+  .ev-date.big .d{font-size:26px;}
+  .ev-date .m{font-size:10px; font-weight:700; color:var(--text-dim);}
+  .ev-main{flex:1; min-width:0;}
+  .ev-title{font-size:15px; font-weight:800; color:var(--text);}
+  .ev-hero .ev-title{font-size:18px;}
+  .ev-sub{font-size:12.5px; color:var(--text-dim); margin-top:2px;}
+  .ev-mini{margin-top:6px;}
+  .ev-mini .hc-av{width:22px; height:22px; font-size:8.5px; margin-right:-5px;}
+  .ev-mini .hc-dot{width:7px; height:7px;}
+  .ev-pill{font-size:11px; font-weight:800; border-radius:99px; padding:5px 10px; white-space:nowrap; flex-shrink:0;}
+  .ev-pill.ok{background:rgba(76,175,106,.16); color:#4CAF6A;}
+  .ev-pill.pe{background:var(--accent-soft); color:var(--accent);}
+  .ev-pill.no{background:rgba(224,107,91,.15); color:#E06B5B;}
+  .ev-pill.mute{background:var(--surface-2); color:var(--text-dim);}
+  .ev-chev{color:var(--text-dim); font-size:12px; width:12px; text-align:center;}
+  .ev-progress{margin-top:14px;}
+  .ev-bar{flex:1; height:6px; border-radius:9px; background:var(--border-soft); overflow:hidden; margin-left:10px;}
+  .ev-bar i{display:block; height:100%; background:#4CAF6A; border-radius:9px;}
+  .ev-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+  .ev-chips span{font-size:12px; font-weight:600; background:var(--bg); border:1px solid var(--border); border-radius:99px; padding:5px 10px; color:var(--text);}
+  .ev-month{font-size:11px; font-weight:800; letter-spacing:.12em; color:var(--text-dim); margin:18px 2px 8px;}
+  .ev-mine{margin:0 14px 12px !important; border-radius:12px !important;}
+  .ev-mine.answered .esc-mine-btns{display:none;}
+  .ev-mine.answered{cursor:pointer;}
+  .ev-mine.answered::after{content:'alterar'; margin-left:auto; font-size:12px; color:var(--text-dim);}
+  .esc-mine-btns .on{outline:2px solid currentColor;}
+  .ev-card .esc-card-body{padding:0 14px 14px;}
+  .ev-sec{display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin:14px 2px 8px;}
+  .ev-sec span{text-transform:none; letter-spacing:0; color:var(--accent); font-size:12px;}
+  .ev-team, .ev-songs{background:var(--bg); border:1px solid var(--border-soft); border-radius:14px; overflow:hidden;}
+  .ev-person{display:flex; align-items:center; gap:10px; padding:9px 12px; border-bottom:1px solid var(--border-soft);}
+  .ev-person:last-child{border-bottom:none;}
+  .ev-person .hc-av{margin-right:0; width:32px; height:32px; font-size:11px; border-color:var(--bg);}
+  .ev-pmain{flex:1; min-width:0;}
+  .ev-pname{font-size:13.5px; font-weight:700; color:var(--text);}
+  .ev-pname small{font-size:10.5px; color:var(--text-dim); font-weight:600;}
+  .ev-nudge{font-size:11px; font-weight:800; color:#4CAF6A; border:1px solid rgba(76,175,106,.45); border-radius:99px; padding:4px 9px; text-decoration:none; white-space:nowrap;}
+  .ev-empty{padding:12px; font-size:13px; color:var(--text-dim);}
+  .ev-song{display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid var(--border-soft); font-size:13.5px;}
+  .ev-song:last-child{border-bottom:none;}
+  .ev-song .n{width:16px; color:var(--text-dim); font-size:12px;}
+  .ev-song .t{flex:1; font-weight:700; color:var(--text); min-width:0;}
+  .ev-song .t small{display:block; font-weight:500; font-size:11.5px; color:var(--text-dim);}
+  .ev-song .k{font-family:var(--font-display); font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:8px; padding:1px 8px;}
+  .ev-link{background:none; border:none; color:var(--accent); font:inherit; font-size:12px; font-weight:800; cursor:pointer; text-transform:none; letter-spacing:0;}
+  .ev-actions{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+  .ev-fab{position:sticky; bottom:10px; float:right; margin:10px 2px 0 !important; width:auto !important; border-radius:15px !important; padding:12px 18px !important; box-shadow:0 10px 24px rgba(232,163,61,.3);}
+  .esc-dress-chips{display:flex; flex-wrap:wrap; gap:6px; margin:-4px 0 10px;}
+  .esc-dress-chips button{font:inherit; font-size:12px; font-weight:600; background:var(--surface-2); border:1px solid var(--border); border-radius:99px; padding:5px 10px; color:var(--text); cursor:pointer;}
+  .esc-dress-chips button:hover{border-color:var(--accent);}
+  .esc-editor .esc-input{border-radius:11px;}
+  .esc-team-fill .btn-secondary{border-style:dashed; color:var(--accent);}
 </style>
 </head>
 <body>
@@ -2360,7 +2430,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v222 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v223 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9081,43 +9151,86 @@
 
   function renderEscEvents(body, mineOnly){
     const today = todayIso();
-    let evs = esc.events.filter(e => e.date >= today);
+    let evs = esc.events.filter(e => e.date >= today).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
     if(mineOnly) evs = evs.filter(e => e.minister_id === esc.user.id || esc.assignments.some(a => a.event_id === e.id && a.profile_id === esc.user.id));
+    const MES = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+    const MES3 = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+    const dateBlock = (iso, big) => { const d = isoToDate(iso); return '<div class="ev-date' + (big ? ' big' : '') + '"><div class="w">' + WEEKDAYS_PT[d.getDay()].toUpperCase() + '</div><div class="d">' + String(d.getDate()).padStart(2, '0') + '</div>' + (big ? '<div class="m">' + MES3[d.getMonth()] + '</div>' : '') + '</div>'; };
+    const whenTxt = iso => { const n = -daysSince(iso); return n === 0 ? 'hoje' : n === 1 ? 'amanhã' : 'em ' + n + ' dias'; };
+    const pillFor = (e, mine) => {
+      if(mine.length){
+        if(mine.every(a => a.status === 'confirmado')) return '<span class="ev-pill ok">✓ Confirmado</span>';
+        if(mine.some(a => a.status === 'recusado')) return '<span class="ev-pill no">Não posso</span>';
+        return '<span class="ev-pill pe">Responder</span>';
+      }
+      if(e.minister_id === esc.user.id) return '<span class="ev-pill pe">Você ministra</span>';
+      return '<span class="ev-pill mute">Sem você</span>';
+    };
     let html = '';
-    if(escCanSchedule() && !mineOnly) html += '<button class="btn-primary esc-new" id="escNewEvent" type="button">＋ Nova escala</button>';
     if(!evs.length) html += '<div class="esc-empty">' + (mineOnly ? 'Você não está em nenhuma escala por enquanto. 🙌' : 'Nenhuma escala marcada.') + '</div>';
-    evs.forEach(e => {
+    let lastMonth = -1;
+    evs.forEach((e, idx) => {
       const as = escEventAssignments(e.id);
       const mine = as.filter(a => a.profile_id === esc.user.id);
       const conf = as.filter(a => a.status === 'confirmado').length;
-      html += '<div class="esc-card' + (esc.openEventId === e.id ? ' open' : '') + '" data-ev="' + e.id + '">' +
-        '<div class="esc-card-head"><div class="esc-date"><b>' + escH(fmtDateBR(e.date).slice(0, 5)) + '</b><span>' + escH(WEEKDAYS_PT[isoToDate(e.date).getDay()].slice(0, 3)) + '</span></div>' +
-        '<div class="esc-card-title"><strong>' + escH(e.title || 'Culto') + (e.time ? ' · ' + escH(e.time) : '') + '</strong>' +
-        '<span>' + (e.minister_id ? '🎤 ' + escH(escName(e.minister_id)) + ' · ' : '') + conf + '/' + as.length + ' confirmados · ' + escH(agoText(e.date)) + '</span></div></div>';
-      if(mine.length){
-        mine.forEach(a => {
-          html += '<div class="esc-mine ' + a.status + '"><span>Você: <b>' + escFnIcon(a.function) + ' ' + escH(a.function) + '</b> ' + escStatusIcon(a.status) + '</span>' +
-            '<span class="esc-mine-btns"><button type="button" class="esc-ok" data-confirm="' + a.id + '">✅ Confirmo</button>' +
-            '<button type="button" class="esc-no" data-decline="' + a.id + '">❌ Não posso</button></span></div>';
-        });
+      const hero = idx === 0;
+      const open = esc.openEventId === e.id;
+      const d = isoToDate(e.date);
+      if(!hero && d.getMonth() !== lastMonth){ html += '<div class="ev-month">' + MES[d.getMonth()] + '</div>'; }
+      if(!hero) lastMonth = d.getMonth();
+      const minister = e.minister_id ? escName(e.minister_id) : '';
+      const sub = [e.time ? escH(e.time) : '', minister ? '🎤 ' + escH(hero ? minister : minister.split(' ')[0]) : '🎤 a definir'].filter(Boolean).join(' · ');
+      const stack = '<div class="hc-stack">' + as.slice(0, hero ? 8 : 5).map(a => homeAvatar(escProfile(a.profile_id), a.status)).join('') + '</div>';
+      html += '<div class="esc-card ev-card' + (hero ? ' ev-hero' : '') + (open ? ' open' : '') + '" data-ev="' + e.id + '">';
+      html += '<div class="esc-card-head">';
+      if(hero) html += '<div class="ev-eyebrow">' + (mineOnly ? 'Sua próxima escala' : 'Próximo culto') + ' · ' + whenTxt(e.date) + '</div>';
+      html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + '</div><div class="ev-sub">' + sub + '</div>' +
+        (!hero && as.length ? '<div class="ev-mini">' + stack + '</div>' : '') + '</div>' + pillFor(e, mine) + '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></div>';
+      if(hero){
+        const pct = as.length ? Math.round(conf * 100 / as.length) : 0;
+        html += '<div class="ev-row ev-progress">' + stack + '<div class="ev-bar"><i style="width:' + pct + '%"></i></div><span class="ev-sub">' + (as.length ? conf + ' de ' + as.length : 'sem equipe') + '</span></div>';
+        const chips = [];
+        if(e.playlist && e.playlist.songs && e.playlist.songs.length) chips.push('🎵 ' + e.playlist.songs.length + (e.playlist.songs.length === 1 ? ' música' : ' músicas'));
+        if(e.dress_code) chips.push('👔 ' + escH(e.dress_code));
+        if(chips.length) html += '<div class="ev-chips">' + chips.map(c => '<span>' + c + '</span>').join('') + '</div>';
       }
-      html += '<div class="esc-card-body"><ul class="esc-list">';
-      as.forEach(a => {
-        const unav = esc.unav.some(u => u.profile_id === a.profile_id && u.date === e.date);
-        html += '<li><span class="esc-fn">' + escFnIcon(a.function) + ' ' + escH(a.function) + '</span><span class="esc-who">' + escH(escName(a.profile_id)) +
-          (unav ? ' <em class="esc-warn" title="Marcou indisponível nesse dia">⚠ indisponível</em>' : '') + (a.status === 'recusado' && a.reason ? ' <em>(' + escH(a.reason) + ')</em>' : '') + '</span><span>' + escStatusIcon(a.status) + '</span></li>';
+      html += '</div>';
+      // Minha resposta
+      mine.forEach(a => {
+        const answered = a.status !== 'pendente';
+        html += '<div class="esc-mine ev-mine ' + a.status + (answered && !esc._reanswer ? ' answered' : '') + '"><span>Você: <b>' + escFnIcon(a.function) + ' ' + escH(a.function) + '</b>' + (a.status === 'confirmado' ? ' · confirmado ✓' : a.status === 'recusado' ? ' · não pode' : '') + '</span>' +
+          '<span class="esc-mine-btns"><button type="button" class="esc-ok' + (a.status === 'confirmado' ? ' on' : '') + '" data-confirm="' + a.id + '">✓ Confirmo</button>' +
+          '<button type="button" class="esc-no' + (a.status === 'recusado' ? ' on' : '') + '" data-decline="' + a.id + '">✕ Não posso</button></span></div>';
       });
-      html += '</ul>';
+      // Detalhe
+      html += '<div class="esc-card-body">';
+      html += '<div class="ev-sec">Equipe <span>' + conf + ' de ' + as.length + ' confirmados</span></div><div class="ev-team">';
+      if(!as.length) html += '<div class="ev-empty">Ninguém escalado ainda.</div>';
+      as.forEach(a => {
+        const p = escProfile(a.profile_id);
+        const unav = esc.unav.some(u => u.profile_id === a.profile_id && u.date === e.date);
+        const st = a.status === 'confirmado' ? '<span class="ev-pill ok">Confirmado</span>' : a.status === 'recusado' ? '<span class="ev-pill no">Não pode</span>' : '<span class="ev-pill pe">Pendente</span>';
+        let nudge = '';
+        if(escCanSchedule() && a.status === 'pendente' && p && p.phone && a.profile_id !== esc.user.id){
+          const msg = 'Oi ' + escFirst(a.profile_id) + '! Você está na escala do ' + (e.title || 'culto') + ' de ' + escDateLabel(e.date) + (e.time ? ' às ' + e.time : '') + ' no ' + a.function + '. Confirma pra gente? 🙏\n' + escAppLink(e.id);
+          nudge = '<a class="ev-nudge" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(msg) + '">Lembrar</a>';
+        }
+        html += '<div class="ev-person">' + homeAvatar(p, null) + '<div class="ev-pmain"><div class="ev-pname">' + escH(escName(a.profile_id)) + (p && p.is_pre ? ' <small>pré-cadastro</small>' : '') + '</div><div class="ev-sub">' + escFnIcon(a.function) + ' ' + escH(a.function) +
+          (unav ? ' · <em class="esc-warn">⚠ marcou que não pode</em>' : '') + (a.status === 'recusado' && a.reason ? ' · “' + escH(a.reason) + '”' : '') + '</div></div>' + st + nudge + '</div>';
+      });
+      html += '</div>';
       if(e.playlist && e.playlist.songs && e.playlist.songs.length){
-        html += '<div class="esc-sub">🎵 ' + escH(e.playlist.name || 'Playlist') + '</div><ol class="esc-songs">' +
-          e.playlist.songs.map(s => '<li>' + escH(s.title) + (s.key ? ' <span class="esc-key">' + escH(s.key) + '</span>' : '') + '</li>').join('') + '</ol>';
+        const plMatch = playlists.find(pl => pl.name === e.playlist.name && !pl.archived);
+        html += '<div class="ev-sec">Repertório' + (plMatch ? ' <button type="button" class="ev-link" data-openpl="' + plMatch.id + '">▶ Abrir playlist</button>' : '') + '</div><div class="ev-songs">' +
+          e.playlist.songs.map((sg, i) => '<div class="ev-song"><span class="n">' + (i + 1) + '</span><span class="t">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' + (sg.key ? '<span class="k">' + escH(sg.key) + '</span>' : '') + '</div>').join('') + '</div>';
       }
-      if(e.dress_code) html += '<div class="esc-sub">👔 Dress code: <span>' + escH(e.dress_code) + '</span></div>';
-      if(e.notes) html += '<div class="esc-notes">📝 ' + escH(e.notes) + '</div>';
-      html += '<div class="esc-actions"><button type="button" class="btn-secondary" data-wa="' + e.id + '">🟢 Enviar no WhatsApp</button>';
+      if(e.dress_code) html += '<div class="ev-sec">Dress code</div><div class="ev-chips"><span>👔 ' + escH(e.dress_code) + '</span></div>';
+      if(e.notes) html += '<div class="ev-sec">Observações</div><div class="esc-notes">' + escH(e.notes) + '</div>';
+      html += '<div class="esc-actions ev-actions"><button type="button" class="btn-secondary" data-wa="' + e.id + '">🟢 Enviar no WhatsApp</button>';
       if(escCanSchedule()) html += '<button type="button" class="btn-secondary" data-remind="' + e.id + '">🔔 Cobrar pendentes</button><button type="button" class="btn-secondary" data-edit="' + e.id + '">✎ Editar</button>';
       html += '</div></div></div>';
     });
+    if(escCanSchedule() && !mineOnly) html += '<button class="btn-primary esc-new ev-fab" id="escNewEvent" type="button">＋ Nova escala</button>';
     body.innerHTML = html;
     const nb = document.getElementById('escNewEvent'); if(nb) nb.onclick = () => escStartEdit(null);
     body.querySelectorAll('.esc-card-head').forEach(h => h.onclick = () => {
@@ -9130,6 +9243,8 @@
       escRespond(b.dataset.decline, 'recusado', reason);
     });
     body.querySelectorAll('[data-wa]').forEach(b => b.onclick = () => escShareEvent(b.dataset.wa));
+    body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
+    body.querySelectorAll('.ev-mine.answered').forEach(m => m.onclick = (ev) => { if(ev.target.closest('button')) return; m.classList.remove('answered'); });
     body.querySelectorAll('[data-remind]').forEach(b => b.onclick = () => escRemind(b.dataset.remind));
     body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.edit));
   }
@@ -9248,9 +9363,12 @@
       '<label>🎵 Playlist do dia (do seu Paraíso)<select id="escPlaylist" class="esc-input">' + plOpts + '</select></label>' +
       (d.playlist ? '<div class="hint">🎵 ' + d.playlist.songs.map(x => escH(x.title) + (x.key ? ' <b class="esc-key">' + escH(x.key) + '</b>' : '')).join(' · ') + '</div>' : '') +
       '<label>👔 Dress code<input id="escDress" class="esc-input" value="' + escH(d.dress_code) + '" placeholder="Ex: preto e branco"></label>' +
+      '<div class="esc-dress-chips">' + ['Preto e branco', 'Jeans e branco', 'Tons neutros', 'Livre'].map(x => '<button type="button" data-dress="' + escH(x) + '">' + escH(x) + '</button>').join('') + '</div>' +
       '<label>📝 Observações<textarea id="escNotes" class="esc-input" rows="2">' + escH(d.notes) + '</textarea></label>' +
       '<div class="esc-sub">Quem toca o quê</div>';
-    if(esc.teams.length) html += '<div class="esc-team-fill">Preencher com a equipe: ' + esc.teams.map(t => '<button type="button" class="btn-secondary" data-team="' + t.id + '">' + escH(t.name) + '</button>').join(' ') + '</div>';
+    const lastEv = esc.events.filter(x => x.id !== d.id && x.date < (d.date || '9999') && escEventAssignments(x.id).length).sort((a, b) => b.date.localeCompare(a.date))[0];
+    html += '<div class="esc-team-fill">' + esc.teams.map(t => '<button type="button" class="btn-secondary" data-team="' + t.id + '">⚡ ' + escH(t.name) + '</button>').join(' ') +
+      (lastEv ? ' <button type="button" class="btn-secondary" id="escCopyLast" title="Copia quem tocou o quê no culto de ' + escH(escDateLabel(lastEv.date)) + '">↺ Igual ao último (' + escH(fmtDateBR(lastEv.date).slice(0, 5)) + ')</button>' : '') + '</div>';
     html += '<div id="escRows">';
     d.rows.forEach((r, i) => {
       html += '<div class="esc-row" data-i="' + i + '"><select class="esc-input esc-fn-sel">' + fnOpts(r.function) + '</select>' +
@@ -9284,6 +9402,13 @@
       d.playlist = pl ? escPlaylistSnapshot(pl) : null;
       if(pl && pl.date && !d.id) d.date = pl.date;
       if(pl && pl.minister && !d.minister_id){ const m = esc.profiles.find(p => p.name.toLowerCase().includes(String(pl.minister).toLowerCase().replace(/^(pr|pra|presb|min|dc)\.?\s+/i, ''))); if(m) d.minister_id = m.id; }
+      renderEscala();
+    };
+    body.querySelectorAll('[data-dress]').forEach(b => b.onclick = () => { document.getElementById('escDress').value = b.dataset.dress; });
+    const cl = document.getElementById('escCopyLast');
+    if(cl) cl.onclick = () => {
+      grab();
+      escEventAssignments(lastEv.id).forEach(a => { if(!d.rows.some(r => r.profile_id === a.profile_id && r.function === a.function)) d.rows.push({ id: null, function: a.function, profile_id: a.profile_id, status: 'pendente' }); });
       renderEscala();
     };
     document.getElementById('escAddRow').onclick = () => { grab(); d.rows.push({ id: null, function: 'Vocal', profile_id: '', status: 'pendente' }); renderEscala(); };
