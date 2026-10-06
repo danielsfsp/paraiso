@@ -1,1 +1,1 @@
-v211 · 06/10/2026 · colunas usam a altura toda
+v212 · 06/10/2026 · touchpad rola a música em vez de trocar
