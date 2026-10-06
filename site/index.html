@@ -1004,6 +1004,12 @@
      no fim de alguma coluna em troca de nunca reembaralhar o que já foi
      escrito antes do ponto da edição. */
   #cifraBodyEditCols.cifra-body{column-fill:auto;}
+  /* LEITURA com colunas de largura ADAPTATIVA: depois que o navegador
+     distribui as linhas nas colunas, cada coluna vira um bloco próprio
+     com a largura exata da sua linha mais longa (ver adaptReadingColumns). */
+  .cifra-body.adaptive-cols{display:flex; align-items:flex-start; column-width:auto !important; column-rule:none; height:auto !important; width:auto !important; max-width:none;}
+  .cifra-col{flex:0 0 auto; width:max-content; padding:0 1.2rem; border-left:1px solid var(--border-soft);}
+  .cifra-col:first-child{padding-left:0; border-left:0;}
   .cifra-body.fade-in{animation:cifraFadeIn .3s var(--ease);}
   @keyframes cifraFadeIn{ from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
   .cifra-line{break-inside:avoid; white-space:pre; margin-bottom:1px; max-width:100%;}
@@ -2171,7 +2177,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v207 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v208 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4507,7 +4513,7 @@
     document.querySelectorAll('.edit-mode-btn').forEach(b => { b.style.display = active ? 'inline-flex' : 'none'; });
     controlsBar.style.display = active ? 'none' : 'flex';
     document.getElementById('inlineEditToolbar').style.display = active ? 'flex' : 'none';
-    cifraBody.style.display = active ? 'none' : 'block';
+    cifraBody.style.display = active ? 'none' : '';
     inlineEditorWrap.style.display = active ? 'grid' : 'none';
   }
 
@@ -4754,6 +4760,7 @@
         el.style.fontSize = nf.toFixed(2) + 'px';
         if(el.scrollWidth > el.clientWidth + 1) el.classList.add('line-overflow');
       });
+      if(!singleColumn) adaptReadingColumns();
     });
 
     if(resumoActive) renderResumo();
@@ -4780,6 +4787,30 @@
     const charW = probe.getBoundingClientRect().width / 40;
     probe.remove();
     return Math.ceil(p90 * charW + 12);
+  }
+  // Colunas de largura ADAPTATIVA na leitura: o navegador decide em qual
+  // coluna cada linha fica (mesma distribuição de sempre); aqui cada coluna
+  // vira um bloco separado, do tamanho da SUA linha mais longa — coluna com
+  // frases curtas fica estreita, sem aquele vazio até a linha divisória.
+  function adaptReadingColumns(){
+    const body = cifraBody;
+    if(!body.offsetParent || body.classList.contains('adaptive-cols')) return;
+    const lines = Array.from(body.querySelectorAll('.cifra-line'));
+    if(lines.length < 2) return;
+    const groups = []; let curLeft = null;
+    lines.forEach(el => {
+      const r = el.getBoundingClientRect();
+      if(!r.width && !r.height) return;
+      if(curLeft === null || r.left > curLeft + 20){ groups.push([]); curLeft = r.left; }
+      groups[groups.length - 1].push(el);
+    });
+    if(groups.length < 2) return; // tudo numa coluna só: deixa como está
+    const frag = document.createDocumentFragment();
+    groups.forEach(g => { const col = document.createElement('div'); col.className = 'cifra-col'; g.forEach(el => col.appendChild(el)); frag.appendChild(col); });
+    body.innerHTML = '';
+    body.appendChild(frag);
+    body.classList.add('adaptive-cols');
+    body.style.columnWidth = ''; body.style.height = ''; body.style.width = '';
   }
   let lastReadingColWidth = 0;
   // useReadingWidth: a edição em tela cheia usa exatamente a largura que a
@@ -6141,7 +6172,10 @@
     clearTimeout(fitColsTimer);
     fitColsTimer = setTimeout(() => {
       if(singleColumn) return;
-      if(cifraBody.offsetParent) fitExactColumnWidth(cifraBody);
+      if(cifraBody.offsetParent && cifraBody.classList.contains('adaptive-cols')){
+        const vp = cifraViewport, st = vp.scrollTop, sl = vp.scrollLeft;
+        renderCifra(); vp.scrollTop = st; vp.scrollLeft = sl;
+      } else if(cifraBody.offsetParent) fitExactColumnWidth(cifraBody);
       const ew = document.getElementById('cifraBodyEditCols');
       if(fullscreenEditing && ew && ew.offsetParent) fitExactColumnWidth(ew, true);
     }, 120);
@@ -6900,7 +6934,7 @@
     wrap.style.display = 'none';
     wrap.classList.remove('cifra-body');
     wrap.innerHTML = '';
-    cifraBody.style.display = 'block';
+    cifraBody.style.display = '';
     const panel = document.querySelector('.main-panel');
     if(panel) panel.classList.remove('fullscreen-editing');
     clearEditToolbarPosition();

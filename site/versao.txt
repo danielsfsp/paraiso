@@ -1,1 +1,1 @@
-v207 · 06/10/2026 · linhas longas sem barra de rolagem
+v208 · 06/10/2026 · colunas com largura adaptativa
