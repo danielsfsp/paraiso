@@ -419,6 +419,8 @@
   .gate-form .esc-checks{margin-bottom:10px;}
   .gate-saved{font-size:12.5px; color:var(--chord); margin-left:8px;}
   .gate-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center;}
+  .esc-rejected{margin:4px 0 14px; font-size:13px; color:var(--text-dim);}
+  .esc-rejected summary{cursor:pointer; padding:4px 0;}
   .esc-pending{border:1px dashed var(--accent-dim); border-radius:10px; padding:4px 10px 8px; margin-bottom:10px;}
   .esc-pend-row{display:flex; gap:8px; align-items:center; padding:6px 0;}
   .esc-pend-row img{width:32px; height:32px; border-radius:50%;}
@@ -2179,7 +2181,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v212 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v213 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8915,7 +8917,9 @@
   // ---------- EQUIPE ----------
   function renderEscTeam(body){
     const leader = esc.me && esc.me.is_leader;
-    const pending = esc.profiles.filter(p => !p.approved);
+    // Recusado = não aprovado e inativo: sai da fila de aprovação.
+    const pending = esc.profiles.filter(p => !p.approved && p.active !== false);
+    const rejected = esc.profiles.filter(p => !p.approved && p.active === false);
     let html = '';
     if(leader && pending.length){
       html += '<div class="esc-pending"><div class="esc-sub">⏳ Aguardando aprovação (' + pending.length + ')</div>' + pending.map(p =>
@@ -8940,7 +8944,13 @@
       }
       html += '</li>';
     });
-    html += '</ul><div class="esc-sub">🧩 Equipes</div>';
+    html += '</ul>';
+    if(leader && rejected.length){
+      html += '<details class="esc-rejected"><summary>🚫 Cadastros recusados (' + rejected.length + ')</summary>' + rejected.map(p =>
+        '<div class="esc-pend-row"><div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + escH(p.email || '') + '</span></div>' +
+        '<button type="button" class="esc-link" data-approve="' + p.id + '">Aprovar mesmo assim</button></div>').join('') + '</details>';
+    }
+    html += '<div class="esc-sub">🧩 Equipes</div>';
     if(!esc.teams.length) html += '<div class="hint">Nenhuma equipe ainda.' + (leader ? ' Equipes ajudam a preencher a escala com um toque.' : '') + '</div>';
     esc.teams.forEach(t => {
       html += '<div class="esc-team"><strong>' + escH(t.name) + '</strong><span>' + t.member_ids.map(id => escH(escFirst(id))).join(', ') + '</span>' +
@@ -8964,7 +8974,7 @@
       showConfirm('Recusar cadastro', 'Recusar o acesso de ' + (p ? p.name : '') + '? (ele continua sem conseguir entrar)', async () => {
         const { error } = await esc.sb.from('profiles').update({ active: false }).eq('id', b.dataset.reject);
         if(error){ showAlert('Equipe', error.message); return; }
-        if(p) p.active = false; await escLoadAll();
+        if(p) p.active = false; renderEscala(); escLoadAll();
       }, { okLabel: 'Recusar' });
     });
     body.querySelectorAll('[data-role]').forEach(cb => cb.onchange = async () => {
@@ -9099,7 +9109,8 @@
     if(!me){ gateLoginScreen('Cadastro não encontrado. Saia e entre de novo.'); return; }
     if(!me.approved || me.active === false){
       lsSet('authOk', '');
-      if(me.active === false && me.approved) gateShow('<div class="gate-logo">🚫</div><h2>Acesso desativado</h2><p class="gate-sub">Fale com um líder do louvor.</p><button class="esc-link" id="gateOut" type="button">Sair</button>'), document.getElementById('gateOut').onclick = escSignOut;
+      if(me.active === false && !me.approved) gateShow('<div class="gate-logo">🚫</div><h2>Cadastro não aprovado</h2><p class="gate-sub">Fale com um líder do louvor.</p><button class="esc-link" id="gateOut" type="button">Sair</button>'), document.getElementById('gateOut').onclick = escSignOut;
+      else if(me.active === false && me.approved) gateShow('<div class="gate-logo">🚫</div><h2>Acesso desativado</h2><p class="gate-sub">Fale com um líder do louvor.</p><button class="esc-link" id="gateOut" type="button">Sair</button>'), document.getElementById('gateOut').onclick = escSignOut;
       else gatePendingScreen(me);
       return;
     }
