@@ -1113,6 +1113,24 @@
   .home-song-snippet mark{background:var(--accent-soft); color:var(--text); border-radius:3px; padding:0 2px;}
   .home-song-search:focus{outline:none; border-color:var(--accent-dim); box-shadow:0 0 0 3px var(--accent-soft);}
   .home-search-empty{font-size:13px; color:var(--text-dim); font-style:italic; padding:6px 0;}
+  .home-right{flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:8px;}
+  .home-profile{position:relative;}
+  .home-profile[hidden]{display:none;}
+  .home-profile-btn{display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:4px 10px 4px 4px; color:var(--text); font:inherit; font-size:13px; font-weight:600;}
+  .home-profile-btn:hover{border-color:var(--accent-dim);}
+  .home-profile-av{width:26px; height:26px; border-radius:50%; background:var(--accent); color:#1a1408; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; overflow:hidden; flex-shrink:0;}
+  .home-profile-av img{width:100%; height:100%; object-fit:cover;}
+  .home-profile-name{max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .home-profile-caret{font-size:10px; color:var(--text-dim);}
+  .home-profile-menu{position:absolute; right:0; top:calc(100% + 6px); z-index:300; min-width:230px; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,.35); padding:6px; display:flex; flex-direction:column;}
+  .home-profile-menu[hidden]{display:none;}
+  .home-profile-info{padding:8px 10px 10px; border-bottom:1px solid var(--border-soft); margin-bottom:4px;}
+  .home-profile-full{font-weight:700; font-size:14px; color:var(--text);}
+  .home-profile-email{font-size:12px; color:var(--text-dim); margin-top:2px; word-break:break-all;}
+  .home-profile-role{font-size:11px; font-weight:700; color:var(--accent); margin-top:4px; text-transform:uppercase; letter-spacing:.04em;}
+  .home-profile-menu > button{text-align:left; background:none; border:0; color:var(--text); font:inherit; font-size:13.5px; padding:9px 10px; border-radius:8px; cursor:pointer;}
+  .home-profile-menu > button:hover{background:var(--surface-2);}
+  .home-profile-menu > button.danger{color:#e57373;}
   .home-counter{
     flex-shrink:0; display:flex; align-items:baseline; gap:6px;
     background:var(--surface-2); border:1px solid var(--border);
@@ -1690,9 +1708,29 @@
           <h1>Paraíso</h1>
           <p>Tudo o que você já criou, num só lugar.</p>
         </div>
-        <div class="home-counter" id="homeSongCounter" aria-live="polite">
-          <span class="home-counter-num" id="homeSongCounterNum">0</span>
-          <span class="home-counter-label" id="homeSongCounterLabel">músicas</span>
+        <div class="home-right">
+          <div class="home-profile" id="homeProfile" hidden>
+            <button type="button" class="home-profile-btn" id="homeProfileBtn" aria-haspopup="true" aria-expanded="false" title="Meu perfil">
+              <span class="home-profile-av" id="homeProfileAv"></span>
+              <span class="home-profile-name" id="homeProfileName"></span>
+              <span class="home-profile-caret">▾</span>
+            </button>
+            <div class="home-profile-menu" id="homeProfileMenu" hidden>
+              <div class="home-profile-info">
+                <div class="home-profile-full" id="homeProfileFull"></div>
+                <div class="home-profile-email" id="homeProfileEmail"></div>
+                <div class="home-profile-role" id="homeProfileRole"></div>
+              </div>
+              <button type="button" data-act="perfil">👤 Meu perfil</button>
+              <button type="button" data-act="escala">📅 Minhas escalas</button>
+              <button type="button" data-act="trocar">🔄 Trocar de conta</button>
+              <button type="button" data-act="sair" class="danger">🚪 Sair</button>
+            </div>
+          </div>
+          <div class="home-counter" id="homeSongCounter" aria-live="polite">
+            <span class="home-counter-num" id="homeSongCounterNum">0</span>
+            <span class="home-counter-label" id="homeSongCounterLabel">músicas</span>
+          </div>
         </div>
       </div>
       <div class="home-columns">
@@ -2132,7 +2170,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v205 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v206 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8451,13 +8489,13 @@
   async function escSignIn(){
     const sb = await escClient();
     if(!sb) return;
-    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname + '?sb=1' } });
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname + '?sb=1', queryParams: { prompt: 'select_account' } } });
     if(error) showAlert('Login', 'Não consegui abrir o login do Google: ' + error.message);
   }
   async function escSignOut(){
     try{ if(esc.sb) await esc.sb.auth.signOut(); }catch(e){}
-    esc.user = null; esc.me = null; lsSet('authOk', '');
-    closeEscala(); renderEscala();
+    esc.user = null; esc.me = null; lsSet('authOk', ''); lsSet('meCache', '');
+    closeEscala(); renderEscala(); renderHomeProfile();
     if(escCanOnline()) gateLoginScreen();
   }
 
@@ -8505,6 +8543,7 @@
 
   // ---------- RENDER ----------
   function renderEscala(){
+    try{ renderHomeProfile(); }catch(e){}
     const body = document.getElementById('escalaBody');
     const tabsEl = document.getElementById('escalaTabs');
     const userEl = document.getElementById('escalaUser');
@@ -9006,14 +9045,51 @@
     }
     esc.me = me;
     lsSet('authOk', session.user.id);
+    renderHomeProfile();
     gateHide();
     libApplyPermissions();
     libPull();
     if(forced) showImportFeedback('Bem-vindo(a), ' + (me.name || '').split(' ')[0] + '! 🎶', true);
   }
+  // ---------- PERFIL NO CANTO SUPERIOR DIREITO DA TELA INICIAL ----------
+  function renderHomeProfile(){
+    const wrap = document.getElementById('homeProfile'); if(!wrap) return;
+    let me = esc.me ? { name: esc.me.name, email: esc.me.email || (esc.user && esc.user.email) || '', photo: esc.me.photo_url || '', leader: !!esc.me.is_leader, minister: !!esc.me.is_minister } : null;
+    if(me) lsSet('meCache', JSON.stringify(me));
+    else if(escCanOnline() && gateCachedOk()){ try{ me = JSON.parse(lsGet('meCache') || 'null'); }catch(e){ me = null; } }
+    if(!me || !escCanOnline()){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    const name = (me.name || me.email || '').trim();
+    const ini = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+    const av = document.getElementById('homeProfileAv');
+    av.textContent = ini;
+    if(me.photo){ const img = new Image(); img.alt = ''; img.referrerPolicy = 'no-referrer'; img.onload = () => { av.textContent = ''; av.appendChild(img); }; img.src = me.photo; }
+    document.getElementById('homeProfileName').textContent = name.split(/\s+/)[0] || 'Perfil';
+    document.getElementById('homeProfileFull').textContent = name;
+    document.getElementById('homeProfileEmail').textContent = me.email || '';
+    document.getElementById('homeProfileRole').textContent = me.leader ? 'Líder' : me.minister ? 'Ministro' : 'Integrante';
+  }
+  (function homeProfileWire(){
+    const btn = document.getElementById('homeProfileBtn'), menu = document.getElementById('homeProfileMenu');
+    if(!btn || !menu) return;
+    const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+    btn.addEventListener('click', (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; btn.setAttribute('aria-expanded', String(!menu.hidden)); });
+    document.addEventListener('click', (e) => { if(!menu.hidden && !menu.contains(e.target)) close(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') close(); });
+    menu.addEventListener('click', async (e) => {
+      const b = e.target.closest('button[data-act]'); if(!b) return;
+      close();
+      const act = b.dataset.act;
+      if(act === 'perfil'){ esc.tab = 'perfil'; openEscala(); }
+      else if(act === 'escala'){ esc.tab = 'minhas'; openEscala(); }
+      else if(act === 'sair'){ showConfirm('Sair', 'Sair da sua conta neste aparelho?', async () => { await escSignOut(); }, { okLabel: 'Sair', okNeutral: true }); }
+      else if(act === 'trocar'){ await escSignOut(); escSignIn(); }
+    });
+  })();
   function gateInit(){
     libApplyPermissions();
     if(!escCanOnline()) return; // dentro do Claude: sem porta
+    renderHomeProfile();
     if(gateCachedOk()) gateHide(); else gateShow('<div class="gate-logo">🌙</div><h1>Paraíso</h1><p class="gate-sub">⏳ Carregando…</p>');
     gateCheck(false);
   }
