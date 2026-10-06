@@ -1,0 +1,7 @@
+{
+  // Site de TESTE do Paraíso (Cloudflare Workers, só arquivos estáticos).
+  // Cada envio para a branch master publica sozinho em paraiso-teste.
+  "name": "paraiso-teste",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./site" }
+}
