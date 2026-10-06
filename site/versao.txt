@@ -1,1 +1,1 @@
-v220 · 06/10/2026 · fonte se ajusta à tela; escalar pré-cadastrados
+v221 · 06/10/2026 · repaginada 1: tela inicial e menu
