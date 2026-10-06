@@ -421,6 +421,7 @@
   .gate-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center;}
   .esc-rejected{margin:4px 0 14px; font-size:13px; color:var(--text-dim);}
   .esc-rejected summary{cursor:pointer; padding:4px 0;}
+  .esc-badge-admin{background:var(--accent) !important; color:#1a1408 !important;}
   .esc-pending{border:1px dashed var(--accent-dim); border-radius:10px; padding:4px 10px 8px; margin-bottom:10px;}
   .esc-pend-row{display:flex; gap:8px; align-items:center; padding:6px 0;}
   .esc-pend-row img{width:32px; height:32px; border-radius:50%;}
@@ -2182,7 +2183,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v215 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v216 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8569,6 +8570,21 @@
     if(escCanOnline()) gateLoginScreen();
   }
 
+  // ADMINISTRADOR: quem está na tabela app_admins (dono do app). Fica acima
+  // de Líder; aparece como "Administrador" e não pode ser rebaixado por ninguém.
+  async function escLoadAdmins(){
+    try{
+      const r = await esc.sb.from('app_admins').select('email');
+      if(!r.error && Array.isArray(r.data)){
+        esc.admins = r.data.map(x => String(x.email || '').toLowerCase());
+        lsSet('adminCache', JSON.stringify(esc.admins));
+      }
+    }catch(e){}
+    if(!esc.admins){ try{ esc.admins = JSON.parse(lsGet('adminCache') || '[]'); }catch(e){ esc.admins = []; } }
+  }
+  function escIsAdmin(p){ return !!(p && p.email && (esc.admins || []).includes(String(p.email).toLowerCase())); }
+  function escRoleName(p){ return !p ? '' : escIsAdmin(p) ? 'Administrador' : p.is_leader ? 'Líder' : p.is_minister ? 'Ministro' : ''; }
+
   async function escLoadAll(){
     const sb = esc.sb; if(!sb || !esc.user) return;
     esc.loading = true; renderEscala();
@@ -8583,6 +8599,7 @@
     const err = pr.error || tm.error || ev.error || un.error;
     if(err){ esc.loading = false; showAlert('Escala', 'Erro ao carregar: ' + err.message); renderEscala(); return; }
     esc.profiles = pr.data || []; esc.teams = tm.data || []; esc.events = ev.data || []; esc.unav = un.data || [];
+    await escLoadAdmins();
     const ids = esc.events.map(e => e.id);
     esc.assignments = [];
     if(ids.length){
@@ -8646,7 +8663,7 @@
     if(esc.loading && !esc.profiles.length){ body.innerHTML = '<div class="esc-empty">⏳ Carregando…</div>'; return; }
     const me = esc.me;
     userEl.innerHTML = (me && me.photo_url ? '<img src="' + escH(me.photo_url) + '" alt="">' : '') +
-      '<span>' + escH(me ? me.name : esc.user.email) + (me && me.is_leader ? ' · Líder' : me && me.is_minister ? ' · Ministro' : '') + '</span>' +
+      '<span>' + escH(me ? me.name : esc.user.email) + (escRoleName(me) ? ' · ' + escRoleName(me) : '') + '</span>' +
       '<button type="button" class="esc-link" id="escLogout">Sair</button>';
     document.getElementById('escLogout').onclick = () => escGuard(escSignOut);
     if(me && !me.functions.length && esc.tab !== 'perfil' && !esc._askedProfile){ esc._askedProfile = true; esc.tab = 'perfil'; }
@@ -8943,12 +8960,12 @@
         (p.photo_url ? '<img src="' + escH(p.photo_url) + '" alt="">' : '<span class="esc-avatar">' + escH((p.name || '?')[0]) + '</span>') +
         '<div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + (p.functions.map(f => escFnIcon(f) + ' ' + escH(f)).join(' · ') || '<em>sem funções</em>') + '</span>' +
         (p.phone ? '<a class="esc-wa" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '">🟢 ' + escH(p.phone) + '</a>' : '') + '</div>';
-      if(leader && p.id !== esc.user.id){
+      if(leader && p.id !== esc.user.id && !escIsAdmin(p)){
         html += '<div class="esc-roles"><label><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '> Líder</label>' +
           '<label><input type="checkbox" data-role="is_minister" data-pid="' + p.id + '"' + (p.is_minister ? ' checked' : '') + '> Ministro</label>' +
           '<label><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '> Ativo</label></div>';
       } else {
-        html += '<div class="esc-roles">' + (p.is_leader ? '<span class="esc-badge">Líder</span>' : '') + (p.is_minister ? '<span class="esc-badge">Ministro</span>' : '') + '</div>';
+        html += '<div class="esc-roles">' + (escIsAdmin(p) ? '<span class="esc-badge esc-badge-admin">Administrador</span>' : p.is_leader ? '<span class="esc-badge">Líder</span>' : '') + (p.is_minister ? '<span class="esc-badge">Ministro</span>' : '') + '</div>';
       }
       html += '</li>';
     });
@@ -9123,6 +9140,8 @@
       return;
     }
     esc.me = me;
+    if(!esc.sb) esc.sb = sb;
+    await escLoadAdmins();
     lsSet('authOk', session.user.id);
     renderHomeProfile();
     gateHide();
@@ -9133,7 +9152,7 @@
   // ---------- PERFIL NO CANTO SUPERIOR DIREITO DA TELA INICIAL ----------
   function renderHomeProfile(){
     const wrap = document.getElementById('homeProfile'); if(!wrap) return;
-    let me = esc.me ? { name: esc.me.name, email: esc.me.email || (esc.user && esc.user.email) || '', photo: esc.me.photo_url || '', leader: !!esc.me.is_leader, minister: !!esc.me.is_minister } : null;
+    let me = esc.me ? { name: esc.me.name, email: esc.me.email || (esc.user && esc.user.email) || '', photo: esc.me.photo_url || '', leader: !!esc.me.is_leader, minister: !!esc.me.is_minister, admin: escIsAdmin(esc.me) } : null;
     if(me) lsSet('meCache', JSON.stringify(me));
     else if(escCanOnline() && gateCachedOk()){ try{ me = JSON.parse(lsGet('meCache') || 'null'); }catch(e){ me = null; } }
     if(!me || !escCanOnline()){ wrap.hidden = true; return; }
@@ -9146,7 +9165,7 @@
     document.getElementById('homeProfileName').textContent = name.split(/\s+/)[0] || 'Perfil';
     document.getElementById('homeProfileFull').textContent = name;
     document.getElementById('homeProfileEmail').textContent = me.email || '';
-    document.getElementById('homeProfileRole').textContent = me.leader ? 'Líder' : me.minister ? 'Ministro' : 'Integrante';
+    document.getElementById('homeProfileRole').textContent = me.admin ? 'Administrador' : me.leader ? 'Líder' : me.minister ? 'Ministro' : 'Integrante';
   }
   (function homeProfileWire(){
     const btn = document.getElementById('homeProfileBtn'), menu = document.getElementById('homeProfileMenu');
