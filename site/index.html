@@ -1763,6 +1763,7 @@
   .tm-switch i::after{content:''; position:absolute; left:3px; top:3px; width:14px; height:14px; border-radius:50%; background:var(--text-dim); transition:transform .15s, background .15s;}
   .tm-switch input:checked + i{background:var(--accent);}
   .tm-switch input:checked + i::after{transform:translateX(14px); background:#1A1206;}
+  .tm-del{align-self:flex-start; margin-top:4px;}
   .tm-pending{display:flex; flex-direction:column; gap:8px;}
   .tm-pend{flex-direction:row; align-items:center; background:linear-gradient(150deg, var(--accent-soft), var(--surface) 70%); border-color:var(--accent-dim);}
   .tm-pend .esc-pre-link{margin-top:6px; max-width:220px; padding:5px 8px; font-size:12px;}
@@ -2530,7 +2531,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v227 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v228 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9727,7 +9728,8 @@
         (canManage ? '<div class="tm-perm" hidden>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '><i></i>Líder <small>aprova pessoas, monta escalas e edita o repertório</small></label>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_minister" data-pid="' + p.id + '"' + (p.is_minister ? ' checked' : '') + '><i></i>Ministro <small>pode montar escalas</small></label>' +
-          '<label class="tm-switch"><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '><i></i>Ativo <small>desligar tira o acesso ao app</small></label></div>' : '') +
+          '<label class="tm-switch"><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '><i></i>Ativo <small>desligar tira o acesso ao app</small></label>' +
+          '<button type="button" class="tm-btn no tm-del" data-del-member="' + p.id + '">🗑 Excluir do ministério</button></div>' : '') +
         '</div>';
     });
     html += '</div>';
@@ -9792,6 +9794,18 @@
       const p = escProfile(cb.dataset.pid); if(p) p[cb.dataset.role] = cb.checked;
     });
     const nt = document.getElementById('escNewTeam'); if(nt) nt.onclick = () => escEditTeam(null);
+    body.querySelectorAll('[data-del-member]').forEach(b => b.onclick = () => {
+      const p = escProfile(b.dataset.delMember); if(!p) return;
+      showConfirm('Excluir ' + (p.name || 'pessoa'), 'Excluir ' + (p.name || 'esta pessoa') + ' do ministério? Ela perde o acesso, sai das equipes e das escalas, e os dias marcados como indisponível são apagados. Se entrar de novo com o Google, volta como cadastro novo, aguardando aprovação. (Para só bloquear o acesso por um tempo, desligue "Ativo".)', async () => {
+        const { error } = await esc.sb.rpc('remove_member', { target: p.id });
+        if(error){
+          const msg = /remove_member|function|schema cache/i.test(error.message || '') ? 'Falta rodar no Supabase o arquivo paraiso_supabase_v7_excluir_membro.sql.' : error.message;
+          showAlert('Excluir pessoa', 'Não consegui excluir: ' + msg); return;
+        }
+        await escLoadAll();
+        showImportFeedback('🗑 ' + (p.name || 'Pessoa') + ' foi excluído(a) do ministério.', true);
+      }, { okLabel: 'Excluir' });
+    });
     body.querySelectorAll('[data-tm-toggle]').forEach(b => b.onclick = () => { const pm = b.closest('.tm-card').querySelector('.tm-perm'); if(pm){ pm.hidden = !pm.hidden; b.classList.toggle('on', !pm.hidden); } });
     const tms = document.getElementById('tmSearch');
     if(tms) tms.oninput = () => { const q = foldForSearch(tms.value); body.querySelectorAll('.tm-card[data-search]').forEach(c => { c.style.display = !q || c.dataset.search.includes(q) ? '' : 'none'; }); };
