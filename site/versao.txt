@@ -1,1 +1,1 @@
-v208 · 06/10/2026 · colunas com largura adaptativa
+v209 · 06/10/2026 · espaço igual dos dois lados da divisória

@@ -1007,7 +1007,7 @@
   /* LEITURA com colunas de largura ADAPTATIVA: depois que o navegador
      distribui as linhas nas colunas, cada coluna vira um bloco próprio
      com a largura exata da sua linha mais longa (ver adaptReadingColumns). */
-  .cifra-body.adaptive-cols{display:flex; align-items:flex-start; column-width:auto !important; column-rule:none; height:auto !important; width:auto !important; max-width:none;}
+  .cifra-body.adaptive-cols{display:flex; align-items:flex-start; column-width:auto !important; column-rule:none; column-gap:0; gap:0; height:auto !important; width:auto !important; max-width:none;}
   .cifra-col{flex:0 0 auto; width:max-content; padding:0 1.2rem; border-left:1px solid var(--border-soft);}
   .cifra-col:first-child{padding-left:0; border-left:0;}
   .cifra-body.fade-in{animation:cifraFadeIn .3s var(--ease);}
@@ -2177,7 +2177,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v208 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v209 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4581,7 +4581,9 @@
     try{ return buildCifraLinesRaw(body, shift); } finally { SIMPLIFY_ACTIVE = prev; }
   }
   function buildCifraLinesRaw(body, shift){
-    const lines = body.replace(/\r\n/g, '\n').split('\n');
+    // Espaços no fim da linha não têm efeito visível, mas ocupam largura
+    // (deixavam vão antes da divisória nas colunas adaptativas): corta.
+    const lines = body.replace(/\r\n/g, '\n').split('\n').map(l => /\S/.test(l) ? l.replace(/\s+$/, '') : l);
     const frag = document.createDocumentFragment();
     for(let i = 0; i < lines.length; i++){
       const line = lines[i];
@@ -4665,7 +4667,12 @@
         continue;
       }
 
-      const {chord, lyric} = splitChordLine(line, shift);
+      let {chord, lyric} = splitChordLine(line, shift);
+      // Espaços sobrando no FIM da linha não aparecem, mas ocupam largura —
+      // com as colunas adaptativas isso deixava um vão grande antes da
+      // linha divisória. Corta só o fim (o começo mantém o alinhamento).
+      if(chord !== null) chord = chord.replace(/\s+$/, '');
+      if(lyric && /\S/.test(lyric)) lyric = lyric.replace(/\s+$/, '');
       const lineWrap = document.createElement('div');
       lineWrap.className = 'cifra-line';
       if(chord === null && lyric.trim() !== '' && /:\s*$/.test(lyric.trim())){
