@@ -422,6 +422,8 @@
   .esc-rejected{margin:4px 0 14px; font-size:13px; color:var(--text-dim);}
   .esc-rejected summary{cursor:pointer; padding:4px 0;}
   .esc-badge-admin{background:var(--accent) !important; color:#1a1408 !important;}
+  .esc-pre-meta{display:block; font-size:12px; color:var(--text-dim);}
+  .esc-pre-link{max-width:170px; padding:6px 8px; font-size:12.5px; margin-right:6px;}
   .esc-pending{border:1px dashed var(--accent-dim); border-radius:10px; padding:4px 10px 8px; margin-bottom:10px;}
   .esc-pend-row{display:flex; gap:8px; align-items:center; padding:6px 0;}
   .esc-pend-row img{width:32px; height:32px; border-radius:50%;}
@@ -2183,7 +2185,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v216 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v217 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8582,6 +8584,61 @@
     }catch(e){}
     if(!esc.admins){ try{ esc.admins = JSON.parse(lsGet('adminCache') || '[]'); }catch(e){ esc.admins = []; } }
   }
+  // PRÉ-CADASTRO: pessoas cadastradas pelo líder antes de entrarem no app.
+  async function escLoadPre(){
+    esc.pre = []; esc.preMissing = false;
+    const me = esc.profiles.find(p => esc.user && p.id === esc.user.id);
+    if(!me || !me.is_leader) return;
+    try{
+      const r = await esc.sb.from('pre_profiles').select('*').order('name');
+      if(r.error){ esc.preMissing = /pre_profiles|does not exist|schema cache/i.test(r.error.message || ''); return; }
+      esc.pre = r.data || [];
+    }catch(e){}
+  }
+  function escPreOpen(){ return (esc.pre || []).filter(x => !x.linked_profile); }
+  function escPreInvite(x){
+    const text = 'Oi ' + (x.name || '').split(' ')[0] + '! 🎶 Você já está cadastrado(a) no *Paraíso*, o app das escalas do louvor. ' +
+      'É só entrar com sua conta Google' + (x.email ? ' (*' + x.email + '*)' : '') + ' — seu acesso já fica liberado:\n' + escAppLink();
+    const ph = escPhoneDigits(x.phone || '');
+    window.open('https://wa.me/' + (ph || '') + '?text=' + encodeURIComponent(text), '_blank', 'noopener');
+  }
+  function escEditPre(id){
+    const x = id ? (esc.pre || []).find(y => y.id === id) : { name: '', phone: '', email: '', functions: [], is_minister: false, is_leader: false, notes: '' };
+    if(!x) return;
+    const body = document.getElementById('escalaBody');
+    body.innerHTML = '<div class="esc-editor"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (id ? 'Editar pré-cadastro' : 'Pré-cadastrar pessoa') + '</h3>' +
+      '<div class="hint">Quando a pessoa entrar pela primeira vez com o <b>e-mail Google</b> informado abaixo, o perfil já vem preenchido e o acesso <b>aprovado</b>. Sem e-mail, você vincula na hora de aprovar.</div>' +
+      '<label>Nome *<input id="escPreName" class="esc-input" value="' + escH(x.name) + '" placeholder="Nome e sobrenome"></label>' +
+      '<label>Celular (WhatsApp)<input id="escPrePhone" class="esc-input" inputmode="tel" value="' + escH(x.phone || '') + '" placeholder="(11) 99999-9999"></label>' +
+      '<label>E-mail Google<input id="escPreEmail" class="esc-input" type="email" inputmode="email" value="' + escH(x.email || '') + '" placeholder="nome@gmail.com"></label>' +
+      '<div class="esc-sub">Funções</div><div class="esc-checks esc-fn-checks">' +
+      ESC_FUNCTIONS.map(f => '<label><input type="checkbox" value="' + escH(f) + '"' + ((x.functions || []).includes(f) ? ' checked' : '') + '> ' + escFnIcon(f) + ' ' + escH(f) + '</label>').join('') + '</div>' +
+      '<div class="esc-checks"><label><input type="checkbox" id="escPreMin"' + (x.is_minister ? ' checked' : '') + '> Pode montar escalas (Ministro)</label><label><input type="checkbox" id="escPreLead"' + (x.is_leader ? ' checked' : '') + '> Líder</label></div>' +
+      '<label>Observações<input id="escPreNotes" class="esc-input" value="' + escH(x.notes || '') + '"></label>' +
+      '<div class="esc-actions esc-save-row">' + (id ? '<button type="button" class="btn-secondary esc-del" id="escPreDel">🗑 Apagar</button>' : '') + '<button type="button" class="btn-primary" id="escPreSave">💾 Salvar</button></div></div>';
+    document.getElementById('escBack').onclick = () => renderEscala();
+    document.getElementById('escPreSave').onclick = async () => {
+      const rec = {
+        name: document.getElementById('escPreName').value.trim(),
+        phone: document.getElementById('escPrePhone').value.trim(),
+        email: document.getElementById('escPreEmail').value.trim().toLowerCase(),
+        functions: [...body.querySelectorAll('.esc-fn-checks input:checked')].map(i => i.value),
+        is_minister: document.getElementById('escPreMin').checked,
+        is_leader: document.getElementById('escPreLead').checked,
+        notes: document.getElementById('escPreNotes').value.trim()
+      };
+      if(!rec.name){ document.getElementById('escPreName').focus(); return; }
+      if(rec.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rec.email)){ showAlert('Pré-cadastro', 'E-mail inválido.'); return; }
+      if(rec.email && esc.profiles.some(p => (p.email || '').toLowerCase() === rec.email)){ showAlert('Pré-cadastro', 'Já existe uma pessoa com esse e-mail no app.'); return; }
+      if(!id) rec.created_by = esc.user.id;
+      const r = id ? await esc.sb.from('pre_profiles').update(rec).eq('id', id) : await esc.sb.from('pre_profiles').insert(rec);
+      if(r.error){ showAlert('Pré-cadastro', r.error.message); return; }
+      await escLoadAll();
+      if(!id && rec.phone) showConfirm('Pré-cadastro salvo ✅', 'Mandar o convite para ' + rec.name + ' pelo WhatsApp?', () => escPreInvite(rec), { okLabel: '🟢 Convidar', cancelLabel: 'Agora não', okNeutral: true });
+    };
+    const del = document.getElementById('escPreDel');
+    if(del) del.onclick = () => showConfirm('Apagar pré-cadastro', 'Apagar o pré-cadastro de ' + x.name + '?', async () => { await esc.sb.from('pre_profiles').delete().eq('id', id); await escLoadAll(); }, { okLabel: 'Apagar' });
+  }
   function escIsAdmin(p){ return !!(p && p.email && (esc.admins || []).includes(String(p.email).toLowerCase())); }
   function escRoleName(p){ return !p ? '' : escIsAdmin(p) ? 'Administrador' : p.is_leader ? 'Líder' : p.is_minister ? 'Ministro' : ''; }
 
@@ -8600,6 +8657,7 @@
     if(err){ esc.loading = false; showAlert('Escala', 'Erro ao carregar: ' + err.message); renderEscala(); return; }
     esc.profiles = pr.data || []; esc.teams = tm.data || []; esc.events = ev.data || []; esc.unav = un.data || [];
     await escLoadAdmins();
+    await escLoadPre();
     const ids = esc.events.map(e => e.id);
     esc.assignments = [];
     if(ids.length){
@@ -8950,7 +9008,22 @@
       html += '<div class="esc-pending"><div class="esc-sub">⏳ Aguardando aprovação (' + pending.length + ')</div>' + pending.map(p =>
         '<div class="esc-pend-row">' + (p.photo_url ? '<img src="' + escH(p.photo_url) + '" alt="">' : '<span class="esc-avatar">' + escH((p.name || '?')[0]) + '</span>') +
         '<div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + escH(p.email || '') + (p.functions && p.functions.length ? ' · ' + escH(p.functions.join(', ')) : '') + '</span></div>' +
+        (escPreOpen().length ? '<select class="esc-input esc-pre-link" data-pid="' + p.id + '" title="Se essa pessoa já tem pré-cadastro, escolha aqui para usar os dados dele"><option value="">sem pré-cadastro</option>' + escPreOpen().map(x => '<option value="' + x.id + '"' + (x.email && p.email && x.email.toLowerCase() === p.email.toLowerCase() ? ' selected' : '') + '>= ' + escH(x.name) + '</option>').join('') + '</select>' : '') +
         '<button type="button" class="esc-ok" data-approve="' + p.id + '">✅ Aprovar</button><button type="button" class="esc-no" data-reject="' + p.id + '">✕</button></div>').join('') + '</div>';
+    }
+    if(leader){
+      const open = escPreOpen();
+      html += '<div class="esc-sub">📝 Pré-cadastros (' + open.length + ')</div>';
+      if(esc.preMissing) html += '<div class="hint">⚠ Falta rodar no Supabase o arquivo <b>paraiso_supabase_v5_precadastro.sql</b> para usar o pré-cadastro.</div>';
+      else {
+        html += '<div class="hint">Cadastre a pessoa antes: quando ela entrar com o e-mail Google informado, já entra aprovada e com o perfil preenchido.</div>';
+        if(open.length) html += '<ul class="esc-people esc-pre-list">' + open.map(x =>
+          '<li><span class="esc-avatar">' + escH((x.name || '?')[0]) + '</span><div class="esc-person"><strong>' + escH(x.name) + '</strong><span>' +
+          ((x.functions || []).map(f => escFnIcon(f) + ' ' + escH(f)).join(' · ') || '<em>sem funções</em>') + '</span><span class="esc-pre-meta">' +
+          (x.email ? '✉️ ' + escH(x.email) : '<em>sem e-mail — vincule ao aprovar</em>') + (x.phone ? ' · 📱 ' + escH(x.phone) : '') + '</span></div>' +
+          '<div class="esc-roles">' + (x.phone ? '<button type="button" class="esc-link" data-pre-inv="' + x.id + '">🟢 Convidar</button>' : '') + '<button type="button" class="esc-link" data-pre-edit="' + x.id + '">✎</button></div></li>').join('') + '</ul>';
+        html += '<button type="button" class="btn-secondary" id="escNewPre">＋ Pré-cadastrar pessoa</button>';
+      }
     }
     const approvedList = esc.profiles.filter(p => p.approved);
     html += '<div class="esc-sub">👥 Pessoas (' + approvedList.length + ')</div>' +
@@ -8984,8 +9057,24 @@
     if(leader) html += '<button type="button" class="btn-secondary" id="escNewTeam">＋ Nova equipe</button>';
     html += '<div class="esc-invite"><div class="esc-sub">📨 Convidar</div><button type="button" class="btn-secondary" id="escInvite">🟢 Mandar convite no WhatsApp</button></div>';
     body.innerHTML = html;
+    const np = document.getElementById('escNewPre'); if(np) np.onclick = () => escEditPre(null);
+    body.querySelectorAll('[data-pre-edit]').forEach(b => b.onclick = () => escEditPre(b.dataset.preEdit));
+    body.querySelectorAll('[data-pre-inv]').forEach(b => b.onclick = () => { const x = (esc.pre || []).find(y => y.id === b.dataset.preInv); if(x) escPreInvite(x); });
     body.querySelectorAll('[data-approve]').forEach(b => b.onclick = async () => {
-      const { error } = await esc.sb.from('profiles').update({ approved: true, active: true }).eq('id', b.dataset.approve);
+      const upd = { approved: true, active: true };
+      const sel = body.querySelector('.esc-pre-link[data-pid="' + b.dataset.approve + '"]');
+      const pre = sel && sel.value ? (esc.pre || []).find(x => x.id === sel.value) : null;
+      const prof = escProfile(b.dataset.approve);
+      if(pre){
+        upd.name = pre.name || (prof && prof.name) || '';
+        if(pre.phone) upd.phone = pre.phone;
+        upd.functions = Array.from(new Set([...(prof && prof.functions || []), ...(pre.functions || [])]));
+        if(pre.is_minister) upd.is_minister = true;
+        if(pre.is_leader) upd.is_leader = true;
+      }
+      const { error } = await esc.sb.from('profiles').update(upd).eq('id', b.dataset.approve);
+      if(!error && pre) await esc.sb.from('pre_profiles').update({ linked_profile: b.dataset.approve }).eq('id', pre.id);
+      if(!error && prof) Object.assign(prof, upd);
       if(error){ showAlert('Equipe', error.message); return; }
       const p = escProfile(b.dataset.approve); if(p){ p.approved = true; p.active = true; }
       renderEscala();
