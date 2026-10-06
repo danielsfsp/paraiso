@@ -1692,6 +1692,7 @@
   .ev-song .k{font-family:var(--font-display); font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:8px; padding:1px 8px;}
   .ev-link{background:none; border:none; color:var(--accent); font:inherit; font-size:12px; font-weight:800; cursor:pointer; text-transform:none; letter-spacing:0;}
   .ev-actions{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+  .ev-actions .ev-del{color:#E06B5B; border-color:rgba(224,107,91,.4); margin-left:auto;}
   .ev-fab{position:sticky; bottom:10px; float:right; margin:10px 2px 0 !important; width:auto !important; border-radius:15px !important; padding:12px 18px !important; box-shadow:0 10px 24px rgba(232,163,61,.3);}
   .esc-dress-chips{display:flex; flex-wrap:wrap; gap:6px; margin:-4px 0 10px;}
   .esc-dress-chips button{font:inherit; font-size:12px; font-weight:600; background:var(--surface-2); border:1px solid var(--border); border-radius:99px; padding:5px 10px; color:var(--text); cursor:pointer;}
@@ -1713,6 +1714,82 @@
     .home-cards.no-event{display:none;}
     body.home-on .home-menu-btn{display:none !important;}
   }
+
+  /* ===== Equipe repaginada ===== */
+  .tm-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:4px 0 12px;}
+  .tm-stats{display:flex; gap:8px; flex:1; min-width:0;}
+  .tm-stats div{flex:1; background:var(--surface); border:1px solid var(--border-soft); border-radius:12px; padding:7px 12px; display:flex; flex-direction:column; min-width:64px;}
+  .tm-stats b{font-family:var(--font-display); font-size:20px; color:var(--accent); line-height:1.1;}
+  .tm-stats span{font-size:11.5px; font-weight:600; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .tm-actions{display:flex; gap:8px;}
+  .tm-btn{font:inherit; font-size:12.5px; font-weight:800; padding:8px 13px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer; white-space:nowrap;}
+  .tm-btn:hover{border-color:var(--accent);}
+  .tm-btn.pri{background:var(--accent); border-color:var(--accent); color:#1A1206;}
+  .tm-btn.ok{background:rgba(76,175,106,.15); border-color:rgba(76,175,106,.45); color:#4CAF6A;}
+  .tm-btn.no{background:transparent; color:#E06B5B; border-color:rgba(224,107,91,.4);}
+  .tm-search{margin-bottom:6px;}
+  .tm-sec{display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:var(--text-dim); margin:18px 2px 8px;}
+  .tm-sec small{text-transform:none; letter-spacing:0; font-weight:600; font-size:11.5px; opacity:.8;}
+  .tm-count{background:var(--surface-2); color:var(--text); border-radius:99px; padding:1px 8px; font-size:11px; letter-spacing:0;}
+  .tm-count.warn{background:var(--accent); color:#1A1206;}
+  .tm-link{margin-left:auto; background:none; border:none; color:var(--accent); font:inherit; font-size:12.5px; font-weight:800; cursor:pointer; text-transform:none; letter-spacing:0;}
+  .tm-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:9px; align-items:start;}
+  .tm-card{background:var(--surface); border:1px solid var(--border-soft); border-radius:15px; padding:12px; display:flex; flex-direction:column; gap:9px; min-width:0;}
+  .tm-card.inactive{opacity:.55;}
+  .tm-head{display:flex; align-items:center; gap:10px;}
+  .tm-av{width:40px !important; height:40px !important; border-radius:50%; object-fit:cover; flex-shrink:0; margin-right:0 !important; font-size:13px !important; border-color:var(--surface) !important;}
+  .tm-main{flex:1; min-width:0;}
+  .tm-name{font-size:14px; font-weight:800; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .tm-name small{font-weight:600; color:var(--text-dim); font-size:11px;}
+  .tm-sub{font-size:12px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis;}
+  .tm-badges{display:flex; gap:4px; flex-wrap:wrap; margin-top:3px;}
+  .tm-badges:empty{display:none;}
+  .tm-role{font-size:10.5px; font-weight:800; border-radius:99px; padding:2px 8px; background:var(--accent-soft); color:var(--accent);}
+  .tm-role.admin{background:var(--accent); color:#1A1206;}
+  .tm-role.min{background:rgba(110,139,216,.16); color:#8FA6E6;}
+  .tm-role.off{background:rgba(224,107,91,.15); color:#E06B5B;}
+  .tm-wa{width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--surface-2); text-decoration:none; font-size:14px; flex-shrink:0;}
+  .tm-more{width:32px; height:32px; border-radius:10px; border:1px solid var(--border-soft); background:transparent; color:var(--text-dim); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;}
+  .tm-more:hover, .tm-more.on{border-color:var(--accent); color:var(--accent);}
+  .tm-fns{display:flex; flex-wrap:wrap; gap:5px;}
+  .tm-fn{font-size:11.5px; font-weight:600; background:var(--bg); border:1px solid var(--border-soft); border-radius:99px; padding:3px 8px; color:var(--text);}
+  .tm-fn.none{color:var(--text-dim); font-style:italic;}
+  .tm-perm{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border-soft); padding-top:10px;}
+  .tm-perm[hidden]{display:none;}
+  .tm-switch{display:flex; align-items:center; gap:9px; font-size:13px; font-weight:700; color:var(--text); cursor:pointer;}
+  .tm-switch small{font-weight:500; color:var(--text-dim); font-size:11px; margin-left:auto; text-align:right;}
+  .tm-switch input{position:absolute; opacity:0; pointer-events:none;}
+  .tm-switch i{width:34px; height:20px; border-radius:99px; background:var(--surface-3); position:relative; flex-shrink:0; transition:background .15s;}
+  .tm-switch i::after{content:''; position:absolute; left:3px; top:3px; width:14px; height:14px; border-radius:50%; background:var(--text-dim); transition:transform .15s, background .15s;}
+  .tm-switch input:checked + i{background:var(--accent);}
+  .tm-switch input:checked + i::after{transform:translateX(14px); background:#1A1206;}
+  .tm-pending{display:flex; flex-direction:column; gap:8px;}
+  .tm-pend{flex-direction:row; align-items:center; background:linear-gradient(150deg, var(--accent-soft), var(--surface) 70%); border-color:var(--accent-dim);}
+  .tm-pend .esc-pre-link{margin-top:6px; max-width:220px; padding:5px 8px; font-size:12px;}
+  .tm-pend-btns{display:flex; gap:6px;}
+  .tm-pre{border-style:dashed;}
+  .tm-inv{align-self:flex-start;}
+  .tm-team{cursor:pointer;}
+  .tm-team:hover{border-color:var(--accent-dim);}
+  .tm-team-ico{width:40px; height:40px; border-radius:12px; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:18px;}
+  .tm-stack .hc-av{width:26px; height:26px; font-size:9.5px;}
+  @media (max-width: 600px){
+    .tm-stats div{min-width:0; flex:1; padding:6px 8px;}
+    .tm-actions{width:100%;} .tm-actions .tm-btn{flex:1;}
+    .tm-pend{flex-wrap:wrap;} .tm-pend-btns{width:100%;} .tm-pend-btns .tm-btn{flex:1;}
+    .tm-grid{grid-template-columns:1fr;}
+  }
+
+  /* ===== Compartilhar playlist ===== */
+  .spl-head{margin:4px 0 12px;}
+  .spl-name{font-family:var(--font-display); font-size:19px; font-weight:700; color:var(--text);}
+  .spl-opts{display:flex; flex-direction:column; gap:8px;}
+  .spl-opt{display:grid; grid-template-columns:34px 1fr; grid-template-rows:auto auto; column-gap:10px; text-align:left; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:13px; padding:11px 13px; cursor:pointer; font:inherit; color:var(--text);}
+  .spl-opt:hover{border-color:var(--accent);}
+  .spl-opt span{grid-row:1 / span 2; font-size:22px; display:flex; align-items:center; justify-content:center;}
+  .spl-opt b{font-size:14px;}
+  .spl-opt small{font-size:12px; color:var(--text-dim);}
+  .pl-share-btn{margin-top:6px;}
 </style>
 </head>
 <body>
@@ -2362,7 +2439,7 @@
         <li><strong>Na tela inicial:</strong> use <strong>🔍 Buscar por nome…</strong> para achar uma música na lista. Com Enter, abre a primeira que aparecer (dando preferência a quem bate pelo nome).</li>
         <li><strong>Atalho na tela inicial:</strong> marque as músicas ☑ e toque em <strong>＋ Criar playlist</strong>. Elas entram na ordem em que foram marcadas. Também dá para usar <strong>Adicionar a uma playlist…</strong> para colocar todas numa playlist que já existe.</li>
         <li>Cada playlist guarda a <strong>sua própria versão</strong> da música: mudar tom, letra ou formatação dentro dela não altera a biblioteca nem outras playlists.</li>
-        <li><strong>📤 Compartilhar:</strong> gera um arquivo da playlist para mandar pelo WhatsApp. Quem recebe abre o Paraíso e importa em <strong>⭱</strong>. Se já tiver uma com o mesmo nome, escolhe atualizar ou criar cópia.</li>
+        <li><strong>📤 Compartilhar playlist:</strong> abra a playlist e toque em "📤 Compartilhar playlist". Dá para enviar a lista no WhatsApp (com os tons e um link), copiar o link — quem abrir recebe a playlist pronta no Paraíso, com os mesmos tons — ou gerar um arquivo completo (importar em ⭱).</li>
         <li><strong>Data do culto:</strong> ao criar a playlist (ou no <strong>✎</strong>), escolha a data. Se o nome tiver a data, como "Culto 21/09", ela é preenchida sozinha. A lista mostra primeiro os próximos cultos.</li>
         <li><strong>🗄️ Arquivar:</strong> tira a playlist da lista sem apagar. Ela fica em "Arquivadas" no fim da lista, continua contando nas estatísticas e volta com <strong>↩️</strong>. Depois do culto aparece o atalho para arquivar de uma vez as que já passaram.</li>
       </ul>
@@ -2453,7 +2530,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v225 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v227 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -2558,6 +2635,22 @@
       <button type="button" data-tab="equipe">👥 Equipe</button>
     </div>
     <div class="esc-body" id="escalaBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sharePlOverlay">
+  <div class="modal share-app-modal">
+    <div class="notes-head">
+      <h2>📤 Compartilhar playlist</h2>
+      <button class="icon-btn" id="btnCloseSharePl" type="button" aria-label="Fechar">✕</button>
+    </div>
+    <div class="spl-head"><div class="spl-name" id="sharePlName"></div><div class="hint" id="sharePlMeta"></div></div>
+    <div class="spl-opts">
+      <button type="button" class="spl-opt" id="btnSharePlWa"><span>🟢</span><b>Enviar no WhatsApp</b><small>Lista das músicas com os tons + link para abrir no Paraíso</small></button>
+      <button type="button" class="spl-opt" id="btnSharePlLink"><span>🔗</span><b>Copiar link da playlist</b><small>Quem abrir recebe a playlist pronta no Paraíso dele, com os mesmos tons</small></button>
+      <button type="button" class="spl-opt" id="btnSharePlNative"><span>📲</span><b>Compartilhar em outro app…</b><small>Telegram, e-mail, mensagens…</small></button>
+      <button type="button" class="spl-opt" id="btnSharePlFile"><span>📄</span><b>Arquivo completo</b><small>Leva também as cifras editadas só nesta playlist (importar em ⭱)</small></button>
+    </div>
   </div>
 </div>
 
@@ -4069,6 +4162,93 @@
     if(ok) showImportFeedback('Arquivo da playlist "' + pl.name + '" pronto. Quem receber importa em ⭱ Importar.', true);
   }
 
+  // ===== COMPARTILHAR PLAYLIST (WhatsApp, link, outro app, arquivo) =====
+  // O link leva só a ordem das músicas (título + artista) e o tom de cada uma:
+  // quem abre no Paraíso recebe a playlist montada com o repertório dele.
+  let sharePlId = null;
+  function plShareData(pl){
+    return pl.songIds.map(id => songs.find(x => x.id === id)).filter(Boolean).map(sg => {
+      const sh = getShiftInPlaylist(pl, sg) || 0;
+      const ov = (pl.overrides && pl.overrides[sg.id] && pl.overrides[sg.id].meta) || {};
+      const key = (ov.key || sg.key || '');
+      return { t: ov.title || sg.title, a: ov.artist || sg.artist || '', sh, key: key ? (transposeChord(key, sh) || key) : '' };
+    });
+  }
+  function b64urlEncode(str){ const bytes = new TextEncoder().encode(str); let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function b64urlDecode(str){ const bin = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const bytes = Uint8Array.from(bin, c => c.charCodeAt(0)); return new TextDecoder().decode(bytes); }
+  function plShareLink(pl){
+    const data = { v: 1, n: pl.name, d: pl.date || '', s: plShareData(pl).map(x => [x.t, x.a, x.sh]) };
+    return appShareUrl() + '#pl=' + b64urlEncode(JSON.stringify(data));
+  }
+  function plShareText(pl){
+    const items = plShareData(pl);
+    let t = '*🎵 ' + pl.name + '*\n';
+    if(pl.date) t += '📅 ' + WEEKDAYS_PT[isoToDate(pl.date).getDay()] + ', ' + fmtDateBR(pl.date) + '\n';
+    t += '\n' + items.map((x, i) => (i + 1) + '. ' + x.t + (x.a ? ' — ' + x.a : '') + (x.key ? ' (' + x.key + ')' : '')).join('\n');
+    t += '\n\nAbrir no Paraíso: ' + plShareLink(pl);
+    return t;
+  }
+  function openSharePlaylist(id){
+    const pl = playlists.find(p => p.id === id); if(!pl) return;
+    if(!pl.songIds.length){ showImportFeedback('Adicione músicas à playlist antes de compartilhar.', false); return; }
+    sharePlId = id;
+    document.getElementById('sharePlName').textContent = pl.name;
+    const n = plShareData(pl).length;
+    document.getElementById('sharePlMeta').textContent = (pl.date ? fmtDateBR(pl.date) + ' · ' : '') + n + (n === 1 ? ' música' : ' músicas');
+    document.getElementById('btnSharePlNative').style.display = navigator.share ? '' : 'none';
+    document.getElementById('sharePlOverlay').classList.add('open');
+  }
+  function closeSharePlaylist(){ document.getElementById('sharePlOverlay').classList.remove('open'); }
+  document.getElementById('btnCloseSharePl').addEventListener('click', closeSharePlaylist);
+  document.getElementById('sharePlOverlay').addEventListener('click', (e) => { if(e.target.id === 'sharePlOverlay') closeSharePlaylist(); });
+  document.getElementById('btnSharePlWa').addEventListener('click', () => {
+    const pl = playlists.find(p => p.id === sharePlId); if(!pl) return;
+    window.open('https://wa.me/?text=' + encodeURIComponent(plShareText(pl)), '_blank', 'noopener');
+  });
+  document.getElementById('btnSharePlLink').addEventListener('click', async () => {
+    const pl = playlists.find(p => p.id === sharePlId); if(!pl) return;
+    const link = plShareLink(pl);
+    try{ await navigator.clipboard.writeText(link); showImportFeedback('🔗 Link da playlist copiado.', true); }
+    catch(e){ window.prompt('Copie o link da playlist:', link); }
+  });
+  document.getElementById('btnSharePlNative').addEventListener('click', () => {
+    const pl = playlists.find(p => p.id === sharePlId); if(!pl || !navigator.share) return;
+    navigator.share({ title: pl.name, text: plShareText(pl) }).catch(() => {});
+  });
+  document.getElementById('btnSharePlFile').addEventListener('click', () => { closeSharePlaylist(); if(sharePlId) sharePlaylist(sharePlId); });
+  // Recebendo um link de playlist (#pl=...)
+  function handlePlaylistHash(){
+    const m = (location.hash || '').match(/^#pl=([A-Za-z0-9_-]+)/);
+    if(!m) return;
+    let data = null;
+    try{ data = JSON.parse(b64urlDecode(m[1])); }catch(e){ data = null; }
+    history.replaceState(null, '', location.pathname + location.search);
+    if(!data || !Array.isArray(data.s)) return;
+    const norm = x => foldForSearch(String(x || '')).replace(/\s+/g, ' ').trim();
+    const found = [], missing = [];
+    data.s.forEach(([t, a, sh]) => {
+      const sg = songs.find(x => norm(x.title) === norm(t) && (!a || norm(x.artist) === norm(a))) || songs.find(x => norm(x.title) === norm(t));
+      if(sg && !found.some(f => f.sg.id === sg.id)) found.push({ sg, sh: Number(sh) || 0 }); else if(!sg) missing.push(t);
+    });
+    const ask = () => {
+      if(document.body.classList.contains('gate-on')){ setTimeout(ask, 600); return; }
+      if(!found.length){ showAlert('Playlist recebida', 'Nenhuma música da playlist "' + (data.n || '') + '" foi encontrada no seu repertório.'); return; }
+      showConfirm('Playlist recebida 🎵', 'Adicionar "' + (data.n || 'Playlist') + '" (' + found.length + (found.length === 1 ? ' música' : ' músicas') + ') às suas playlists?' + (missing.length ? ' Não encontrei no repertório: ' + missing.join(', ') + '.' : ''), () => {
+        const overrides = {};
+        found.forEach(f => { if(f.sh) overrides[f.sg.id] = { shift: f.sh }; });
+        const pl = { id: newPlaylistId(), name: uniquePlaylistName(data.n || 'Playlist'), songIds: found.map(f => f.sg.id), date: data.d || '', overrides };
+        playlists.push(pl); savePlaylists();
+        activeView = 'playlists'; openPlaylistId = pl.id; navSel = 'playlists';
+        renderSidebar();
+        if(window.innerWidth <= 820) sidebar.classList.add('open');
+        showImportFeedback('✅ Playlist "' + pl.name + '" adicionada.', true);
+      }, { okLabel: 'Adicionar', okNeutral: true });
+    };
+    setTimeout(ask, 800);
+  }
+  window.addEventListener('hashchange', handlePlaylistHash);
+  setTimeout(handlePlaylistHash, 300);
+
   // (Antigo) compartilhamento pelo banco do artefato — só existe dentro do
   // Claude. Mantido pra quem já tinha playlists publicadas lá.
   async function sharePlaylistToClaudeDb(playlistId){
@@ -4555,7 +4735,7 @@
       bt.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
       actions.appendChild(bt);
     };
-    mk('📤', 'Compartilhar playlist (gera um arquivo para enviar)', () => sharePlaylist(pl.id));
+    mk('📤', 'Compartilhar playlist', () => openSharePlaylist(pl.id));
     mk('✎', 'Editar nome e data', () => openPlaylistModal(pl.id));
     if(pl.archived) mk('↩️', 'Desarquivar (voltar para a lista)', () => setPlaylistArchived(pl, false));
     else mk('🗄️', 'Arquivar (sai da lista, mas continua contando nas estatísticas)', () => setPlaylistArchived(pl, true));
@@ -4687,6 +4867,13 @@
       setTimeout(() => { if(addMusicBtn.parentNode){ addMusicBtn.parentNode.insertBefore(spRow, addMusicBtn.nextSibling); if(spNote) spRow.parentNode.insertBefore(spNote, spRow.nextSibling); } }, 0);
     }
     wrap.appendChild(addMusicBtn);
+    if(pl.songIds.length){
+      const shBtn = document.createElement('button');
+      shBtn.type = 'button'; shBtn.className = 'add-music-btn pl-share-btn';
+      shBtn.textContent = '📤 Compartilhar playlist';
+      shBtn.addEventListener('click', () => openSharePlaylist(pl.id));
+      wrap.appendChild(shBtn);
+    }
 
     if(pl.songIds.length === 0){
       const empty = document.createElement('div');
@@ -9257,7 +9444,7 @@
       if(e.dress_code) html += '<div class="ev-sec">Dress code</div><div class="ev-chips"><span>👔 ' + escH(e.dress_code) + '</span></div>';
       if(e.notes) html += '<div class="ev-sec">Observações</div><div class="esc-notes">' + escH(e.notes) + '</div>';
       html += '<div class="esc-actions ev-actions"><button type="button" class="btn-secondary" data-wa="' + e.id + '">🟢 Enviar no WhatsApp</button>';
-      if(escCanSchedule()) html += '<button type="button" class="btn-secondary" data-remind="' + e.id + '">🔔 Cobrar pendentes</button><button type="button" class="btn-secondary" data-edit="' + e.id + '">✎ Editar</button>';
+      if(escCanSchedule()) html += '<button type="button" class="btn-secondary" data-remind="' + e.id + '">🔔 Cobrar pendentes</button><button type="button" class="btn-secondary" data-edit="' + e.id + '">✎ Editar</button><button type="button" class="btn-secondary ev-del" data-del-ev="' + e.id + '">🗑 Excluir</button>';
       html += '</div></div></div>';
     });
     if(escCanSchedule() && !mineOnly) html += '<button class="btn-primary esc-new ev-fab" id="escNewEvent" type="button">＋ Nova escala</button>';
@@ -9273,6 +9460,15 @@
       escRespond(b.dataset.decline, 'recusado', reason);
     });
     body.querySelectorAll('[data-wa]').forEach(b => b.onclick = () => escShareEvent(b.dataset.wa));
+    body.querySelectorAll('[data-del-ev]').forEach(b => b.onclick = () => {
+      const ev = esc.events.find(x => x.id === b.dataset.delEv); if(!ev) return;
+      showConfirm('Excluir escala', 'Excluir a escala "' + (ev.title || 'Culto') + '" de ' + escDateLabel(ev.date) + ' para todos? Isso não pode ser desfeito.', async () => {
+        const { error } = await esc.sb.from('events').delete().eq('id', ev.id);
+        if(error){ showAlert('Escala', 'Não consegui excluir: ' + error.message); return; }
+        esc.openEventId = null; await escLoadAll();
+        showImportFeedback('🗑 Escala excluída.', true);
+      }, { okLabel: 'Excluir' });
+    });
     body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
     body.querySelectorAll('.ev-mine.answered').forEach(m => m.onclick = (ev) => { if(ev.target.closest('button')) return; m.classList.remove('answered'); });
     body.querySelectorAll('[data-remind]').forEach(b => b.onclick = () => escRemind(b.dataset.remind));
@@ -9502,59 +9698,58 @@
     // Recusado = não aprovado e inativo: sai da fila de aprovação.
     const pending = esc.profiles.filter(p => !p.approved && p.active !== false);
     const rejected = esc.profiles.filter(p => !p.approved && p.active === false);
+    const approvedList = esc.profiles.filter(p => p.approved).sort((a, b) => (escIsAdmin(b) - escIsAdmin(a)) || ((b.active !== false) - (a.active !== false)) || (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+    const open = leader ? escPreOpen() : [];
+    const av = p => p && p.photo_url ? '<img class="tm-av" src="' + escH(p.photo_url) + '" alt="" referrerpolicy="no-referrer">' : homeAvatar(p, null).replace('class="hc-av"', 'class="hc-av tm-av"');
+    const fnChips = fns => (fns && fns.length) ? fns.map(f => '<span class="tm-fn">' + escFnIcon(f) + ' ' + escH(f) + '</span>').join('') : '<span class="tm-fn none">sem funções</span>';
+    const roleBadge = p => escIsAdmin(p) ? '<span class="tm-role admin">Administrador</span>' : (p.is_leader ? '<span class="tm-role">Líder</span>' : '') + (p.is_minister ? '<span class="tm-role min">Ministro</span>' : '');
     let html = '';
+    // Resumo + ações
+    html += '<div class="tm-top"><div class="tm-stats"><div><b>' + approvedList.filter(p => p.active !== false).length + '</b><span>pessoas</span></div>' +
+      (leader ? '<div><b>' + pending.length + '</b><span>novos</span></div><div><b>' + open.length + '</b><span>pré-cadastro</span></div>' : '') +
+      '<div><b>' + esc.teams.length + '</b><span>equipes</span></div></div>' +
+      '<div class="tm-actions">' + (leader && !esc.preMissing ? '<button type="button" class="tm-btn pri" id="escNewPre">＋ Pré-cadastrar</button>' : '') + '<button type="button" class="tm-btn" id="escInvite">🟢 Convidar</button></div></div>';
+    html += '<input type="search" class="esc-input tm-search" id="tmSearch" placeholder="🔍 Buscar pessoa ou função…" autocomplete="off">';
     if(leader && pending.length){
-      html += '<div class="esc-pending"><div class="esc-sub">⏳ Aguardando aprovação (' + pending.length + ')</div>' + pending.map(p =>
-        '<div class="esc-pend-row">' + (p.photo_url ? '<img src="' + escH(p.photo_url) + '" alt="">' : '<span class="esc-avatar">' + escH((p.name || '?')[0]) + '</span>') +
-        '<div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + escH(p.email || '') + (p.functions && p.functions.length ? ' · ' + escH(p.functions.join(', ')) : '') + '</span></div>' +
-        (escPreOpen().length ? '<select class="esc-input esc-pre-link" data-pid="' + p.id + '" title="Se essa pessoa já tem pré-cadastro, escolha aqui para usar os dados dele"><option value="">sem pré-cadastro</option>' + escPreOpen().map(x => '<option value="' + x.id + '"' + (x.email && p.email && x.email.toLowerCase() === p.email.toLowerCase() ? ' selected' : '') + '>= ' + escH(x.name) + '</option>').join('') + '</select>' : '') +
-        '<button type="button" class="esc-ok" data-approve="' + p.id + '">✅ Aprovar</button><button type="button" class="esc-no" data-reject="' + p.id + '">✕</button></div>').join('') + '</div>';
+      html += '<div class="tm-sec">Aguardando aprovação <span class="tm-count warn">' + pending.length + '</span></div><div class="tm-pending">' + pending.map(p =>
+        '<div class="tm-card tm-pend" data-search="' + escH(foldForSearch((p.name || '') + ' ' + (p.email || ''))) + '">' + av(p) + '<div class="tm-main"><div class="tm-name">' + escH(p.name || p.email) + '</div><div class="tm-sub">' + escH(p.email || '') + '</div>' +
+        (escPreOpen().length ? '<select class="esc-input esc-pre-link" data-pid="' + p.id + '" title="Se essa pessoa já tem pré-cadastro, escolha aqui para usar os dados dele"><option value="">sem pré-cadastro</option>' + escPreOpen().map(x => '<option value="' + x.id + '"' + (x.email && p.email && x.email.toLowerCase() === p.email.toLowerCase() ? ' selected' : '') + '>= ' + escH(x.name) + '</option>').join('') + '</select>' : '') + '</div>' +
+        '<div class="tm-pend-btns"><button type="button" class="tm-btn ok" data-approve="' + p.id + '">✓ Aprovar</button><button type="button" class="tm-btn no" data-reject="' + p.id + '">Recusar</button></div></div>').join('') + '</div>';
     }
-    if(leader){
-      const open = escPreOpen();
-      html += '<div class="esc-sub">📝 Pré-cadastros (' + open.length + ')</div>';
-      if(esc.preMissing) html += '<div class="hint">⚠ Falta rodar no Supabase o arquivo <b>paraiso_supabase_v5_precadastro.sql</b> para usar o pré-cadastro.</div>';
-      else {
-        html += '<div class="hint">Cadastre a pessoa antes: quando ela entrar com o e-mail Google informado, já entra aprovada e com o perfil preenchido.</div>';
-        if(open.length) html += '<ul class="esc-people esc-pre-list">' + open.map(x =>
-          '<li><span class="esc-avatar">' + escH((x.name || '?')[0]) + '</span><div class="esc-person"><strong>' + escH(x.name) + '</strong><span>' +
-          ((x.functions || []).map(f => escFnIcon(f) + ' ' + escH(f)).join(' · ') || '<em>sem funções</em>') + '</span><span class="esc-pre-meta">' +
-          (x.email ? '✉️ ' + escH(x.email) : '<em>sem e-mail — vincule ao aprovar</em>') + (x.phone ? ' · 📱 ' + escH(x.phone) : '') + '</span></div>' +
-          '<div class="esc-roles">' + (x.phone ? '<button type="button" class="esc-link" data-pre-inv="' + x.id + '">🟢 Convidar</button>' : '') + '<button type="button" class="esc-link" data-pre-edit="' + x.id + '">✎</button></div></li>').join('') + '</ul>';
-        html += '<button type="button" class="btn-secondary" id="escNewPre">＋ Pré-cadastrar pessoa</button>';
-      }
-    }
-    const approvedList = esc.profiles.filter(p => p.approved);
-    html += '<div class="esc-sub">👥 Pessoas (' + approvedList.length + ')</div>' +
-      '<div class="hint">Cada um entra com a própria conta Google e completa o perfil. ' + (leader ? 'Como líder, você aprova novos cadastros e marca quem é <b>Líder</b> ou <b>Ministro</b> (podem montar escalas). Desmarcar <b>Ativo</b> tira o acesso.' : '') + '</div><ul class="esc-people">';
+    html += '<div class="tm-sec">Pessoas <span class="tm-count">' + approvedList.length + '</span></div><div class="tm-grid">';
     approvedList.forEach(p => {
-      html += '<li class="' + (p.active === false ? 'inactive' : '') + '">' +
-        (p.photo_url ? '<img src="' + escH(p.photo_url) + '" alt="">' : '<span class="esc-avatar">' + escH((p.name || '?')[0]) + '</span>') +
-        '<div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + (p.functions.map(f => escFnIcon(f) + ' ' + escH(f)).join(' · ') || '<em>sem funções</em>') + '</span>' +
-        (p.phone ? '<a class="esc-wa" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '">🟢 ' + escH(p.phone) + '</a>' : '') + '</div>';
-      if(leader && p.id !== esc.user.id && !escIsAdmin(p)){
-        html += '<div class="esc-roles"><label><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '> Líder</label>' +
-          '<label><input type="checkbox" data-role="is_minister" data-pid="' + p.id + '"' + (p.is_minister ? ' checked' : '') + '> Ministro</label>' +
-          '<label><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '> Ativo</label></div>';
-      } else {
-        html += '<div class="esc-roles">' + (escIsAdmin(p) ? '<span class="esc-badge esc-badge-admin">Administrador</span>' : p.is_leader ? '<span class="esc-badge">Líder</span>' : '') + (p.is_minister ? '<span class="esc-badge">Ministro</span>' : '') + '</div>';
-      }
-      html += '</li>';
+      const canManage = leader && p.id !== esc.user.id && !escIsAdmin(p);
+      html += '<div class="tm-card' + (p.active === false ? ' inactive' : '') + '" data-search="' + escH(foldForSearch((p.name || '') + ' ' + (p.functions || []).join(' '))) + '">' +
+        '<div class="tm-head">' + av(p) + '<div class="tm-main"><div class="tm-name">' + escH(p.name || p.email) + (p.id === esc.user.id ? ' <small>(você)</small>' : '') + '</div><div class="tm-badges">' + roleBadge(p) + (p.active === false ? '<span class="tm-role off">Inativo</span>' : '') + '</div></div>' +
+        (p.phone ? '<a class="tm-wa" title="' + escH(p.phone) + '" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '">🟢</a>' : '') +
+        (canManage ? '<button type="button" class="tm-more" data-tm-toggle title="Permissões">⚙</button>' : '') + '</div>' +
+        '<div class="tm-fns">' + fnChips(p.functions) + '</div>' +
+        (canManage ? '<div class="tm-perm" hidden>' +
+          '<label class="tm-switch"><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '><i></i>Líder <small>aprova pessoas, monta escalas e edita o repertório</small></label>' +
+          '<label class="tm-switch"><input type="checkbox" data-role="is_minister" data-pid="' + p.id + '"' + (p.is_minister ? ' checked' : '') + '><i></i>Ministro <small>pode montar escalas</small></label>' +
+          '<label class="tm-switch"><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '><i></i>Ativo <small>desligar tira o acesso ao app</small></label></div>' : '') +
+        '</div>';
     });
-    html += '</ul>';
+    html += '</div>';
+    if(leader){
+      if(esc.preMissing) html += '<div class="hint">⚠ Falta rodar no Supabase o arquivo <b>paraiso_supabase_v5_precadastro.sql</b> para usar o pré-cadastro.</div>';
+      else if(open.length){
+        html += '<div class="tm-sec">Pré-cadastros <span class="tm-count">' + open.length + '</span><small>ainda não entraram no app</small></div><div class="tm-grid">' + open.map(x =>
+          '<div class="tm-card tm-pre" data-search="' + escH(foldForSearch((x.name || '') + ' ' + (x.functions || []).join(' '))) + '"><div class="tm-head">' + homeAvatar(x, null).replace('class="hc-av"', 'class="hc-av tm-av"') +
+          '<div class="tm-main"><div class="tm-name">' + escH(x.name) + '</div><div class="tm-sub">' + (x.email ? '✉️ ' + escH(x.email) : 'sem e-mail — vincule ao aprovar') + '</div></div>' +
+          '<button type="button" class="tm-more" data-pre-edit="' + x.id + '" title="Editar">✎</button></div><div class="tm-fns">' + fnChips(x.functions) + '</div>' +
+          (x.phone ? '<button type="button" class="tm-btn ok tm-inv" data-pre-inv="' + x.id + '">🟢 Mandar convite</button>' : '') + '</div>').join('') + '</div>';
+      }
+    }
+    html += '<div class="tm-sec">Equipes <span class="tm-count">' + esc.teams.length + '</span>' + (leader ? '<button type="button" class="tm-link" id="escNewTeam">＋ Nova equipe</button>' : '') + '</div>';
+    if(!esc.teams.length) html += '<div class="hint">Nenhuma equipe ainda.' + (leader ? ' Equipes ajudam a preencher a escala com um toque.' : '') + '</div>';
+    html += '<div class="tm-grid">' + esc.teams.map(t => '<div class="tm-card tm-team"' + (leader ? ' data-team-edit="' + t.id + '"' : '') + '><div class="tm-head"><div class="tm-team-ico">🧩</div><div class="tm-main"><div class="tm-name">' + escH(t.name) + '</div><div class="tm-sub">' + t.member_ids.length + (t.member_ids.length === 1 ? ' pessoa' : ' pessoas') + '</div></div>' + (leader ? '<span class="tm-more">✎</span>' : '') + '</div>' +
+      '<div class="hc-stack tm-stack">' + t.member_ids.slice(0, 10).map(id => homeAvatar(escProfile(id), null)).join('') + '</div><div class="tm-sub">' + t.member_ids.map(id => escH(escFirst(id))).join(', ') + '</div></div>').join('') + '</div>';
     if(leader && rejected.length){
       html += '<details class="esc-rejected"><summary>🚫 Cadastros recusados (' + rejected.length + ')</summary>' + rejected.map(p =>
         '<div class="esc-pend-row"><div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + escH(p.email || '') + '</span></div>' +
         '<button type="button" class="esc-link" data-approve="' + p.id + '">Aprovar mesmo assim</button></div>').join('') + '</details>';
     }
-    html += '<div class="esc-sub">🧩 Equipes</div>';
-    if(!esc.teams.length) html += '<div class="hint">Nenhuma equipe ainda.' + (leader ? ' Equipes ajudam a preencher a escala com um toque.' : '') + '</div>';
-    esc.teams.forEach(t => {
-      html += '<div class="esc-team"><strong>' + escH(t.name) + '</strong><span>' + t.member_ids.map(id => escH(escFirst(id))).join(', ') + '</span>' +
-        (leader ? '<button type="button" class="esc-link" data-team-edit="' + t.id + '">✎</button>' : '') + '</div>';
-    });
-    if(leader) html += '<button type="button" class="btn-secondary" id="escNewTeam">＋ Nova equipe</button>';
-    html += '<div class="esc-invite"><div class="esc-sub">📨 Convidar</div><button type="button" class="btn-secondary" id="escInvite">🟢 Mandar convite no WhatsApp</button></div>';
     body.innerHTML = html;
     const np = document.getElementById('escNewPre'); if(np) np.onclick = () => escEditPre(null);
     body.querySelectorAll('[data-pre-edit]').forEach(b => b.onclick = () => escEditPre(b.dataset.preEdit));
@@ -9597,6 +9792,9 @@
       const p = escProfile(cb.dataset.pid); if(p) p[cb.dataset.role] = cb.checked;
     });
     const nt = document.getElementById('escNewTeam'); if(nt) nt.onclick = () => escEditTeam(null);
+    body.querySelectorAll('[data-tm-toggle]').forEach(b => b.onclick = () => { const pm = b.closest('.tm-card').querySelector('.tm-perm'); if(pm){ pm.hidden = !pm.hidden; b.classList.toggle('on', !pm.hidden); } });
+    const tms = document.getElementById('tmSearch');
+    if(tms) tms.oninput = () => { const q = foldForSearch(tms.value); body.querySelectorAll('.tm-card[data-search]').forEach(c => { c.style.display = !q || c.dataset.search.includes(q) ? '' : 'none'; }); };
     body.querySelectorAll('[data-team-edit]').forEach(b => b.onclick = () => escEditTeam(b.dataset.teamEdit));
     document.getElementById('escInvite').onclick = () => {
       const text = 'Oi! 🎶 Estamos usando o *Paraíso* para as escalas do louvor. Entre com sua conta Google, complete seu perfil (funções e celular) e marque os dias em que não pode:\n' + escAppLink();
