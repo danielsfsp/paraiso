@@ -1,1 +1,1 @@
-v210 · 06/10/2026 · sem controle de largura
+v211 · 06/10/2026 · colunas usam a altura toda

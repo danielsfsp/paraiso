@@ -967,7 +967,7 @@
     border-radius:5px; background:none; cursor:pointer;
   }
 
-  .cifra-viewport{flex:1; overflow-y:auto; overflow-x:auto; padding:32px 32px 70px; scroll-behavior:auto; background:var(--cifra-bg, transparent); transition:background-color .2s var(--ease);}
+  .cifra-viewport{flex:1; overflow-y:auto; overflow-x:auto; scrollbar-width:thin; padding:32px 32px 70px; scroll-behavior:auto; background:var(--cifra-bg, transparent); transition:background-color .2s var(--ease);}
   .cifra-body{
     font-family:var(--font-cifra);
     font-size:var(--cifra-size);
@@ -1004,6 +1004,8 @@
      no fim de alguma coluna em troca de nunca reembaralhar o que já foi
      escrito antes do ponto da edição. */
   #cifraBodyEditCols.cifra-body{column-fill:auto;}
+  /* Em colunas, o espaço de baixo vira altura de coluna (menos colunas, menos rolagem lateral). */
+  .cifra-viewport.multi-cols{padding-bottom:22px;}
   /* LEITURA com colunas de largura ADAPTATIVA: depois que o navegador
      distribui as linhas nas colunas, cada coluna vira um bloco próprio
      com a largura exata da sua linha mais longa (ver adaptReadingColumns). */
@@ -2177,7 +2179,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v210 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v211 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4734,6 +4736,7 @@
     // cria quantas colunas forem necessárias, mesmo além do que cabe na
     // tela (dá pra rolar pra direita pra ver o resto, do jeito que a
     // rolagem horizontal já funcionava antes).
+    cifraViewport.classList.toggle('multi-cols', !singleColumn);
     const colWidthSlider = document.getElementById('colWidthSlider');
     colWidthSlider.value = colWidth;
     if(singleColumn){
@@ -4760,6 +4763,9 @@
     requestAnimationFrame(() => {
       const lines = cifraBody.querySelectorAll('.cifra-line');
       lines.forEach(el => { el.style.fontSize = ''; el.classList.remove('line-overflow'); });
+      // Colunas adaptativas primeiro: cada coluna cresce até a sua linha mais
+      // longa, então normalmente nenhuma linha precisa encolher.
+      if(!singleColumn) adaptReadingColumns();
       lines.forEach(el => {
         if(el.scrollWidth <= el.clientWidth + 1 || !el.clientWidth) return;
         const fs = parseFloat(getComputedStyle(el).fontSize) || 16;
@@ -4767,7 +4773,6 @@
         el.style.fontSize = nf.toFixed(2) + 'px';
         if(el.scrollWidth > el.clientWidth + 1) el.classList.add('line-overflow');
       });
-      if(!singleColumn) adaptReadingColumns();
     });
 
     if(resumoActive) renderResumo();
