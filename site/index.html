@@ -2105,6 +2105,7 @@
         <button data-view="favorites" class="side-nav-item"><span class="sn-ico">★</span><span class="sn-lab">Favoritas</span><span class="sn-count" id="navCountFav"></span></button>
       </div>
       <button type="button" class="esc-open-btn side-nav-item" id="btnEscala"><span class="sn-ico">📅</span><span class="sn-lab">Escala</span><span class="sn-count sn-alert" id="navCountEsc"></span></button>
+      <button type="button" class="esc-open-btn side-nav-item" id="btnEquipe"><span class="sn-ico">👥</span><span class="sn-lab">Equipe</span><span class="sn-count sn-alert" id="navCountEq"></span></button>
     </nav>
     <div class="side-section-title" id="sideSectionTitle">Playlists</div>
     <div class="storage-banner" id="storageBanner" style="display:none;">
@@ -2820,7 +2821,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v249 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v250 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -2922,7 +2923,6 @@
     <div class="esc-tabs" id="escalaTabs" style="display:none;">
       <button type="button" data-tab="escalas">📅 Escalas</button>
       <button type="button" data-tab="minhas">🙋 Minhas</button>
-      <button type="button" data-tab="equipe">👥 Equipe</button>
     </div>
     <div class="esc-body" id="escalaBody"></div>
   </div>
@@ -3991,6 +3991,8 @@
       try{ if(esc.user){ const t = todayIso(); n = esc.assignments.filter(a => a.profile_id === esc.user.id && a.status === 'pendente' && ((esc.events.find(e => e.id === a.event_id) || {}).date || '') >= t).length; } }catch(e){}
       ec.textContent = n || ''; ec.title = n ? n + ' escala(s) esperando sua resposta' : '';
       const tb = document.getElementById('tbEscBadge'); if(tb) tb.textContent = n || '';
+      const eq = document.getElementById('navCountEq');
+      if(eq){ let k = 0; try{ if(esc.me && esc.me.is_leader) k = esc.profiles.filter(p => !p.approved && p.active !== false).length; }catch(e){} eq.textContent = k || ''; eq.title = k ? k + ' cadastro(s) aguardando aprovação' : ''; }
     }
     const tt = document.getElementById('sideSectionTitle');
     if(tt) tt.textContent = sidebarTab === 'favorites' ? 'Favoritas' : 'Playlists';
@@ -9690,8 +9692,9 @@
     userEl.innerHTML = '';
     if(me && !me.functions.length && esc.tab !== 'perfil' && !esc._askedProfile){ esc._askedProfile = true; esc.tab = 'perfil'; }
     const isProfile = esc.tab === 'perfil' && !esc.editing;
-    document.getElementById('escalaTitle').textContent = isProfile ? '👤 Meu perfil' : '📅 Escala';
-    tabsEl.style.display = isProfile ? 'none' : '';
+    const isTeam = esc.tab === 'equipe';
+    document.getElementById('escalaTitle').textContent = isProfile ? '👤 Meu perfil' : isTeam ? '👥 Equipe' : '📅 Escala';
+    tabsEl.style.display = (isProfile || (isTeam && !esc.editing)) ? 'none' : '';
     tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === esc.tab));
     if(esc.editing){ renderEscEditor(body); return; }
     if(esc.tab === 'escalas') renderEscEvents(body, false);
@@ -10375,7 +10378,8 @@
     gateCheck(false);
   }
 
-  document.getElementById('btnEscala').addEventListener('click', () => { if(esc.tab === 'perfil') esc.tab = 'escalas'; openEscala(); });
+  document.getElementById('btnEscala').addEventListener('click', () => { if(esc.tab === 'perfil' || esc.tab === 'equipe') esc.tab = 'escalas'; openEscala(); });
+  document.getElementById('btnEquipe').addEventListener('click', () => { esc.tab = 'equipe'; esc.editing = null; openEscala(); if(window.innerWidth <= 820) sidebar.classList.remove('open'); });
   document.getElementById('btnCloseEscala').addEventListener('click', () => escGuard(closeEscala));
   document.getElementById('escalaTabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => escGuard(() => { esc.tab = b.dataset.tab; renderEscala(); })));
   escOverlay().addEventListener('click', (e) => { if(e.target === escOverlay()) escGuard(closeEscala); });
@@ -11979,7 +11983,7 @@
   document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.addEventListener('click', () => {
     const t = b.dataset.tb;
     if(t === 'home'){ guardIfDirty(() => showHomeView()); sidebar.classList.remove('open'); return; }
-    if(t === 'escala'){ if(esc.tab === 'perfil') esc.tab = 'escalas'; openEscala(); return; }
+    if(t === 'escala'){ if(esc.tab === 'perfil' || esc.tab === 'equipe') esc.tab = 'escalas'; openEscala(); return; }
     if(t === 'playlists'){ guardIfDirty(() => { showHomeView(); activeView = 'playlists'; navSel = 'playlists'; renderSidebar(); renderHomeView(); sidebar.classList.remove('open'); }); return; }
     if(t === 'favorites'){ guardIfDirty(() => { activeView = t; openPlaylistId = null; navSel = t; renderSidebar(); sidebar.classList.add('open'); }); return; }
     if(t === 'mais'){ sidebar.classList.add('open'); setTimeout(() => { const m = document.getElementById('moreMenu'); m.hidden = false; document.getElementById('btnMore').setAttribute('aria-expanded', 'true'); }, 50); }
