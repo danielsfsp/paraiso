@@ -1959,6 +1959,20 @@
     .m-quick-row .step-btn{min-width:32px; height:32px;}
     #controlsBar > #btnMetroChip{display:inline-flex !important;}
   }
+
+  /* ===== v238: quem vai tocar (playlist ↔ escala) ===== */
+  .plp-esc{margin-top:14px; border:1px solid var(--border-soft); background:var(--surface); border-radius:12px; padding:12px 14px;}
+  .plp-esc-head{display:flex; flex-direction:column; gap:2px; margin-bottom:8px;}
+  .plp-esc-head span{font-weight:700; font-size:14px;}
+  .plp-esc-head small{color:var(--text-dim); font-size:12px;}
+  .plp-esc-p{display:flex; align-items:center; gap:10px; padding:5px 0; border-top:1px solid var(--border-soft); font-size:13px;}
+  .plp-esc-p:first-of-type{border-top:none;}
+  .plp-esc-p .nm{flex:1; min-width:0; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .plp-esc-p .fn{color:var(--text-dim); font-size:12px; white-space:nowrap;}
+  .plp-esc-p b{width:20px; text-align:center;} .plp-esc-p b.ok{color:#5BBF7A;} .plp-esc-p b.no{color:var(--danger);} .plp-esc-p b.pe{color:var(--text-dim);}
+  .plp-esc-av{display:inline-flex;} .plp-esc-av > *{width:28px !important; height:28px !important; font-size:11px !important; margin:0 !important;}
+  .plp-esc-empty{color:var(--text-dim); font-size:13px; padding:4px 0;}
+  .plp-esc-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
 </style>
 </head>
 <body>
@@ -2703,7 +2717,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v237 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v238 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3387,7 +3401,7 @@
   function toggleTheme(){ applyTheme(theme === 'light' ? 'dark' : 'light'); }
 
   async function saveSongs(){ lsSet('songs', JSON.stringify(songs)); if(typeof libAfterSave === 'function') libAfterSave(); }
-  async function savePlaylists(){ lsSet('playlists', JSON.stringify(playlists)); }
+  async function savePlaylists(){ lsSet('playlists', JSON.stringify(playlists)); try{ schedulePushEventPlaylists(); }catch(e){} }
   async function savePrefs(){ lsSet('prefs', JSON.stringify({ fontSize, chordColor, librarySortBy, lyricColor, cifraBgColor })); }
 
   async function loadAll(){
@@ -3768,7 +3782,7 @@
         const st = mine.every(a => a.status === 'confirmado') ? 'ok' : mine.some(a => a.status === 'recusado') ? 'no' : 'pe';
         pill = '<span class="hc-pill ' + st + '">' + (st === 'ok' ? '✓ Confirmado' : st === 'no' ? '✕ Não posso' : 'Responder') + '</span>';
       }
-      const plMatch = ev.playlist && ev.playlist.name ? playlists.find(p => p.name === ev.playlist.name && !p.archived) : null;
+      const plMatch = plForEvent(ev);
       html += '<div class="hc-card hc-hero"><div class="hc-eyebrow">Próximo culto · ' + when + '</div>' +
         '<div class="hc-row"><div class="hc-date"><div class="w">' + WEEKDAYS_PT[dd.getDay()].toUpperCase() + '</div><div class="d">' + String(dd.getDate()).padStart(2, '0') + '</div><div class="m">' + ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][dd.getMonth()] + '</div></div>' +
         '<div class="hc-main"><div class="hc-title">' + escapeHtml(ev.title || 'Culto') + '</div><div class="hc-sub">' + [ev.time ? escapeHtml(ev.time) : '', minister ? '🎤 ' + escapeHtml(minister) : '', mine.length ? 'você: ' + mine.map(a => escFnIcon(a.function) + ' ' + escapeHtml(a.function)).join(', ') : ''].filter(Boolean).join(' · ') + '</div></div>' + pill + '</div>' +
@@ -3828,6 +3842,7 @@
         (items.length ? '<button type="button" class="plp-btn" data-plp-share><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' : '') +
         (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp><i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar playlist') + '</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button></div></div>';
+      try{ html += plEscalaCardHtml(sel); }catch(e){ console.error(e); }
       if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
       else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
         '<span class="plp-ctl"><button type="button" data-mv="-1" data-ri="' + ri + '" title="Subir"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-mv="1" data-ri="' + ri + '" title="Descer"' + (i === items.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-rm="' + sg.id + '" title="Tirar da playlist">✕</button></span></div>'; }).join('') + '</div>';
@@ -3844,6 +3859,7 @@
       const sh = q('[data-plp-share]'); if(sh) sh.onclick = () => openSharePlaylist(sel.id);
       const sp = q('[data-plp-sp]'); if(sp) sp.onclick = () => spSyncPlaylist(sel, sp);
       const ed = q('[data-plp-edit]'); if(ed) ed.onclick = () => openPlaylistModal(sel.id);
+      try{ bindPlEscalaCard(box, sel); }catch(e){}
       box.querySelectorAll('.plp-ctl [data-mv]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); movePlaylistSong(sel.id, +b.dataset.ri, +b.dataset.mv); renderPlaylistsPage(); });
       box.querySelectorAll('.plp-ctl [data-rm]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const sg = songs.find(x => x.id === b.dataset.rm); showConfirm('Tirar da playlist', 'Tirar "' + (sg ? sg.title : '') + '" da playlist "' + sel.name + '"? A música continua no repertório.', () => { removeSongFromPlaylist(sel.id, b.dataset.rm); renderSidebar(); renderPlaylistsPage(); }, { okLabel: 'Tirar' }); });
       box.querySelectorAll('[data-plp-song]').forEach(b => b.onclick = () => guardIfDirty(() => { showingHome = false; activeView = 'playlists'; openPlaylistId = sel.id; selectSong(b.dataset.plpSong, sel.id); }));
@@ -9491,6 +9507,7 @@
     }
     esc.me = esc.profiles.find(p => p.id === esc.user.id) || null;
     esc.loading = false;
+    try{ syncEventPlaylists(); }catch(e){ console.error(e); }
     try{ if(showingHome) renderHomeView(); else syncNavActive(); }catch(e){}
     renderEscala();
   }
@@ -9638,7 +9655,7 @@
       });
       html += '</div>';
       if(e.playlist && e.playlist.songs && e.playlist.songs.length){
-        const plMatch = playlists.find(pl => pl.name === e.playlist.name && !pl.archived);
+        const plMatch = plForEvent(e);
         html += '<div class="ev-sec">Repertório' + (plMatch ? ' <button type="button" class="ev-link" data-openpl="' + plMatch.id + '">▶ Abrir playlist</button>' : '') + '</div><div class="ev-songs">' +
           e.playlist.songs.map((sg, i) => '<div class="ev-song"><span class="n">' + (i + 1) + '</span><span class="t">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' + (sg.key ? '<span class="k">' + escH(sg.key) + '</span>' : '') + '</div>').join('') + '</div>';
       }
@@ -9757,7 +9774,9 @@
       () => { esc.editing = null; action(); }, { okLabel: 'Descartar alterações', cancelLabel: 'Continuar editando' });
   }
   function escPlaylistSnapshot(pl){
+    const ov = {}; (pl.songIds || []).forEach(id => { if(pl.overrides && pl.overrides[id]) ov[id] = pl.overrides[id]; });
     return {
+      id: pl.id, songIds: (pl.songIds || []).slice(), overrides: ov, date: pl.date || '', minister: pl.minister || '',
       name: pl.name,
       songs: pl.songIds.map(id => {
         const s = songs.find(x => x.id === id); if(!s) return null;
@@ -12271,6 +12290,100 @@
       if(isPhoneView() && !fullscreenEditing){ try{ saveDisplayPrefsForCurrentSong(); }catch(e){} }
     }));
   })();
+
+  // ================= PLAYLISTS DA ESCALA (v238) =================
+  // A playlist ligada a uma escala vai junto no registro da escala (events.playlist).
+  // Quem está escalado (e líderes/ministros) recebe a playlist no próprio aparelho;
+  // quando o líder muda a playlist, a escala é atualizada e todos recebem a nova versão.
+  function plForEvent(ev){
+    if(!ev || !ev.playlist) return null;
+    return (ev.playlist.id && playlists.find(p => p.id === ev.playlist.id)) ||
+      (ev.playlist.name ? playlists.find(p => p.name === ev.playlist.name && !p.archived) : null) || null;
+  }
+  function eventForPl(pl){
+    if(!pl || typeof esc === 'undefined' || !esc.events) return null;
+    const y = isoFromDate(new Date(Date.now() - 86400000));
+    const evs = esc.events.filter(e => e.playlist && (e.playlist.id ? e.playlist.id === pl.id : e.playlist.name === pl.name));
+    return evs.find(e => e.date >= y) || evs[evs.length - 1] || null;
+  }
+  function syncEventPlaylists(){
+    if(!esc.user) return;
+    const y = isoFromDate(new Date(Date.now() - 86400000));
+    const me = esc.user.id; let changed = false;
+    esc.events.forEach(ev => {
+      const ep = ev.playlist; if(!ep || !ep.id || !Array.isArray(ep.songIds) || ev.date < y) return;
+      const mine = ev.minister_id === me || esc.assignments.some(a => a.event_id === ev.id && a.profile_id === me);
+      if(!mine && !escCanSchedule()) return;
+      const key = JSON.stringify(ep);
+      let p = playlists.find(x => x.id === ep.id);
+      if(!p){
+        playlists.push({ id: ep.id, name: ep.name || 'Culto', songIds: ep.songIds.slice(), overrides: JSON.parse(JSON.stringify(ep.overrides || {})),
+          date: ep.date || ev.date, archived: false, minister: ep.minister || '', fromEvent: ev.id, syncedKey: key });
+        changed = true;
+      } else if(p.fromEvent && p.syncedKey !== key){
+        p.name = ep.name || p.name; p.songIds = ep.songIds.slice(); p.overrides = JSON.parse(JSON.stringify(ep.overrides || {}));
+        p.date = ep.date || ev.date; p.minister = ep.minister || ''; p.syncedKey = key; p.archived = false; changed = true;
+      }
+    });
+    if(changed){
+      lsSet('playlists', JSON.stringify(playlists));
+      try{ renderSidebar(); if(showingHome) renderHomeView(); }catch(e){}
+    }
+  }
+  let pushPlTimer = null;
+  function schedulePushEventPlaylists(){ clearTimeout(pushPlTimer); pushPlTimer = setTimeout(pushEventPlaylists, 1500); }
+  async function pushEventPlaylists(){
+    if(typeof esc === 'undefined' || !esc.sb || !esc.user || !escCanSchedule()) return;
+    const y = isoFromDate(new Date(Date.now() - 86400000));
+    for(const ev of esc.events.filter(e => e.playlist && e.date >= y)){
+      const p = plForEvent(ev); if(!p) continue;
+      const snap = escPlaylistSnapshot(p);
+      if(JSON.stringify(snap) === JSON.stringify(ev.playlist)) continue;
+      const r = await esc.sb.from('events').update({ playlist: snap }).eq('id', ev.id);
+      if(!r.error){ ev.playlist = snap; if(p.fromEvent){ p.syncedKey = JSON.stringify(snap); lsSet('playlists', JSON.stringify(playlists)); } }
+    }
+  }
+  // Na tela de Playlists: quem vai tocar (escala ligada a esta playlist).
+  function plEscalaCardHtml(pl){
+    if(typeof esc === 'undefined' || !esc.user) return '';
+    const ev = eventForPl(pl), can = escCanSchedule();
+    if(!ev && !can) return '';
+    let h = '<div class="plp-esc"><div class="plp-esc-head"><span>👥 Quem vai tocar</span>';
+    if(ev){
+      const dd = isoToDate(ev.date);
+      h += '<small>' + escapeHtml(ev.title || 'Culto') + ' · ' + WEEKDAYS_PT[dd.getDay()] + ', ' + fmtDateBR(ev.date).slice(0, 5) + (ev.time ? ' · ' + escapeHtml(ev.time) : '') + '</small></div>';
+      const as = escEventAssignments(ev.id);
+      const stIco = st => st === 'confirmado' ? '<b class="ok">✓</b>' : st === 'recusado' ? '<b class="no">✕</b>' : '<b class="pe">…</b>';
+      if(ev.minister_id) h += '<div class="plp-esc-p"><span class="plp-esc-av">' + homeAvatar(escProfile(ev.minister_id), null) + '</span><span class="nm">' + escapeHtml(escName(ev.minister_id)) + '</span><span class="fn">🎤 Ministro</span></div>';
+      h += as.length ? as.map(a => '<div class="plp-esc-p"><span class="plp-esc-av">' + homeAvatar(escProfile(a.profile_id), a.status) + '</span><span class="nm">' + escapeHtml(escName(a.profile_id)) + '</span><span class="fn">' + escFnIcon(a.function) + ' ' + escapeHtml(a.function) + '</span>' + stIco(a.status) + '</div>').join('')
+        : '<div class="plp-esc-empty">Ninguém escalado ainda.</div>';
+      h += '<div class="plp-esc-acts">' + (can ? '<button type="button" class="plp-btn pri" data-plp-esc-edit="' + ev.id + '">👥 Escolher pessoas</button>' : '') + '<button type="button" class="plp-btn" data-plp-esc-open="' + ev.id + '">📅 Ver escala</button></div>';
+    } else {
+      h += '<small>Esta playlist ainda não está em nenhuma escala.</small></div>';
+      h += '<div class="plp-esc-acts"><button type="button" class="plp-btn pri" data-plp-esc-new>👥 Escolher quem vai tocar</button></div>';
+    }
+    return h + '</div>';
+  }
+  async function plOpenEscalaEditor(pl, evId){
+    await openEscala(evId || undefined);
+    if(!esc.me) return;
+    if(evId){ escStartEdit(evId); }
+    else {
+      const same = pl.date ? esc.events.find(e => e.date === pl.date && !e.playlist) : null;
+      escStartEdit(same ? same.id : null);
+      const d = esc.editing; if(!d) return;
+      if(pl.date) d.date = pl.date;
+      if(pl.minister && !d.minister_id){ const m = esc.profiles.find(p => (p.name || '').toLowerCase().includes(String(pl.minister).toLowerCase().replace(/^(pr|pra|presb|min|dc)\.?\s+/i, ''))); if(m) d.minister_id = m.id; }
+    }
+    const d = esc.editing; if(!d) return;
+    d.playlistId = pl.id; d.playlist = escPlaylistSnapshot(pl);
+    renderEscala();
+  }
+  function bindPlEscalaCard(box, pl){
+    const e1 = box.querySelector('[data-plp-esc-edit]'); if(e1) e1.onclick = () => plOpenEscalaEditor(pl, e1.dataset.plpEscEdit);
+    const e2 = box.querySelector('[data-plp-esc-new]'); if(e2) e2.onclick = () => plOpenEscalaEditor(pl, null);
+    const e3 = box.querySelector('[data-plp-esc-open]'); if(e3) e3.onclick = () => openEscala(e3.dataset.plpEscOpen);
+  }
 
 })();
 </script>
