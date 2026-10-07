@@ -2774,7 +2774,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v244 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v245 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10057,7 +10057,7 @@
     if(leader && rejected.length){
       html += '<details class="esc-rejected"><summary>🚫 Cadastros recusados (' + rejected.length + ')</summary>' + rejected.map(p =>
         '<div class="esc-pend-row"><div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + escH(p.email || '') + '</span></div>' +
-        '<button type="button" class="esc-link" data-approve="' + p.id + '">Aprovar mesmo assim</button></div>').join('') + '</details>';
+        '<button type="button" class="esc-link" data-approve="' + p.id + '">Aprovar mesmo assim</button><button type="button" class="tm-btn no" data-del-member="' + p.id + '">🗑 Excluir</button></div>').join('') + '</details>';
     }
     body.innerHTML = html;
     const np = document.getElementById('escNewPre'); if(np) np.onclick = () => escEditPre(null);
@@ -10127,7 +10127,7 @@
     const body = document.getElementById('escalaBody');
     body.innerHTML = '<div class="esc-editor"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (id ? 'Editar equipe' : 'Nova equipe') + '</h3>' +
       '<label>Nome<input id="escTeamName" class="esc-input" value="' + escH(t.name) + '" placeholder="Equipe A"></label>' +
-      '<div class="esc-sub">Membros</div><div class="esc-checks">' + esc.profiles.map(p => '<label><input type="checkbox" value="' + p.id + '"' + (t.member_ids.includes(p.id) ? ' checked' : '') + '> ' + escH(p.name) + ' <small>' + escH(p.functions.join(', ')) + '</small></label>').join('') + '</div>' +
+      '<div class="esc-sub">Membros</div><div class="esc-checks">' + esc.profiles.filter(p => (p.approved && p.active !== false) || t.member_ids.includes(p.id)).map(p => '<label><input type="checkbox" value="' + p.id + '"' + (t.member_ids.includes(p.id) ? ' checked' : '') + '> ' + escH(p.name) + ' <small>' + escH(p.functions.join(', ')) + '</small></label>').join('') + '</div>' +
       '<div class="esc-actions esc-save-row">' + (id ? '<button type="button" class="btn-secondary esc-del" id="escTeamDel">🗑 Apagar</button>' : '') + '<button type="button" class="btn-primary" id="escTeamSave">💾 Salvar</button></div></div>';
     document.getElementById('escBack').onclick = () => renderEscala();
     document.getElementById('escTeamSave').onclick = async () => {
