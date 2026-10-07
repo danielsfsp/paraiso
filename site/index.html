@@ -1932,6 +1932,14 @@
     .options-sep.mobile-only{display:block !important;}
     #btnOptionsMenu.ajustes-on{border-color:var(--accent); color:var(--accent);}
   }
+
+  /* ===== v236 ===== */
+  @media (max-width: 820px){
+    #btnMenuAjustes, #btnMenuAjustes + .options-sep{display:none !important;}
+    .aj-menu-row{flex-basis:100%; display:flex !important; flex-wrap:wrap; gap:6px; padding-top:10px; border-top:1px solid var(--border-soft); margin-top:4px;}
+    .aj-menu-row .options-item{width:auto; flex:1 1 auto; text-align:center; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:8px 10px; font-size:13px;}
+    .aj-menu-row .options-item[style*="none"]{display:none !important;}
+  }
 </style>
 </head>
 <body>
@@ -2676,7 +2684,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v235 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v236 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -12152,6 +12160,7 @@
       }
       // 3) metrônomo
       if(typeof metroPanel !== 'undefined' && metroPanel && !metroPanel.hidden){ metroPanel.hidden = true; return true; }
+      if(isPhoneView() && !isFsMode() && !controlsBar.classList.contains('mobile-collapsed')){ document.getElementById('btnToggleControls').click(); return true; }
       // 4) tela cheia
       if(isFsMode()){
         if(fullscreenEditing){ const c = document.getElementById('btnFullscreenEditCancel'); if(c) c.click(); return true; }
@@ -12177,6 +12186,38 @@
     // Arma no primeiro toque (o navegador só respeita isso depois de uma interação).
     arm();
     ['pointerdown','touchstart','keydown'].forEach(ev => window.addEventListener(ev, () => { if(!armed && !exitTimer) arm(); }, { passive:true, capture:true }));
+  })();
+
+  // ===== v236: no celular, o ☰ abre direto os ajustes (com as opções da música embaixo) =====
+  (function(){
+    const btn = document.getElementById('btnOptionsMenu');
+    const menu = document.getElementById('optionsMenu');
+    const tog = document.getElementById('btnToggleControls');
+    const row = document.createElement('div');
+    row.className = 'control-group aj-menu-row'; row.id = 'ajMenuRow';
+    const ids = ['btnFavorite','btnResumo','btnAddToPlaylist','btnLibRevert','btnDelete'];
+    function place(){
+      const phone = isPhoneView();
+      ids.forEach(id => { const el = document.getElementById(id); if(!el) return;
+        if(phone){ if(el.parentNode !== row) row.appendChild(el); }
+        else if(el.parentNode === row){ const sep = menu.querySelector('.options-sep:not(.mobile-only)'); if(id === 'btnDelete') menu.appendChild(el); else menu.insertBefore(el, sep); }
+      });
+      if(phone && row.parentNode !== controlsBar) controlsBar.appendChild(row);
+      if(!phone && row.parentNode) row.remove();
+    }
+    place(); window.addEventListener('resize', place);
+    btn.addEventListener('click', (e) => {
+      if(!isPhoneView()) return;
+      e.stopImmediatePropagation(); e.preventDefault();
+      menu.classList.remove('open');
+      const sg = currentSong();
+      const pl = typeof getOverridePlaylist === 'function' ? getOverridePlaylist() : null;
+      document.getElementById('btnLibRevert').style.display = (sg && sg.localEdited && libOnline()) ? '' : 'none';
+      document.getElementById('btnDelete').style.display = (!pl && !canEditLibrary()) ? 'none' : '';
+      tog.click();
+    }, true);
+    // escolher uma opção fecha os ajustes
+    row.addEventListener('click', (e) => { if(e.target.closest('.options-item') && !controlsBar.classList.contains('mobile-collapsed')) tog.click(); });
   })();
 
 })();
