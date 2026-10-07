@@ -2613,7 +2613,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v231 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v232 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -2963,11 +2963,17 @@
     if(!trimmed) return false;
     if(isTabLine(line)) return false;
     const tokens = trimmed.split(/\s+/);
-    return tokens.every(tok => {
-      if(tok === '(' || tok === ')') return true;
+    // Anotações comuns no meio dos acordes ("Riff 1", "Solo", "2x", "(bis)")
+    // não impedem a linha de ser de acordes — desde que tenha acorde de verdade.
+    const NOTE_RE = /^\(?(riff|solo|bis|base|intro|final|x?\d{1,2}x?|\d{1,2}ª?)\)?:?$/i;
+    let chords = 0;
+    const ok = tokens.every(tok => {
+      if(tok === '(' || tok === ')' || tok === '|' || tok === '-') return true;
       const m = tok.match(/^\{([^{}]+)\}$/);
-      return CHORD_TOKEN_RE.test(m ? m[1] : tok);
+      if(CHORD_TOKEN_RE.test(m ? m[1] : tok)){ chords++; return true; }
+      return NOTE_RE.test(tok);
     });
+    return ok && chords > 0;
   }
   // Edição de uma LINHA DE ACORDES mantendo o alinhamento com a letra de
   // baixo: digitar sobre um espaço substitui o espaço (não empurra nada);

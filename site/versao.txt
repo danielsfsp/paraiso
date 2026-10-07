@@ -1,1 +1,1 @@
-v231 · 06/10/2026 · menu da playlist sem músicas; botões numa linha
+v232 · 06/10/2026 · linhas de acorde com Riff/2x destacadas
