@@ -2002,6 +2002,10 @@
   @media (max-width: 820px){
     #controlsBar .save-display-btn, #controlsBar .discard-display-btn{margin:0; padding:8px 14px;}
   }
+
+  /* v243: edição na tela cheia com as mesmas colunas da leitura */
+  #cifraBodyEditCols.adaptive-cols{display:flex !important;}
+  #cifraBodyEditCols.adaptive-cols .cifra-col{min-height:40px;}
 </style>
 </head>
 <body>
@@ -2746,7 +2750,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v242 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v243 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7174,6 +7178,7 @@
     const wrap = document.getElementById('cifraBodyEditCols');
     if(!wrap) return;
     wrap.style.fontSize = fontSize + 'px';
+    if(wrap.classList.contains('adaptive-cols')){ refreshEditLineOverflow(wrap); return; }
     applyFullscreenEditColumns(wrap, { recalc: true });
     forceEditReflow(wrap);
   }
@@ -7184,6 +7189,7 @@
   // esse recálculo na mão, alternando column-width por um instante — sem
   // isso, sobrava esse resto visual bugado.
   function forceEditReflow(wrap){
+    if(wrap.classList.contains('adaptive-cols')){ refreshEditLineOverflow(wrap); return; }
     const cur = wrap.style.columnWidth;
     wrap.style.columnWidth = 'auto';
     void wrap.offsetHeight;
@@ -7454,8 +7460,10 @@
     const prevRows = getEditRows(wrap);
     const activeIdx = prevRows.indexOf(document.activeElement);
     mrsRows = []; mrsActive = false; mrsAnchorRow = null; mrsDragging = false; // wrap inteiro vai ser recriado, essas referências ficariam presas em <div> que não existem mais
+    const colCounts = wrap.classList.contains('adaptive-cols') ? Array.from(wrap.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length) : null;
     wrap.innerHTML = '';
     wrap.appendChild(buildEditUnitsFragment(bodyText));
+    if(colCounts) distributeEditCols(wrap, colCounts, false);
     forceEditReflow(wrap);
     const rows = getEditRows(wrap);
     if(rows.length){
@@ -7762,12 +7770,20 @@
     // column-width, então a quebra entre colunas fica idêntica à leitura
     // (matchRead:true — cifraBody ainda está com o conteúdo em dia
     // nesse instante, ver applyFullscreenEditColumns).
-    wrap.style.fontSize = fontSize + 'px';
+    // v243: a edição copia EXATAMENTE a leitura — mesma fonte (já com o
+    // ajuste automático) e as mesmas colunas, com as mesmas linhas em cada uma.
+    const readCols = (!singleColumn && cifraBody.classList.contains('adaptive-cols'))
+      ? Array.from(cifraBody.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length) : null;
+    const readFs = parseFloat(cifraBody.style.fontSize) || fontSize;
+    wrap.style.fontSize = readFs + 'px';
     wrap.style.display = 'block';
     cifraBody.style.display = 'none';
     wrap.appendChild(buildEditUnitsFragment(inlineChordsToAbove(getEffectiveBody(song))));
-    // Só agora (visível e com o conteúdo) dá pra medir a largura certa.
-    applyFullscreenEditColumns(wrap, { matchRead: true });
+    if(!(readCols && distributeEditCols(wrap, readCols, true))){
+      wrap.classList.remove('adaptive-cols');
+      // Só agora (visível e com o conteúdo) dá pra medir a largura certa.
+      applyFullscreenEditColumns(wrap, { matchRead: true });
+    }
     resetEditUndoHistory();
     // Mesma rede de segurança contra linha larga vazando pra coluna
     // vizinha que a leitura já tem — precisa rodar aqui também na
@@ -7823,7 +7839,7 @@
     mrsRows = []; mrsActive = false; mrsAnchorRow = null; mrsDragging = false;
     const wrap = document.getElementById('cifraBodyEditCols');
     wrap.style.display = 'none';
-    wrap.classList.remove('cifra-body');
+    wrap.classList.remove('cifra-body', 'adaptive-cols');
     wrap.innerHTML = '';
     cifraBody.style.display = '';
     const panel = document.querySelector('.main-panel');
@@ -12509,6 +12525,27 @@
       if(!r.error) e.playlist = null;
     }
     try{ renderEscala(); if(showingHome) renderHomeView(); }catch(err){}
+  }
+
+  // Coloca as linhas da edição nas mesmas colunas da leitura (v243).
+  // strict: só aceita se o número de linhas bater exatamente com a leitura.
+  function distributeEditCols(wrap, counts, strict){
+    const units = Array.from(wrap.querySelectorAll('.cifra-line'));
+    const total = counts.reduce((a, b) => a + b, 0);
+    if(!units.length || counts.length < 2) return false;
+    if(strict && units.length !== total) return false;
+    const frag = document.createDocumentFragment(); let k = 0;
+    counts.forEach((n, ci) => {
+      const col = document.createElement('div'); col.className = 'cifra-col';
+      const take = ci === counts.length - 1 ? units.length - k : n;
+      for(let j = 0; j < take && k < units.length; j++) col.appendChild(units[k++]);
+      frag.appendChild(col);
+    });
+    wrap.innerHTML = '';
+    wrap.appendChild(frag);
+    wrap.classList.add('adaptive-cols');
+    wrap.style.columnWidth = ''; wrap.style.height = ''; wrap.style.width = '';
+    return true;
   }
 
 })();
