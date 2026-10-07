@@ -2098,6 +2098,22 @@
   .cu-esc{display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:13px; color:var(--text-dim);}
   .cu-esc .cu-sp{flex:1;} .cu-esc button{margin:0 !important; padding:7px 12px; font-size:13px;}
   .cu-none{color:var(--danger);}
+
+  /* v253: menu lateral sem a lista de playlists */
+  #sideSectionTitle, #sidebarContent, .pl-side-actions{display:none !important;}
+  .plp-btn[disabled]{opacity:.45; cursor:default;}
+  /* v253: Escala / Equipe / Culto abrem na tela (não em janela) */
+  #escalaOverlay{z-index:140; background:var(--bg); backdrop-filter:none; -webkit-backdrop-filter:none; padding:0; align-items:stretch; justify-content:stretch; left:300px;}
+  body.sidebar-collapsed #escalaOverlay{left:0;}
+  #escalaOverlay .esc-modal{max-width:980px; width:100%; margin:0 auto; max-height:none; height:100%; border:0; border-radius:0; box-shadow:none; background:transparent; padding:22px 28px 16px;}
+  #escalaOverlay .esc-head h2{font-size:26px;}
+  .side-nav-item.on{background:var(--accent-soft) !important; color:var(--accent) !important;}
+  body.esc-page-on .side-nav-item.active:not(.on), body.esc-page-on .side-nav .sidebar-tabs button.side-nav-item.active{background:transparent !important; color:var(--text-dim) !important;}
+  @media (max-width: 820px){
+    #escalaOverlay{left:0;}
+    #escalaOverlay .esc-modal{padding:14px 14px calc(12px + env(safe-area-inset-bottom));}
+    body.home-on #escalaOverlay .esc-modal{padding-bottom:calc(76px + env(safe-area-inset-bottom));}
+  }
 </style>
 </head>
 <body>
@@ -2845,7 +2861,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v252 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v253 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3966,7 +3982,7 @@
       html += '<div class="plp-head"><div><div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
         '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
-        (items.length ? '<button type="button" class="plp-btn" data-plp-share><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' : '') +
+        '<button type="button" class="plp-btn" data-plp-share title="Compartilhar playlist"' + (items.length ? '' : ' disabled') + '><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
         (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp><i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar playlist') + '</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button>' +
         '<button type="button" class="plp-btn" data-plp-arch title="' + (sel.archived ? 'Desarquivar' : 'Arquivar (sai da lista, mas continua nas estatísticas)') + '">' + (sel.archived ? '↩️ Desarquivar' : '🗄️ Arquivar') + '</button>' +
@@ -9675,7 +9691,8 @@
     }catch(e){ /* mostra a tela de login/config */ }
     renderEscala();
   }
-  function closeEscala(){ escOverlay().classList.remove('open'); esc.editing = null; }
+  function closeEscala(){ escOverlay().classList.remove('open'); esc.editing = null; document.body.classList.remove('esc-page-on'); markEscNav(); try{ syncNavActive(); }catch(e){} }
+  function markEscNav(){ const on = escOverlay().classList.contains('open'); const map = { escalas:'btnEscala', minhas:'btnEscala', equipe:'btnEquipe', cultos:'btnCultos' }; ['btnEscala','btnEquipe','btnCultos'].forEach(id => { const b = document.getElementById(id); if(b) b.classList.toggle('on', on && map[esc.tab] === id); }); if(on) document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.classList.toggle('on', b.dataset.tb === 'escala' && (esc.tab === 'escalas' || esc.tab === 'minhas'))); }
 
   // ---------- RENDER ----------
   function renderEscala(){
@@ -9716,6 +9733,7 @@
     userEl.innerHTML = '';
     if(me && !me.functions.length && esc.tab !== 'perfil' && !esc._askedProfile){ esc._askedProfile = true; esc.tab = 'perfil'; }
     const isProfile = esc.tab === 'perfil' && !esc.editing;
+    document.body.classList.toggle('esc-page-on', escOverlay().classList.contains('open')); markEscNav();
     const isTeam = esc.tab === 'equipe', isCultos = esc.tab === 'cultos';
     document.getElementById('escalaTitle').textContent = isProfile ? '👤 Meu perfil' : isTeam ? '👥 Equipe' : isCultos ? '⛪ Culto' : '📅 Escala';
     tabsEl.style.display = (isProfile || isTeam || isCultos) ? 'none' : '';
@@ -10424,7 +10442,7 @@
   document.getElementById('btnEquipe').addEventListener('click', () => { esc.tab = 'equipe'; esc.editing = null; openEscala(); if(window.innerWidth <= 820) sidebar.classList.remove('open'); });
   document.getElementById('btnCloseEscala').addEventListener('click', () => escGuard(closeEscala));
   document.getElementById('escalaTabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => escGuard(() => { esc.tab = b.dataset.tab; renderEscala(); })));
-  escOverlay().addEventListener('click', (e) => { if(e.target === escOverlay()) escGuard(closeEscala); });
+  // Agora é uma página (não janela): clicar no fundo não fecha mais.
   document.addEventListener('keydown', (e) => {
     if(e.key !== 'Escape' || !escOverlay().classList.contains('open')) return;
     if(document.getElementById('confirmModalOverlay').classList.contains('open')) return;
@@ -12814,6 +12832,13 @@
     body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
   }
+
+  // Outros itens do menu fecham a página de Escala/Equipe/Culto (v253)
+  document.addEventListener('click', (e) => {
+    if(!document.body.classList.contains('esc-page-on')) return;
+    const t = e.target.closest('.side-nav-item:not(.esc-open-btn), #mobileTabbar [data-tb]:not([data-tb="escala"]), #btnLogo, .brand');
+    if(t) closeEscala();
+  }, true);
 
 })();
 </script>
