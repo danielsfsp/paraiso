@@ -1706,7 +1706,7 @@
     body.home-on .tabbar{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:150; background:color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-top:1px solid var(--border-soft); padding:8px 4px calc(8px + env(safe-area-inset-bottom));}
     .tabbar button{flex:1; background:none; border:none; font:inherit; font-size:11px; font-weight:700; color:var(--text-dim); display:flex; flex-direction:column; align-items:center; gap:2px; position:relative; cursor:pointer; padding:2px 0;}
     .tabbar button i{font-style:normal; font-size:19px; line-height:1.1;}
-    .tabbar button[data-tb="home"]{color:var(--accent);}
+    .tabbar button.on{color:var(--accent);}
     .tb-badge{position:absolute; top:-2px; left:calc(50% + 6px); background:var(--accent); color:#1A1206; font-size:10px; border-radius:99px; padding:0 5px; min-width:16px;}
     .tb-badge:empty{display:none;}
     body.home-on .home-view{padding-bottom:90px;}
@@ -1791,6 +1791,54 @@
   .spl-opt b{font-size:14px;}
   .spl-opt small{font-size:12px; color:var(--text-dim);}
   .pl-share-btn{margin-top:6px;}
+
+  /* ===== Página de Playlists + ajustes do menu lateral ===== */
+  .sidebar-footer{padding:6px 10px 8px; gap:6px;}
+  .sidebar-footer .sf-btn{padding:5px 8px; font-size:12px; border-radius:9px; min-height:0; height:30px;}
+  .pl-side-actions{display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; border-top:1px solid var(--border-soft);}
+  .pl-side-actions .add-music-btn{margin:0; flex:1; padding:6px 8px; font-size:12px; white-space:nowrap;}
+  .pl-side-actions .sp-pl-row{margin:0; flex:1 1 100%;}
+  .pl-side-actions .sp-pl-btn{padding:5px 8px; font-size:12px;}
+  .playlist-detail .song-list{min-height:120px;}
+  .home-view.pl-mode .home-cards, .home-view.pl-mode .home-columns, .home-view.pl-mode .home-searchbar{display:none !important;}
+  .pl-page[hidden]{display:none;}
+  .plp-wrap{display:grid; grid-template-columns:290px 1fr; gap:18px; align-items:start;}
+  .plp-list{display:flex; flex-direction:column; gap:6px; position:sticky; top:0;}
+  .plp-new{font:inherit; font-size:13px; font-weight:800; padding:10px 12px; border-radius:12px; border:1px dashed var(--accent-dim); background:var(--accent-soft); color:var(--accent); cursor:pointer; text-align:left;}
+  .plp-item{display:flex; align-items:center; gap:10px; text-align:left; font:inherit; background:var(--surface); border:1px solid var(--border-soft); border-radius:13px; padding:10px 12px; cursor:pointer; color:var(--text);}
+  .plp-item:hover{border-color:var(--accent-dim);}
+  .plp-item.on{border-color:var(--accent); background:var(--accent-soft);}
+  .plp-ico{width:34px; height:34px; border-radius:10px; background:var(--surface-3); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .plp-item.future .plp-ico{background:var(--accent-soft);}
+  .plp-txt{display:flex; flex-direction:column; min-width:0;}
+  .plp-txt b{font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .plp-txt small{font-size:12px; color:var(--text-dim);}
+  .plp-arch-toggle{background:none; border:none; font:inherit; font-size:12.5px; font-weight:700; color:var(--text-dim); text-align:left; padding:8px 4px; cursor:pointer;}
+  .plp-detail{background:var(--surface); border:1px solid var(--border-soft); border-radius:18px; padding:18px; min-width:0;}
+  .plp-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+  .plp-title{font-family:var(--font-display); font-size:24px; font-weight:700; color:var(--text);}
+  .plp-sub{font-size:13px; color:var(--text-dim); margin-top:2px;}
+  .plp-acts{display:flex; gap:6px; flex-wrap:wrap;}
+  .plp-btn{font:inherit; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer; white-space:nowrap;}
+  .plp-btn:hover{border-color:var(--accent);}
+  .plp-btn.pri{background:var(--accent); border-color:var(--accent); color:#1A1206;}
+  .plp-btn.sp{color:#1DB954; border-color:#1DB95466; background:#1DB95414;}
+  .plp-songs{display:flex; flex-direction:column; margin-top:14px; border:1px solid var(--border-soft); border-radius:14px; overflow:hidden; background:var(--bg);}
+  .plp-song{display:flex; align-items:center; gap:12px; padding:11px 14px; border:none; border-bottom:1px solid var(--border-soft); background:transparent; font:inherit; text-align:left; cursor:pointer; color:var(--text);}
+  .plp-song:last-child{border-bottom:none;}
+  .plp-song:hover{background:var(--surface-2);}
+  .plp-song.on{background:var(--accent-soft);}
+  .plp-song .n{width:22px; color:var(--text-dim); font-size:13px; font-weight:700; text-align:right;}
+  .plp-song .t{flex:1; display:flex; flex-direction:column; min-width:0;}
+  .plp-song .t b{font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .plp-song .t small{font-size:12px; color:var(--text-dim);}
+  .plp-song .k{font-family:var(--font-display); font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:8px; padding:2px 9px; font-size:14px;}
+  .plp-song .k.moved{outline:1px dashed var(--accent-dim);}
+  @media (max-width: 820px){
+    .plp-wrap{grid-template-columns:1fr;}
+    .plp-list{position:static;}
+    .plp-detail{padding:14px;}
+  }
 </style>
 </head>
 <body>
@@ -2086,6 +2134,7 @@
         <button type="button" class="home-new-song" id="btnHomeNewSong" title="Adicionar uma música nova">＋ Nova música</button>
       </div>
       <div class="home-cards" id="homeCards"></div>
+      <div class="pl-page" id="plPage" hidden></div>
       <div class="home-columns">
         <div class="home-col home-col-playlists" style="display:none;">
           <div class="home-col-title">Playlists</div>
@@ -2531,7 +2580,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v228 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v229 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3399,6 +3448,7 @@
     renderHomeGreeting();
     renderHomeCards();
     syncNavActive();
+    renderPlaylistsPage();
 
     plList.innerHTML = '';
     const homePls = sortPlaylistsForList(playlists.filter(p => !p.archived));
@@ -3611,6 +3661,62 @@
     box.querySelectorAll('[data-hc-pl]').forEach(b => b.onclick = () => { const pl = playlists.find(x => x.id === b.dataset.hcPl); if(pl) guardIfDirty(() => goHomeToPlaylist(pl)); });
     box.querySelectorAll('[data-hc-mode]').forEach(b => b.onclick = () => { homeMode = b.dataset.hcMode; homeArtist = null; lsSet('homeMode', homeMode); renderHomeView(); document.getElementById('homeModeSeg').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }
+  // ===== PÁGINA DE PLAYLISTS (área principal, ao escolher "Playlists") =====
+  function plEffKey(pl, sg){
+    const sh = getShiftInPlaylist(pl, sg) || 0;
+    const ov = (pl.overrides && pl.overrides[sg.id] && pl.overrides[sg.id].meta) || {};
+    const k = ov.key || sg.key || '';
+    return { key: k ? (sh ? (transposeChord(k, sh) || k) : k) : '', moved: !!sh };
+  }
+  let plPageShowArchived = false;
+  function renderPlaylistsPage(){
+    const box = document.getElementById('plPage'); if(!box) return;
+    const on = !!showingHome && navSel === 'playlists';
+    box.hidden = !on;
+    document.getElementById('homeView').classList.toggle('pl-mode', on);
+    const h1 = document.getElementById('homeGreeting'), sub = document.getElementById('homeSubline');
+    if(!on){ return; }
+    const act = sortPlaylistsForList(playlists.filter(p => !p.archived));
+    const arch = sortPlaylistsForList(playlists.filter(p => p.archived));
+    let sel = playlists.find(p => p.id === openPlaylistId) || act[0] || null;
+    if(h1) h1.textContent = 'Playlists';
+    if(sub) sub.textContent = act.length + (act.length === 1 ? ' playlist ativa' : ' playlists ativas') + (arch.length ? ' · ' + arch.length + ' arquivada' + (arch.length === 1 ? '' : 's') : '');
+    const card = pl => {
+      const n = pl.songIds.filter(id => songs.some(s => s.id === id)).length;
+      const today = todayIso();
+      const when = pl.date ? (pl.date === today ? 'Hoje' : (pl.date > today ? WEEKDAYS_PT[isoToDate(pl.date).getDay()] + ', ' + fmtDateBR(pl.date).slice(0, 5) : 'Tocada em ' + fmtDateBR(pl.date))) : 'Sem data';
+      return '<button type="button" class="plp-item' + (sel && sel.id === pl.id ? ' on' : '') + (pl.date && pl.date >= today ? ' future' : '') + '" data-plp="' + pl.id + '"><span class="plp-ico">' + (pl.date && pl.date >= today ? '📅' : '♫') + '</span><span class="plp-txt"><b>' + escapeHtml(pl.name) + '</b><small>' + escapeHtml(when) + ' · ' + n + (n === 1 ? ' música' : ' músicas') + '</small></span></button>';
+    };
+    let html = '<div class="plp-wrap"><div class="plp-list"><button type="button" class="plp-new" id="plpNew">＋ Nova playlist</button>' + act.map(card).join('') +
+      (arch.length ? '<button type="button" class="plp-arch-toggle" id="plpArch">🗄️ Arquivadas (' + arch.length + ') ' + (plPageShowArchived ? '▴' : '▾') + '</button>' + (plPageShowArchived ? arch.map(card).join('') : '') : '') +
+      (!act.length && !arch.length ? '<div class="home-empty-note">Nenhuma playlist ainda.</div>' : '') + '</div>';
+    html += '<div class="plp-detail">';
+    if(sel){
+      const items = sel.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
+      html += '<div class="plp-head"><div><div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
+        '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
+        '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
+        (items.length ? '<button type="button" class="plp-btn" data-plp-share>📤 Compartilhar</button>' : '') +
+        (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp>🎧 ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar no Spotify') + '</button>' : '') +
+        '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button></div></div>';
+      if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
+      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); return '<button type="button" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') + '</button>'; }).join('') + '</div>';
+    } else html += '<div class="home-empty-note">Crie uma playlist para montar o repertório do culto.</div>';
+    html += '</div></div>';
+    box.innerHTML = html;
+    box.querySelectorAll('[data-plp]').forEach(b => b.onclick = () => { activeView = 'playlists'; openPlaylistId = b.dataset.plp; renderSidebar(); renderPlaylistsPage(); });
+    const nb = document.getElementById('plpNew'); if(nb) nb.onclick = () => openPlaylistModal(null);
+    const ab = document.getElementById('plpArch'); if(ab) ab.onclick = () => { plPageShowArchived = !plPageShowArchived; renderPlaylistsPage(); };
+    if(sel){
+      const q = sel1 => box.querySelector(sel1);
+      const pb = q('[data-plp-play]'); if(pb) pb.onclick = () => guardIfDirty(() => goHomeToPlaylist(sel));
+      const ad = q('[data-plp-add]'); if(ad) ad.onclick = () => openPickSongs(sel.id);
+      const sh = q('[data-plp-share]'); if(sh) sh.onclick = () => openSharePlaylist(sel.id);
+      const sp = q('[data-plp-sp]'); if(sp) sp.onclick = () => spSyncPlaylist(sel, sp);
+      const ed = q('[data-plp-edit]'); if(ed) ed.onclick = () => openPlaylistModal(sel.id);
+      box.querySelectorAll('[data-plp-song]').forEach(b => b.onclick = () => guardIfDirty(() => { showingHome = false; activeView = 'playlists'; openPlaylistId = sel.id; selectSong(b.dataset.plpSong, sel.id); }));
+    }
+  }
   // Menu lateral: item ativo e contadores.
   // Item marcado no menu lateral = a última opção escolhida (Início,
   // Playlists ou Favoritas).
@@ -3621,6 +3727,7 @@
     if(nh) nh.classList.toggle('active', navSel === 'home');
     document.body.classList.toggle('home-on', !!showingHome);
     document.body.classList.toggle('nav-home', navSel === 'home');
+    document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.classList.toggle('on', b.dataset.tb === (navSel === 'home' ? 'home' : navSel)));
     const pc = document.getElementById('navCountPl'); if(pc){ const n = playlists.filter(p => !p.archived).length; pc.textContent = n || ''; }
     const fc = document.getElementById('navCountFav'); if(fc){ const n = songs.filter(s => s.favorite).length; fc.textContent = n || ''; }
     const ec = document.getElementById('navCountEsc');
@@ -4527,7 +4634,7 @@
     else if(openPlaylistId) renderPlaylistDetailView();
     else renderPlaylistsListView();
 
-    try{ syncNavActive(); }catch(e){}
+    try{ syncNavActive(); if(showingHome && navSel === 'playlists') renderPlaylistsPage(); }catch(e){}
     if(view === 'favorites') btnAddSong.title = 'Adicionar música';
     else if(openPlaylistId) btnAddSong.title = 'Adicionar música a esta playlist';
     else btnAddSong.title = 'Nova playlist';
@@ -4843,6 +4950,7 @@
     addMusicBtn.className = 'add-music-btn';
     addMusicBtn.textContent = '+ Adicionar música';
     addMusicBtn.addEventListener('click', () => openPickSongs(pl.id));
+    let plSideSp = null, plSideSpNote = null;
     if(spCanUse() && pl.songIds.length){
       const spRow = document.createElement('div');
       spRow.className = 'sp-pl-row';
@@ -4865,21 +4973,29 @@
         spNote.className = 'sp-miss-note';
         spNote.textContent = '⚠ ' + (spMiss.length === 1 ? '1 música não está' : spMiss.length + ' músicas não estão') + ' na playlist do Spotify (marcadas abaixo).';
       }
-      setTimeout(() => { if(addMusicBtn.parentNode){ addMusicBtn.parentNode.insertBefore(spRow, addMusicBtn.nextSibling); if(spNote) spRow.parentNode.insertBefore(spNote, spRow.nextSibling); } }, 0);
+      plSideSp = spRow; plSideSpNote = spNote;
     }
-    wrap.appendChild(addMusicBtn);
+    // Ações da playlist: ficam EMBAIXO da lista de músicas, compactas,
+    // para a lista ganhar o espaço todo.
+    const sideActs = document.createElement('div');
+    sideActs.className = 'pl-side-actions';
+    addMusicBtn.textContent = '＋ Música';
+    addMusicBtn.title = 'Adicionar música a esta playlist';
+    sideActs.appendChild(addMusicBtn);
     if(pl.songIds.length){
       const shBtn = document.createElement('button');
       shBtn.type = 'button'; shBtn.className = 'add-music-btn pl-share-btn';
-      shBtn.textContent = '📤 Compartilhar playlist';
+      shBtn.textContent = '📤 Compartilhar';
+      shBtn.title = 'Compartilhar playlist';
       shBtn.addEventListener('click', () => openSharePlaylist(pl.id));
-      wrap.appendChild(shBtn);
+      sideActs.appendChild(shBtn);
     }
+    if(plSideSp){ const sb = plSideSp.querySelector('.sp-pl-btn'); if(sb){ sb.textContent = pl.spotifyId ? '🎧 Atualizar' : '🎧 Spotify'; } sideActs.appendChild(plSideSp); }
 
     if(pl.songIds.length === 0){
       const empty = document.createElement('div');
       empty.className = 'empty-sidebar';
-      empty.textContent = 'Playlist vazia. Toque em "+ Adicionar música" acima para escolher músicas da sua biblioteca.';
+      empty.textContent = 'Playlist vazia. Toque em "＋ Música" abaixo para escolher músicas da sua biblioteca.';
       wrap.appendChild(empty);
     } else {
       const ul = document.createElement('ul');
@@ -4940,6 +5056,8 @@
       });
       wrap.appendChild(ul);
     }
+    if(plSideSpNote) wrap.appendChild(plSideSpNote);
+    wrap.appendChild(sideActs);
     sidebarContent.appendChild(wrap);
     const newList = sidebarContent.querySelector('.song-list');
     if(newList) newList.scrollTop = scrollTop;
@@ -11206,7 +11324,11 @@
         activeView = btn.dataset.view;
         openPlaylistId = null;
         navSel = btn.dataset.view;
+        if(!showingHome) showHomeView(), navSel = btn.dataset.view;
+        if(btn.dataset.view === 'favorites'){ homeMode = 'favoritas'; homeArtist = null; }
+        else if(homeMode === 'favoritas'){ homeMode = 'musicas'; }
         renderSidebar();
+        renderHomeView();
       });
     });
   });
@@ -11590,7 +11712,8 @@
     const t = b.dataset.tb;
     if(t === 'home'){ guardIfDirty(() => showHomeView()); sidebar.classList.remove('open'); return; }
     if(t === 'escala'){ if(esc.tab === 'perfil') esc.tab = 'escalas'; openEscala(); return; }
-    if(t === 'playlists' || t === 'favorites'){ guardIfDirty(() => { activeView = t; openPlaylistId = null; navSel = t; renderSidebar(); sidebar.classList.add('open'); }); return; }
+    if(t === 'playlists'){ guardIfDirty(() => { showHomeView(); activeView = 'playlists'; navSel = 'playlists'; renderSidebar(); renderHomeView(); sidebar.classList.remove('open'); }); return; }
+    if(t === 'favorites'){ guardIfDirty(() => { activeView = t; openPlaylistId = null; navSel = t; renderSidebar(); sidebar.classList.add('open'); }); return; }
     if(t === 'mais'){ sidebar.classList.add('open'); setTimeout(() => { const m = document.getElementById('moreMenu'); m.hidden = false; document.getElementById('btnMore').setAttribute('aria-expanded', 'true'); }, 50); }
   }));
   (function moreMenuWire(){
