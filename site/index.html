@@ -2117,6 +2117,12 @@
 
   .cu-names{margin-top:-4px; margin-bottom:8px;}
   .cu-names button.on{background:rgba(232,165,63,0.16); border-color:var(--accent); color:var(--accent);}
+
+  .ev-pl-swap-btns{display:flex; gap:8px; justify-content:flex-end; margin-top:8px;}
+  .ev-pl-swap-btns button{margin:0 !important; padding:7px 14px; font-size:13px;}
+  .ev-pl-swap-btns button:disabled{opacity:.45;}
+  .cu-share{margin:0 !important; padding:7px 12px; font-size:13px; white-space:nowrap;}
+  @media (max-width: 600px){ .cu-share{padding:7px 10px;} .cu-share{font-size:0;} .cu-share i{font-size:14px;} }
 </style>
 </head>
 <body>
@@ -2864,7 +2870,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v256 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v257 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -12666,7 +12672,7 @@
         (pl ? '<button type="button" class="btn-primary ev-pl-open" data-openpl="' + pl.id + '">▶ Abrir</button>' : '') + '</div>';
       if(e.playlist.songs && e.playlist.songs.length) h += escPlSongRowsHtml(e, can);
       else h += '<div class="ev-pl-empty">Nenhuma música ainda.</div>';
-      if(can) h += escPlAddHtml(e) + '<div class="ev-pl-acts"><button type="button" class="btn-secondary" data-evp-addopen="' + e.id + '">＋ Incluir música</button><button type="button" class="btn-secondary" data-pl-swap="' + e.id + '">🔁 Trocar playlist</button></div>' +
+      if(can) h += '<div class="ev-pl-acts"><button type="button" class="btn-secondary" data-pl-swap="' + e.id + '">🔁 Trocar playlist</button></div>' +
         '<div class="evp-note">✓ Mudanças feitas aqui valem para toda a equipe escalada.</div>';
     } else if(can){
       const sug = escPlSuggest(e);
@@ -12677,7 +12683,8 @@
     }
     if(can && esc.plSwap === e.id){
       const opts = sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '">' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + ' (' + p.songIds.length + ')</option>').join('');
-      h += '<div class="ev-pl-swap"><select data-pl-pick="' + e.id + '"><option value="">Escolha uma playlist…</option>' + opts + (e.playlist ? '<option value="__none">— tirar a playlist deste culto —</option>' : '') + '</select></div>';
+      h += '<div class="ev-pl-swap"><select data-pl-pick="' + e.id + '"><option value="">Escolha uma playlist…</option>' + opts + (e.playlist ? '<option value="__none">— tirar a playlist deste culto —</option>' : '') + '</select>' +
+        '<div class="ev-pl-swap-btns"><button type="button" class="btn-secondary" data-pl-swap-cancel>Cancelar</button><button type="button" class="btn-primary" data-pl-swap-save="' + e.id + '" disabled>💾 Salvar</button></div></div>';
     }
     return h + '</div>';
   }
@@ -12696,9 +12703,15 @@
     body.querySelectorAll('[data-pl-link]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(p => p.id === b.dataset.plId); if(pl) escLinkPlaylist(b.dataset.plLink, pl); });
     body.querySelectorAll('[data-pl-swap]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); esc.plSwap = esc.plSwap === b.dataset.plSwap ? null : b.dataset.plSwap; renderEscala(); });
     body.querySelectorAll('[data-pl-pick]').forEach(sel => { sel.onclick = ev => ev.stopPropagation(); sel.onchange = () => {
-      if(sel.value === '__none') return escLinkPlaylist(sel.dataset.plPick, null);
-      const pl = playlists.find(p => p.id === sel.value); if(pl) escLinkPlaylist(sel.dataset.plPick, pl);
+      const sv = body.querySelector('[data-pl-swap-save="' + sel.dataset.plPick + '"]'); if(sv) sv.disabled = !sel.value;
     }; });
+    body.querySelectorAll('[data-pl-swap-cancel]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); esc.plSwap = null; renderEscala(); });
+    body.querySelectorAll('[data-pl-swap-save]').forEach(b => b.onclick = (ev) => {
+      ev.stopPropagation();
+      const sel = body.querySelector('[data-pl-pick="' + b.dataset.plSwapSave + '"]'); if(!sel || !sel.value) return;
+      if(sel.value === '__none') return escLinkPlaylist(b.dataset.plSwapSave, null);
+      const pl = playlists.find(p => p.id === sel.value); if(pl) escLinkPlaylist(b.dataset.plSwapSave, pl);
+    });
     body.querySelectorAll('[data-pl-create]').forEach(b => b.onclick = async (ev) => {
       ev.stopPropagation();
       const e = esc.events.find(x => x.id === b.dataset.plCreate); if(!e) return;
@@ -12840,6 +12853,7 @@
       html += '<div class="cu-card" data-cu="' + e.id + '">' +
         '<div class="cu-head"><div class="ev-date big"><div class="w">' + WEEKDAYS_PT[dd.getDay()].toUpperCase() + '</div><div class="d">' + String(dd.getDate()).padStart(2, '0') + '</div><div class="m">' + ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][dd.getMonth()] + '</div></div>' +
         '<div class="cu-main"><div class="cu-title">' + escH(e.title || 'Culto') + '</div><div class="cu-sub">' + [e.time ? escH(e.time) : '', e.minister_id ? '🎤 ' + escH(escName(e.minister_id)) : '🎤 ministro a definir'].filter(Boolean).join(' · ') + '</div></div>' +
+        '<button type="button" class="btn-secondary cu-share" data-cu-share="' + e.id + '" title="Compartilhar no WhatsApp: culto, escala e músicas"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
         (can ? '<button type="button" class="tm-more" data-cu-edit="' + e.id + '" title="Editar culto">✎</button>' : '') + '</div>' +
         '<div class="ev-sec">👥 Escala</div><div class="cu-esc">' +
           (as.length ? '<div class="hc-stack">' + as.slice(0, 10).map(a => homeAvatar(escProfile(a.profile_id), a.status)).join('') + '</div><span>' + as.length + (as.length === 1 ? ' pessoa' : ' pessoas') + ' · ' + conf + ' confirmada' + (conf === 1 ? '' : 's') + '</span>' : '<span class="cu-none">Escala ainda não montada</span>') +
@@ -12850,6 +12864,7 @@
     const nb = document.getElementById('cuNew'); if(nb) nb.onclick = () => escStartEdit(null, 'culto');
     body.querySelectorAll('[data-cu-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEdit, 'culto'));
     body.querySelectorAll('[data-cu-esc]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEsc, 'escala'));
+    body.querySelectorAll('[data-cu-share]').forEach(b => b.onclick = () => escShareEvent(b.dataset.cuShare));
     body.querySelectorAll('[data-cu-see]').forEach(b => b.onclick = () => { esc.tab = 'escalas'; esc.openEventId = b.dataset.cuSee; renderEscala(); });
     body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
