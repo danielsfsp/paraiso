@@ -2735,7 +2735,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v240 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v241 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3881,7 +3881,7 @@
       const ed = q('[data-plp-edit]'); if(ed) ed.onclick = () => openPlaylistModal(sel.id);
       try{ bindPlEscalaCard(box, sel); }catch(e){}
       const ar = q('[data-plp-arch]'); if(ar) ar.onclick = () => { setPlaylistArchived(sel, !sel.archived); renderPlaylistsPage(); };
-      const dl = q('[data-plp-del]'); if(dl) dl.onclick = () => showConfirm('Excluir playlist', 'Deseja excluir a playlist "' + sel.name + '"? As músicas continuam salvas na biblioteca.' + (sel.date ? ' Ela deixa de contar nas estatísticas — para guardar o histórico, prefira arquivar (🗄️).' : ''), () => { performDeletePlaylist(sel.id); if(openPlaylistId === sel.id) openPlaylistId = null; renderPlaylistsPage(); }, { okLabel: '🗑️ Excluir' });
+      const dl = q('[data-plp-del]'); if(dl) dl.onclick = () => showConfirm('Excluir playlist', 'Deseja excluir a playlist "' + sel.name + '"? As músicas continuam salvas na biblioteca.' + plDeleteEscNote(sel) + (sel.date ? ' Ela deixa de contar nas estatísticas — para guardar o histórico, prefira arquivar (🗄️).' : ''), () => { performDeletePlaylist(sel.id); if(openPlaylistId === sel.id) openPlaylistId = null; renderPlaylistsPage(); }, { okLabel: '🗑️ Excluir' });
       box.querySelectorAll('.plp-ctl [data-mv]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); movePlaylistSong(sel.id, +b.dataset.ri, +b.dataset.mv); renderPlaylistsPage(); });
       box.querySelectorAll('.plp-ctl [data-rm]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const sg = songs.find(x => x.id === b.dataset.rm); showConfirm('Tirar da playlist', 'Tirar "' + (sg ? sg.title : '') + '" da playlist "' + sel.name + '"? A música continua no repertório.', () => { removeSongFromPlaylist(sel.id, b.dataset.rm); renderSidebar(); renderPlaylistsPage(); }, { okLabel: 'Tirar' }); });
       box.querySelectorAll('[data-plp-song]').forEach(b => b.onclick = () => guardIfDirty(() => { showingHome = false; activeView = 'playlists'; openPlaylistId = sel.id; selectSong(b.dataset.plpSong, sel.id); }));
@@ -4329,6 +4329,9 @@
     savePlaylists();
   }
   function performDeletePlaylist(id){
+    // Não deixa a sincronização da escala trazer de volta, e (líder) tira da escala também.
+    try{ const dm = JSON.parse(lsGet('plDismissed') || '[]'); if(!dm.includes(id)){ dm.push(id); lsSet('plDismissed', JSON.stringify(dm.slice(-200))); } }catch(e){}
+    try{ unlinkPlaylistFromEvents(id); }catch(e){}
     playlists = playlists.filter(p => p.id !== id);
     if(openPlaylistId === id) openPlaylistId = null;
     savePlaylists();
@@ -5019,7 +5022,7 @@
     if(pl.archived) mk('↩️', 'Desarquivar (voltar para a lista)', () => setPlaylistArchived(pl, false));
     else mk('🗄️', 'Arquivar (sai da lista, mas continua contando nas estatísticas)', () => setPlaylistArchived(pl, true));
     mk('✕', 'Excluir playlist', () => {
-      showConfirm('Excluir playlist', 'Deseja excluir a playlist "' + pl.name + '"? As músicas continuam salvas na biblioteca.' + (pl.date ? ' Ela deixa de contar nas estatísticas — para guardar o histórico, prefira arquivar (🗄️).' : ''), () => performDeletePlaylist(pl.id));
+      showConfirm('Excluir playlist', 'Deseja excluir a playlist "' + pl.name + '"? As músicas continuam salvas na biblioteca.' + plDeleteEscNote(pl) + (pl.date ? ' Ela deixa de contar nas estatísticas — para guardar o histórico, prefira arquivar (🗄️).' : ''), () => performDeletePlaylist(pl.id));
     });
 
     li.appendChild(info);
@@ -12328,8 +12331,19 @@
     if(!esc.user) return;
     const y = isoFromDate(new Date(Date.now() - 86400000));
     const me = esc.user.id; let changed = false;
+    let dismissed = []; try{ dismissed = JSON.parse(lsGet('plDismissed') || '[]'); }catch(e){}
+    // cópias recebidas de uma escala que não tem mais essa playlist: somem
+    const before = playlists.length;
+    playlists = playlists.filter(p => {
+      if(!p.fromEvent) return true;
+      const ev = esc.events.find(e => e.id === p.fromEvent);
+      if(!ev) return p.date && p.date < y; // escala apagada: some (as antigas ficam como histórico)
+      return !!(ev.playlist && ev.playlist.id === p.id);
+    });
+    if(playlists.length !== before) changed = true;
     esc.events.forEach(ev => {
       const ep = ev.playlist; if(!ep || !ep.id || !Array.isArray(ep.songIds) || ev.date < y) return;
+      if(dismissed.includes(ep.id)) return;
       const mine = ev.minister_id === me || esc.assignments.some(a => a.event_id === ev.id && a.profile_id === me);
       if(!mine && !escCanSchedule()) return;
       const key = JSON.stringify(ep);
@@ -12440,6 +12454,7 @@
   async function escLinkPlaylist(evId, pl){
     const e = esc.events.find(x => x.id === evId); if(!e) return;
     const snap = pl ? escPlaylistSnapshot(pl) : null;
+    if(pl){ try{ lsSet('plDismissed', JSON.stringify(JSON.parse(lsGet('plDismissed') || '[]').filter(x => x !== pl.id))); }catch(e){} }
     const r = await esc.sb.from('events').update({ playlist: snap }).eq('id', evId);
     if(r.error){ showAlert('Escala', 'Não consegui ligar a playlist: ' + r.error.message); return; }
     e.playlist = snap; esc.plSwap = null; renderEscala();
@@ -12462,6 +12477,26 @@
       closeEscala(); openPickSongs(pl.id);
     });
     body.querySelectorAll('[data-pl-addsongs]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); closeEscala(); openPickSongs(b.dataset.plAddsongs); });
+  }
+
+  // Excluir playlist ligada a escala (v241)
+  function plLinkedEvents(id){
+    if(typeof esc === 'undefined' || !esc.events) return [];
+    const y = isoFromDate(new Date(Date.now() - 86400000));
+    return esc.events.filter(e => e.playlist && e.playlist.id === id && e.date >= y);
+  }
+  function plDeleteEscNote(pl){
+    const evs = plLinkedEvents(pl.id); if(!evs.length) return '';
+    const nomes = evs.map(e => (e.title || 'Culto') + ' ' + fmtDateBR(e.date).slice(0, 5)).join(', ');
+    return escCanSchedule() ? ' Ela também sai da escala (' + nomes + ') para toda a equipe.' : ' Ela está na escala (' + nomes + '); some só do seu aparelho.';
+  }
+  async function unlinkPlaylistFromEvents(id){
+    if(!esc.sb || !escCanSchedule()) return;
+    for(const e of plLinkedEvents(id)){
+      const r = await esc.sb.from('events').update({ playlist: null }).eq('id', e.id);
+      if(!r.error) e.playlist = null;
+    }
+    try{ renderEscala(); if(showingHome) renderHomeView(); }catch(err){}
   }
 
 })();
