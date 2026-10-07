@@ -1940,6 +1940,25 @@
     .aj-menu-row .options-item{width:auto; flex:1 1 auto; text-align:center; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:8px 10px; font-size:13px;}
     .aj-menu-row .options-item[style*="none"]{display:none !important;}
   }
+
+  /* ===== v237: layout do celular conforme modelo ===== */
+  @media (max-width: 820px){
+    .viewer-header{column-gap:8px; row-gap:8px; align-items:center;}
+    .m-break{order:-3; flex-basis:100%; height:0;}
+    #btnBack{order:-6;}
+    .viewer-header > #btnFullscreen{order:-5; margin-left:auto; padding:6px 10px; font-size:13px;}
+    #btnMenu{order:-4; margin-left:0 !important;}
+    .viewer-header .title-block{order:-2; flex:1 1 0 !important; flex-basis:0 !important; min-width:0;}
+    .viewer-header > #optionsMenuWrap{order:-1; margin-left:0; align-self:center;}
+    .viewer-header .header-actions{display:none !important;}
+    .m-quick-row{order:0; flex-basis:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:nowrap;}
+    .m-quick-row .control-group{display:flex !important; align-items:center; gap:6px; padding:0; margin:0; border:none !important; background:none;}
+    .m-quick-row .control-label{font-size:10.5px;}
+    .m-quick-row .speed-slider{width:72px;}
+    .m-quick-row .play-btn{width:32px; height:32px;}
+    .m-quick-row .step-btn{min-width:32px; height:32px;}
+    #controlsBar > #btnMetroChip{display:inline-flex !important;}
+  }
 </style>
 </head>
 <body>
@@ -2127,7 +2146,7 @@
         </label>
       </div>
 
-      <div class="control-group">
+      <div class="control-group" id="grpFonte">
         <span class="control-label">FONTE</span>
         <button class="step-btn" id="btnFontDown">A−</button>
         <span class="key-display" id="fontSizeDisplay" title="Tamanho da fonte">14</span>
@@ -2156,7 +2175,7 @@
         </div>
       </div>
 
-      <div class="control-group resumo-hide-group">
+      <div class="control-group resumo-hide-group" id="grpRolagem">
         <span class="control-label">ROLAGEM</span>
         <button class="play-btn" id="btnPlay">▶</button>
         <input type="range" class="speed-slider" id="speedSlider" min="1" max="10" value="4">
@@ -2684,7 +2703,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v236 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v237 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -12218,6 +12237,39 @@
     }, true);
     // escolher uma opção fecha os ajustes
     row.addEventListener('click', (e) => { if(e.target.closest('.options-item') && !controlsBar.classList.contains('mobile-collapsed')) tog.click(); });
+  })();
+
+  // ===== v237: layout do celular (Voltar · Tela cheia · » / nome + ☰ / Rolagem + Fonte) =====
+  (function(){
+    const vh = document.getElementById('viewerHeader');
+    const quick = document.createElement('div'); quick.id = 'mQuickRow'; quick.className = 'm-quick-row';
+    const brk = document.createElement('div'); brk.className = 'm-break';
+    const moves = [
+      ['btnFullscreen', () => vh, () => document.getElementById('btnMenu')],
+      ['optionsMenuWrap', () => vh, null],
+      ['grpRolagem', () => quick, null],
+      ['grpFonte', () => quick, null],
+      ['btnMetroChip', () => controlsBar, () => document.getElementById('btnDiscardDisplayPrefs')],
+    ];
+    const homes = {};
+    moves.forEach(([id]) => { const el = document.getElementById(id); if(!el) return; const ph = document.createComment('home:' + id); el.parentNode.insertBefore(ph, el); homes[id] = ph; });
+    function place(){
+      const on = isPhoneView() && !isFsMode();
+      if(on && quick.parentNode !== vh){ vh.appendChild(brk); vh.appendChild(quick); }
+      moves.forEach(([id, to, before]) => {
+        const el = document.getElementById(id); if(!el) return;
+        if(on){ const t = to(), b = before && before(); if(el.parentNode !== t) t.insertBefore(el, b && b.parentNode === t ? b : null); }
+        else if(homes[id] && el.previousSibling !== homes[id]) homes[id].parentNode.insertBefore(el, homes[id].nextSibling);
+      });
+      if(!on && quick.parentNode){ quick.remove(); brk.remove(); }
+    }
+    place();
+    window.addEventListener('resize', place);
+    new MutationObserver(place).observe(document.querySelector('.main-panel'), { attributes:true, attributeFilter:['class'] });
+    // No celular a fonte fica salva na hora (sem precisar do 💾).
+    ['btnFontUp','btnFontDown'].forEach(id => document.getElementById(id).addEventListener('click', () => {
+      if(isPhoneView() && !fullscreenEditing){ try{ saveDisplayPrefsForCurrentSong(); }catch(e){} }
+    }));
   })();
 
 })();
