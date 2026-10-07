@@ -1989,6 +1989,8 @@
   .ev-pl-sug{font-size:13px; background:rgba(91,191,122,0.10); border:1px solid rgba(91,191,122,0.35); border-radius:10px; padding:8px 10px; margin-bottom:8px; display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
   .ev-pl-sug button{margin:0 0 0 auto !important; padding:5px 12px !important; font-size:12.5px !important;}
   .ev-pl-swap{margin-top:8px;} .ev-pl-swap select{width:100%; padding:8px; border-radius:8px; background:var(--surface); color:var(--text); border:1px solid var(--border);}
+
+  .plp-btn.danger{color:var(--danger);}
 </style>
 </head>
 <body>
@@ -2733,7 +2735,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v239 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v240 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3857,7 +3859,9 @@
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
         (items.length ? '<button type="button" class="plp-btn" data-plp-share><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' : '') +
         (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp><i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar playlist') + '</button>' : '') +
-        '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button></div></div>';
+        '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button>' +
+        '<button type="button" class="plp-btn" data-plp-arch title="' + (sel.archived ? 'Desarquivar' : 'Arquivar (sai da lista, mas continua nas estatísticas)') + '">' + (sel.archived ? '↩️ Desarquivar' : '🗄️ Arquivar') + '</button>' +
+        '<button type="button" class="plp-btn danger" data-plp-del title="Excluir playlist">🗑️ Excluir</button></div></div>';
       try{ html += plEscalaCardHtml(sel); }catch(e){ console.error(e); }
       if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
       else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
@@ -3876,6 +3880,8 @@
       const sp = q('[data-plp-sp]'); if(sp) sp.onclick = () => spSyncPlaylist(sel, sp);
       const ed = q('[data-plp-edit]'); if(ed) ed.onclick = () => openPlaylistModal(sel.id);
       try{ bindPlEscalaCard(box, sel); }catch(e){}
+      const ar = q('[data-plp-arch]'); if(ar) ar.onclick = () => { setPlaylistArchived(sel, !sel.archived); renderPlaylistsPage(); };
+      const dl = q('[data-plp-del]'); if(dl) dl.onclick = () => showConfirm('Excluir playlist', 'Deseja excluir a playlist "' + sel.name + '"? As músicas continuam salvas na biblioteca.' + (sel.date ? ' Ela deixa de contar nas estatísticas — para guardar o histórico, prefira arquivar (🗄️).' : ''), () => { performDeletePlaylist(sel.id); if(openPlaylistId === sel.id) openPlaylistId = null; renderPlaylistsPage(); }, { okLabel: '🗑️ Excluir' });
       box.querySelectorAll('.plp-ctl [data-mv]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); movePlaylistSong(sel.id, +b.dataset.ri, +b.dataset.mv); renderPlaylistsPage(); });
       box.querySelectorAll('.plp-ctl [data-rm]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const sg = songs.find(x => x.id === b.dataset.rm); showConfirm('Tirar da playlist', 'Tirar "' + (sg ? sg.title : '') + '" da playlist "' + sel.name + '"? A música continua no repertório.', () => { removeSongFromPlaylist(sel.id, b.dataset.rm); renderSidebar(); renderPlaylistsPage(); }, { okLabel: 'Tirar' }); });
       box.querySelectorAll('[data-plp-song]').forEach(b => b.onclick = () => guardIfDirty(() => { showingHome = false; activeView = 'playlists'; openPlaylistId = sel.id; selectSong(b.dataset.plpSong, sel.id); }));
