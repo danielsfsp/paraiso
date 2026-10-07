@@ -2075,6 +2075,19 @@
   [data-merge-open].on{border-color:var(--accent); color:var(--accent);}
   .tm-perm-save .sp{flex:1;}
   .tm-del-ico{width:38px; padding:0 !important; justify-content:center; font-size:15px;}
+
+  /* v251: abas da Equipe */
+  .tm-tabs{display:flex; gap:4px; background:var(--surface); border:1px solid var(--border-soft); border-radius:12px; padding:4px; margin:10px 0;}
+  .tm-tabs button{flex:1; border:0; background:transparent; color:var(--text-dim); padding:8px 6px; border-radius:9px; font-weight:700; font-size:13px; cursor:pointer; position:relative;}
+  .tm-tabs button b{font-weight:600; opacity:.7; margin-left:3px;}
+  .tm-tabs button.on{background:var(--surface-3, var(--surface-2)); color:var(--text);}
+  .tm-tab-alert{position:absolute; top:2px; right:6px; background:var(--accent); color:#1A1206; font-style:normal; font-size:10px; font-weight:800; border-radius:99px; padding:0 5px; line-height:15px;}
+
+  .tm-top .tm-stats{display:none !important;}
+  .tm-tabs button{white-space:nowrap;}
+  @media (max-width: 820px){ .tm-tabs button{font-size:12px; padding:8px 2px;} .tm-tabs button b{margin-left:2px;} }
+
+  .tm-tabs .tm-tab-alert{position:static; display:inline-block; margin-left:4px; vertical-align:1px;}
 </style>
 </head>
 <body>
@@ -2821,7 +2834,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v250 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v251 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10066,7 +10079,13 @@
       (leader ? '<div><b>' + pending.length + '</b><span>novos</span></div><div><b>' + open.length + '</b><span>pré-cadastro</span></div>' : '') +
       '<div><b>' + esc.teams.length + '</b><span>equipes</span></div></div>' +
       '<div class="tm-actions">' + (leader && !esc.preMissing ? '<button type="button" class="tm-btn pri" id="escNewPre">＋ Pré-cadastrar</button>' : '') + '<button type="button" class="tm-btn" id="escInvite"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Convidar</button></div></div>';
+    const tt = esc.teamTab = (esc.teamTab === 'pre' && !leader) ? 'pessoas' : (esc.teamTab || 'pessoas');
+    html += '<div class="tm-tabs">' +
+      '<button type="button" data-ttab="pessoas"' + (tt === 'pessoas' ? ' class="on"' : '') + '>Cadastrados <b>' + approvedList.length + '</b>' + (leader && pending.length ? '<i class="tm-tab-alert">' + pending.length + '</i>' : '') + '</button>' +
+      (leader ? '<button type="button" data-ttab="pre"' + (tt === 'pre' ? ' class="on"' : '') + '>Pré-cadastros <b>' + open.length + '</b></button>' : '') +
+      '<button type="button" data-ttab="equipes"' + (tt === 'equipes' ? ' class="on"' : '') + '>Equipes <b>' + esc.teams.length + '</b></button></div>';
     html += '<input type="search" class="esc-input tm-search" id="tmSearch" placeholder="🔍 Buscar pessoa ou função…" autocomplete="off">';
+    html += '<div class="tm-tsec" data-tsec="pessoas">';
     if(leader && pending.length){
       html += '<div class="tm-sec">Aguardando aprovação <span class="tm-count warn">' + pending.length + '</span></div><div class="tm-pending">' + pending.map(p =>
         '<div class="tm-card tm-pend" data-search="' + escH(foldForSearch((p.name || '') + ' ' + (p.email || ''))) + '">' + av(p) + '<div class="tm-main"><div class="tm-name">' + escH(p.name || p.email) + '</div><div class="tm-sub">' + escH(p.email || '') + '</div>' +
@@ -10093,7 +10112,7 @@
           '<div class="tm-perm-save"><button type="button" class="tm-btn no tm-del-ico" data-del-member="' + p.id + '" title="Excluir do ministério" aria-label="Excluir do ministério">🗑</button><span class="sp"></span><button type="button" class="tm-btn" data-perm-cancel="' + p.id + '">Cancelar</button><button type="button" class="tm-btn pri" data-perm-save="' + p.id + '">💾 Salvar</button></div></div>' : '') +
         '</div>';
     });
-    html += '</div>';
+    html += '</div></div><div class="tm-tsec" data-tsec="pre">';
     if(leader){
       if(esc.preMissing) html += '<div class="hint">⚠ Falta rodar no Supabase o arquivo <b>paraiso_supabase_v5_precadastro.sql</b> para usar o pré-cadastro.</div>';
       else if(open.length){
@@ -10104,16 +10123,23 @@
           (x.phone ? '<button type="button" class="tm-btn ok tm-inv" data-pre-inv="' + x.id + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Mandar convite</button>' : '') + '</div>').join('') + '</div>';
       }
     }
+    if(leader && !esc.preMissing && !open.length) html += '<div class="hint">Nenhum pré-cadastro aberto. Use "＋ Pré-cadastrar" para deixar alguém cadastrado antes de entrar no app.</div>';
+    html += '</div><div class="tm-tsec" data-tsec="equipes">';
     html += '<div class="tm-sec">Equipes <span class="tm-count">' + esc.teams.length + '</span>' + (leader ? '<button type="button" class="tm-link" id="escNewTeam">＋ Nova equipe</button>' : '') + '</div>';
     if(!esc.teams.length) html += '<div class="hint">Nenhuma equipe ainda.' + (leader ? ' Equipes ajudam a preencher a escala com um toque.' : '') + '</div>';
     html += '<div class="tm-grid">' + esc.teams.map(t => '<div class="tm-card tm-team"' + (leader ? ' data-team-edit="' + t.id + '"' : '') + '><div class="tm-head"><div class="tm-team-ico">🧩</div><div class="tm-main"><div class="tm-name">' + escH(t.name) + '</div><div class="tm-sub">' + t.member_ids.length + (t.member_ids.length === 1 ? ' pessoa' : ' pessoas') + '</div></div>' + (leader ? '<span class="tm-more">✎</span>' : '') + '</div>' +
       '<div class="hc-stack tm-stack">' + t.member_ids.slice(0, 10).map(id => homeAvatar(escProfile(id), null)).join('') + '</div><div class="tm-sub">' + t.member_ids.map(id => escH(escFirst(id))).join(', ') + '</div></div>').join('') + '</div>';
+    html += '</div><div class="tm-tsec" data-tsec="pessoas">';
     if(leader && rejected.length){
       html += '<details class="esc-rejected"><summary>🚫 Cadastros recusados (' + rejected.length + ')</summary>' + rejected.map(p =>
         '<div class="esc-pend-row"><div class="esc-person"><strong>' + escH(p.name || p.email) + '</strong><span>' + escH(p.email || '') + '</span></div>' +
         '<button type="button" class="esc-link" data-approve="' + p.id + '">Aprovar mesmo assim</button><button type="button" class="tm-btn no" data-del-member="' + p.id + '">🗑 Excluir</button></div>').join('') + '</details>';
     }
+    html += '</div>';
     body.innerHTML = html;
+    body.querySelectorAll('.tm-tsec').forEach(sec => { sec.hidden = sec.dataset.tsec !== tt; });
+    body.querySelectorAll('[data-ttab]').forEach(b => b.onclick = () => { esc.teamTab = b.dataset.ttab; renderEscala(); });
+    const sb0 = body.querySelector('#tmSearch'); if(sb0 && tt === 'equipes') sb0.style.display = 'none';
     const np = document.getElementById('escNewPre'); if(np) np.onclick = () => escEditPre(null);
     body.querySelectorAll('[data-pre-edit]').forEach(b => b.onclick = () => escEditPre(b.dataset.preEdit));
     body.querySelectorAll('[data-pre-inv]').forEach(b => b.onclick = () => { const x = (esc.pre || []).find(y => y.id === b.dataset.preInv); if(x) escPreInvite(x); });
