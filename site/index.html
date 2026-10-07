@@ -2043,6 +2043,30 @@
 
   .tm-dup{font-size:12px; color:var(--accent); background:rgba(232,165,63,0.10); border-radius:8px; padding:5px 9px; margin-top:8px;}
   .tm-merge{display:flex; gap:8px; align-items:center;} .tm-merge select{flex:1; min-width:0;}
+
+  /* v248: Pessoas e Pré-cadastros em lista */
+  .tm-grid.tm-list{display:flex; flex-direction:column; gap:0; background:var(--surface); border:1px solid var(--border-soft); border-radius:14px; overflow:hidden;}
+  .tm-list .tm-card{background:transparent; border:0 !important; border-radius:0; border-top:1px solid var(--border-soft) !important; padding:10px 12px;
+    display:grid; grid-template-columns:36px minmax(0, 1fr) 32px 32px; column-gap:10px; width:100%; box-sizing:border-box; row-gap:6px; align-items:center;}
+  .tm-list .tm-card:first-child{border-top:0 !important;}
+  .tm-list .tm-head{display:contents;}
+  .tm-list .tm-av, .tm-list .tm-head > .hc-av{grid-column:1; grid-row:1; width:36px !important; height:36px !important;}
+  .tm-list .tm-main{grid-column:2; grid-row:1; min-width:0;}
+  .tm-list .tm-wa{grid-column:3; grid-row:1;}
+  .tm-list .tm-more{grid-column:4; grid-row:1;}
+  .tm-list .tm-fns{grid-column:2 / -1; grid-row:2; margin:0;}
+  .tm-list .tm-fn{font-size:11.5px; padding:2px 8px;}
+  .tm-list .tm-dup, .tm-list .tm-perm, .tm-list .tm-inv{grid-column:2 / -1; margin:0;}
+  .tm-list .tm-perm{border-top:1px solid var(--border-soft); padding-top:6px;}
+  .tm-list .tm-card.tm-pre .tm-more{grid-column:4;}
+  .tm-list .tm-sec small{display:block;}
+  .tm-list .tm-inv{justify-self:start; padding:6px 14px;}
+  .tm-list .tm-name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  @media (min-width: 821px){
+    .tm-list .tm-card{grid-template-columns:36px minmax(200px, 1fr) minmax(0, 1.4fr) 32px 32px;}
+    .tm-list .tm-fns{grid-column:3; grid-row:1;}
+    .tm-list .tm-wa{grid-column:4;} .tm-list .tm-more{grid-column:5;}
+  }
 </style>
 </head>
 <body>
@@ -2788,7 +2812,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v247 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v248 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10038,7 +10062,7 @@
         (escPreOpen().length ? '<select class="esc-input esc-pre-link" data-pid="' + p.id + '" title="Se essa pessoa já tem pré-cadastro, escolha aqui para usar os dados dele"><option value="">sem pré-cadastro</option>' + escPreOpen().map(x => '<option value="' + x.id + '"' + ((x.email && p.email && x.email.toLowerCase() === p.email.toLowerCase()) || (!x.email && preNameMatch(x, p)) ? ' selected' : '') + '>= ' + escH(x.name) + '</option>').join('') + '</select>' : '') + '</div>' +
         '<div class="tm-pend-btns"><button type="button" class="tm-btn ok" data-approve="' + p.id + '">✓ Aprovar</button><button type="button" class="tm-btn no" data-reject="' + p.id + '">Recusar</button></div></div>').join('') + '</div>';
     }
-    html += '<div class="tm-sec">Pessoas <span class="tm-count">' + approvedList.length + '</span></div><div class="tm-grid">';
+    html += '<div class="tm-sec">Pessoas <span class="tm-count">' + approvedList.length + '</span></div><div class="tm-grid tm-list">';
     approvedList.forEach(p => {
       const canManage = leader && p.id !== esc.user.id && !escIsAdmin(p);
       html += '<div class="tm-card' + (p.active === false ? ' inactive' : '') + '" data-search="' + escH(foldForSearch((p.name || '') + ' ' + (p.functions || []).join(' '))) + '">' +
@@ -10062,7 +10086,7 @@
     if(leader){
       if(esc.preMissing) html += '<div class="hint">⚠ Falta rodar no Supabase o arquivo <b>paraiso_supabase_v5_precadastro.sql</b> para usar o pré-cadastro.</div>';
       else if(open.length){
-        html += '<div class="tm-sec">Pré-cadastros <span class="tm-count">' + open.length + '</span><small>ainda não entraram no app</small></div><div class="tm-grid">' + open.map(x =>
+        html += '<div class="tm-sec">Pré-cadastros <span class="tm-count">' + open.length + '</span><small>ainda não entraram no app</small></div><div class="tm-grid tm-list">' + open.map(x =>
           '<div class="tm-card tm-pre" data-search="' + escH(foldForSearch((x.name || '') + ' ' + (x.functions || []).join(' '))) + '"><div class="tm-head">' + homeAvatar(x, null).replace('class="hc-av"', 'class="hc-av tm-av"') +
           '<div class="tm-main"><div class="tm-name">' + escH(x.name) + '</div><div class="tm-sub">' + (x.email ? '✉️ ' + escH(x.email) : 'sem e-mail — vincule ao aprovar') + '</div></div>' +
           '<button type="button" class="tm-more" data-pre-edit="' + x.id + '" title="Editar">✎</button></div><div class="tm-fns">' + fnChips(x.functions) + '</div>' +
