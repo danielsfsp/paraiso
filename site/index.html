@@ -1973,6 +1973,22 @@
   .plp-esc-av{display:inline-flex;} .plp-esc-av > *{width:28px !important; height:28px !important; font-size:11px !important; margin:0 !important;}
   .plp-esc-empty{color:var(--text-dim); font-size:13px; padding:4px 0;}
   .plp-esc-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  /* ===== v239: playlist do culto na escala ===== */
+  .ev-pl-badge{display:inline-block; margin-top:5px; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:99px;}
+  .ev-pl-badge.on{background:rgba(232,165,63,0.14); color:var(--accent);}
+  .ev-pl-badge.off{background:rgba(212,105,90,0.13); color:var(--danger);}
+  .ev-pl{border:1px solid var(--border-soft); border-radius:12px; padding:10px 12px; background:var(--surface-2);}
+  .ev-pl-head{display:flex; align-items:center; gap:10px;}
+  .ev-pl-ico{width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:rgba(232,165,63,0.15); color:var(--accent); font-size:18px; flex-shrink:0;}
+  .ev-pl-txt{flex:1; min-width:0;} .ev-pl-txt b{display:block; font-size:14px;} .ev-pl-txt small{color:var(--text-dim); font-size:12px;}
+  .ev-pl-open{padding:7px 14px !important; margin:0 !important; font-size:13px !important;}
+  .ev-pl .ev-songs{margin-top:8px;}
+  .ev-pl-empty{color:var(--text-dim); font-size:13px; padding:4px 0;}
+  .ev-pl-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .ev-pl-acts button{margin:0 !important; font-size:13px; padding:8px 12px;}
+  .ev-pl-sug{font-size:13px; background:rgba(91,191,122,0.10); border:1px solid rgba(91,191,122,0.35); border-radius:10px; padding:8px 10px; margin-bottom:8px; display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+  .ev-pl-sug button{margin:0 0 0 auto !important; padding:5px 12px !important; font-size:12.5px !important;}
+  .ev-pl-swap{margin-top:8px;} .ev-pl-swap select{width:100%; padding:8px; border-radius:8px; background:var(--surface); color:var(--text); border:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -2717,7 +2733,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v238 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v239 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9619,13 +9635,12 @@
       html += '<div class="esc-card ev-card' + (hero ? ' ev-hero' : '') + (open ? ' open' : '') + '" data-ev="' + e.id + '">';
       html += '<div class="esc-card-head">';
       if(hero) html += '<div class="ev-eyebrow">' + (mineOnly ? 'Sua próxima escala' : 'Próximo culto') + ' · ' + whenTxt(e.date) + '</div>';
-      html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + '</div><div class="ev-sub">' + sub + '</div>' +
+      html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + '</div><div class="ev-sub">' + sub + '</div>' + escPlBadge(e) +
         (!hero && as.length ? '<div class="ev-mini">' + stack + '</div>' : '') + '</div>' + pillFor(e, mine) + '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></div>';
       if(hero){
         const pct = as.length ? Math.round(conf * 100 / as.length) : 0;
         html += '<div class="ev-row ev-progress">' + stack + '<div class="ev-bar"><i style="width:' + pct + '%"></i></div><span class="ev-sub">' + (as.length ? conf + ' de ' + as.length : 'sem equipe') + '</span></div>';
         const chips = [];
-        if(e.playlist && e.playlist.songs && e.playlist.songs.length) chips.push('🎵 ' + e.playlist.songs.length + (e.playlist.songs.length === 1 ? ' música' : ' músicas'));
         if(e.dress_code) chips.push('👔 ' + escH(e.dress_code));
         if(chips.length) html += '<div class="ev-chips">' + chips.map(c => '<span>' + c + '</span>').join('') + '</div>';
       }
@@ -9654,11 +9669,7 @@
           (unav ? ' · <em class="esc-warn">⚠ marcou que não pode</em>' : '') + (a.status === 'recusado' && a.reason ? ' · “' + escH(a.reason) + '”' : '') + '</div></div>' + st + nudge + '</div>';
       });
       html += '</div>';
-      if(e.playlist && e.playlist.songs && e.playlist.songs.length){
-        const plMatch = plForEvent(e);
-        html += '<div class="ev-sec">Repertório' + (plMatch ? ' <button type="button" class="ev-link" data-openpl="' + plMatch.id + '">▶ Abrir playlist</button>' : '') + '</div><div class="ev-songs">' +
-          e.playlist.songs.map((sg, i) => '<div class="ev-song"><span class="n">' + (i + 1) + '</span><span class="t">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' + (sg.key ? '<span class="k">' + escH(sg.key) + '</span>' : '') + '</div>').join('') + '</div>';
-      }
+      html += escPlBlockHtml(e);
       if(e.dress_code) html += '<div class="ev-sec">Dress code</div><div class="ev-chips"><span>👔 ' + escH(e.dress_code) + '</span></div>';
       if(e.notes) html += '<div class="ev-sec">Observações</div><div class="esc-notes">' + escH(e.notes) + '</div>';
       html += '<div class="esc-actions ev-actions"><button type="button" class="btn-secondary" data-wa="' + e.id + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp</button>';
@@ -9687,6 +9698,7 @@
         showImportFeedback('🗑 Escala excluída.', true);
       }, { okLabel: 'Excluir' });
     });
+    try{ bindEscPlBlock(body); }catch(err){ console.error(err); }
     body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
     body.querySelectorAll('.ev-mine.answered').forEach(m => m.onclick = (ev) => { if(ev.target.closest('button')) return; m.classList.remove('answered'); });
     body.querySelectorAll('[data-remind]').forEach(b => b.onclick = () => escRemind(b.dataset.remind));
@@ -12383,6 +12395,67 @@
     const e1 = box.querySelector('[data-plp-esc-edit]'); if(e1) e1.onclick = () => plOpenEscalaEditor(pl, e1.dataset.plpEscEdit);
     const e2 = box.querySelector('[data-plp-esc-new]'); if(e2) e2.onclick = () => plOpenEscalaEditor(pl, null);
     const e3 = box.querySelector('[data-plp-esc-open]'); if(e3) e3.onclick = () => openEscala(e3.dataset.plpEscOpen);
+  }
+
+  // ================= PLAYLIST DO CULTO NA ESCALA (v239) =================
+  function escPlCount(e){ return e.playlist ? ((e.playlist.songs && e.playlist.songs.length) || (e.playlist.songIds && e.playlist.songIds.length) || 0) : 0; }
+  function escPlBadge(e){
+    const n = escPlCount(e);
+    if(e.playlist) return '<div class="ev-pl-badge on">🎵 ' + n + (n === 1 ? ' música' : ' músicas') + '</div>';
+    return '<div class="ev-pl-badge off">🎵 sem repertório</div>';
+  }
+  function escPlSuggest(e){
+    const linked = new Set(esc.events.filter(x => x.playlist && x.playlist.id).map(x => x.playlist.id));
+    return playlists.find(p => !p.archived && p.date === e.date && !linked.has(p.id) && !p.fromEvent) || null;
+  }
+  function escPlBlockHtml(e){
+    const can = escCanSchedule();
+    let h = '<div class="ev-sec">🎵 Playlist do culto</div><div class="ev-pl">';
+    if(e.playlist){
+      const pl = plForEvent(e), n = escPlCount(e);
+      h += '<div class="ev-pl-head"><div class="ev-pl-ico">♫</div><div class="ev-pl-txt"><b>' + escH(e.playlist.name || 'Playlist') + '</b><small>' + n + (n === 1 ? ' música' : ' músicas') + '</small></div>' +
+        (pl ? '<button type="button" class="btn-primary ev-pl-open" data-openpl="' + pl.id + '">▶ Abrir</button>' : '') + '</div>';
+      if(e.playlist.songs && e.playlist.songs.length) h += '<div class="ev-songs">' + e.playlist.songs.map((sg, i) => '<div class="ev-song"><span class="n">' + (i + 1) + '</span><span class="t">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' + (sg.key ? '<span class="k">' + escH(sg.key) + '</span>' : '') + '</div>').join('') + '</div>';
+      else h += '<div class="ev-pl-empty">Nenhuma música ainda.</div>';
+      if(can) h += '<div class="ev-pl-acts">' + (pl ? '<button type="button" class="btn-secondary" data-pl-addsongs="' + pl.id + '">＋ Músicas</button>' : '') + '<button type="button" class="btn-secondary" data-pl-swap="' + e.id + '">🔁 Trocar playlist</button></div>';
+    } else if(can){
+      const sug = escPlSuggest(e);
+      if(sug) h += '<div class="ev-pl-sug">💡 Usar a playlist <b>' + escH(sug.name) + '</b> (' + sug.songIds.length + ' músicas, mesma data)? <button type="button" class="btn-primary" data-pl-link="' + e.id + '" data-pl-id="' + sug.id + '">Usar</button></div>';
+      h += '<div class="ev-pl-empty">Este culto ainda não tem repertório.</div><div class="ev-pl-acts"><button type="button" class="btn-primary" data-pl-create="' + e.id + '">＋ Criar playlist para este culto</button><button type="button" class="btn-secondary" data-pl-swap="' + e.id + '">📂 Escolher playlist existente</button></div>';
+    } else {
+      h += '<div class="ev-pl-empty">Repertório ainda não definido pelo líder.</div>';
+    }
+    if(can && esc.plSwap === e.id){
+      const opts = sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '">' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + ' (' + p.songIds.length + ')</option>').join('');
+      h += '<div class="ev-pl-swap"><select data-pl-pick="' + e.id + '"><option value="">Escolha uma playlist…</option>' + opts + (e.playlist ? '<option value="__none">— tirar a playlist deste culto —</option>' : '') + '</select></div>';
+    }
+    return h + '</div>';
+  }
+  async function escLinkPlaylist(evId, pl){
+    const e = esc.events.find(x => x.id === evId); if(!e) return;
+    const snap = pl ? escPlaylistSnapshot(pl) : null;
+    const r = await esc.sb.from('events').update({ playlist: snap }).eq('id', evId);
+    if(r.error){ showAlert('Escala', 'Não consegui ligar a playlist: ' + r.error.message); return; }
+    e.playlist = snap; esc.plSwap = null; renderEscala();
+    try{ if(showingHome) renderHomeView(); }catch(err){}
+  }
+  function bindEscPlBlock(body){
+    body.querySelectorAll('[data-pl-link]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(p => p.id === b.dataset.plId); if(pl) escLinkPlaylist(b.dataset.plLink, pl); });
+    body.querySelectorAll('[data-pl-swap]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); esc.plSwap = esc.plSwap === b.dataset.plSwap ? null : b.dataset.plSwap; renderEscala(); });
+    body.querySelectorAll('[data-pl-pick]').forEach(sel => { sel.onclick = ev => ev.stopPropagation(); sel.onchange = () => {
+      if(sel.value === '__none') return escLinkPlaylist(sel.dataset.plPick, null);
+      const pl = playlists.find(p => p.id === sel.value); if(pl) escLinkPlaylist(sel.dataset.plPick, pl);
+    }; });
+    body.querySelectorAll('[data-pl-create]').forEach(b => b.onclick = async (ev) => {
+      ev.stopPropagation();
+      const e = esc.events.find(x => x.id === b.dataset.plCreate); if(!e) return;
+      const name = uniquePlaylistName((e.title || 'Culto') + ' ' + fmtDateBR(e.date).slice(0, 5));
+      const pl = { id: newPlaylistId(), name, songIds: [], overrides: {}, date: e.date, archived: false, minister: e.minister_id ? escName(e.minister_id) : '' };
+      playlists.push(pl); lsSet('playlists', JSON.stringify(playlists)); renderSidebar();
+      await escLinkPlaylist(e.id, pl);
+      closeEscala(); openPickSongs(pl.id);
+    });
+    body.querySelectorAll('[data-pl-addsongs]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); closeEscala(); openPickSongs(b.dataset.plAddsongs); });
   }
 
 })();
