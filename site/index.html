@@ -2040,6 +2040,9 @@
   .tm-fn-pick input:checked + span{background:rgba(232,165,63,0.16); border-color:var(--accent); color:var(--accent); font-weight:700;}
   .tm-perm-save{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
   .tm-perm.dirty .tm-perm-save [data-perm-save]{animation:saveBtnPulse 1.6s ease-in-out infinite;}
+
+  .tm-dup{font-size:12px; color:var(--accent); background:rgba(232,165,63,0.10); border-radius:8px; padding:5px 9px; margin-top:8px;}
+  .tm-merge{display:flex; gap:8px; align-items:center;} .tm-merge select{flex:1; min-width:0;}
 </style>
 </head>
 <body>
@@ -2785,7 +2788,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v246 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v247 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10032,7 +10035,7 @@
     if(leader && pending.length){
       html += '<div class="tm-sec">Aguardando aprovação <span class="tm-count warn">' + pending.length + '</span></div><div class="tm-pending">' + pending.map(p =>
         '<div class="tm-card tm-pend" data-search="' + escH(foldForSearch((p.name || '') + ' ' + (p.email || ''))) + '">' + av(p) + '<div class="tm-main"><div class="tm-name">' + escH(p.name || p.email) + '</div><div class="tm-sub">' + escH(p.email || '') + '</div>' +
-        (escPreOpen().length ? '<select class="esc-input esc-pre-link" data-pid="' + p.id + '" title="Se essa pessoa já tem pré-cadastro, escolha aqui para usar os dados dele"><option value="">sem pré-cadastro</option>' + escPreOpen().map(x => '<option value="' + x.id + '"' + (x.email && p.email && x.email.toLowerCase() === p.email.toLowerCase() ? ' selected' : '') + '>= ' + escH(x.name) + '</option>').join('') + '</select>' : '') + '</div>' +
+        (escPreOpen().length ? '<select class="esc-input esc-pre-link" data-pid="' + p.id + '" title="Se essa pessoa já tem pré-cadastro, escolha aqui para usar os dados dele"><option value="">sem pré-cadastro</option>' + escPreOpen().map(x => '<option value="' + x.id + '"' + ((x.email && p.email && x.email.toLowerCase() === p.email.toLowerCase()) || (!x.email && preNameMatch(x, p)) ? ' selected' : '') + '>= ' + escH(x.name) + '</option>').join('') + '</select>' : '') + '</div>' +
         '<div class="tm-pend-btns"><button type="button" class="tm-btn ok" data-approve="' + p.id + '">✓ Aprovar</button><button type="button" class="tm-btn no" data-reject="' + p.id + '">Recusar</button></div></div>').join('') + '</div>';
     }
     html += '<div class="tm-sec">Pessoas <span class="tm-count">' + approvedList.length + '</span></div><div class="tm-grid">';
@@ -10043,7 +10046,9 @@
         (p.phone ? '<a class="tm-wa" title="' + escH(p.phone) + '" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i></a>' : '') +
         (canManage ? '<button type="button" class="tm-more" data-tm-toggle title="Permissões">⚙</button>' : '') + '</div>' +
         '<div class="tm-fns">' + fnChips(p.functions) + '</div>' +
+        (leader && open.some(x => preNameMatch(x, p)) ? '<div class="tm-dup">⚠ Parece o pré-cadastro <b>' + escH(open.find(x => preNameMatch(x, p)).name) + '</b> — junte no ⚙</div>' : '') +
         (canManage ? '<div class="tm-perm" hidden data-perm="' + p.id + '">' +
+          (open.length ? '<div class="tm-perm-sec">Pré-cadastro</div><div class="tm-merge"><select class="esc-input" data-merge-sel="' + p.id + '"><option value="">— juntar com um pré-cadastro —</option>' + open.map(x => '<option value="' + x.id + '"' + (preNameMatch(x, p) ? ' selected' : '') + '>' + escH(x.name) + ((x.functions || []).length ? ' · ' + escH(x.functions.join(', ')) : '') + '</option>').join('') + '</select><button type="button" class="tm-btn" data-merge="' + p.id + '">🔗 Juntar</button></div>' : '') +
           '<div class="tm-perm-sec">Funções</div><div class="tm-fn-pick">' + ESC_FUNCTIONS.filter(f => f !== 'Ministro').map(f => '<label><input type="checkbox" data-fn="' + escH(f) + '"' + ((p.functions || []).includes(f) ? ' checked' : '') + '><span>' + escFnIcon(f) + ' ' + escH(f) + '</span></label>').join('') + '</div>' +
           '<div class="tm-perm-sec">Permissões</div>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '><i></i>Líder <small>aprova pessoas, monta escalas e edita o repertório</small></label>' +
@@ -10119,6 +10124,21 @@
       const p = escProfile(pid); if(p) Object.assign(p, upd);
       renderEscala();
       showImportFeedback('✓ ' + ((p && p.name) || 'Pessoa') + ' atualizado(a).', true);
+    });
+    body.querySelectorAll('[data-merge]').forEach(b => b.onclick = () => {
+      const pid = b.dataset.merge, sel = body.querySelector('[data-merge-sel="' + pid + '"]');
+      const pre = sel && sel.value ? (esc.pre || []).find(x => x.id === sel.value) : null; const p = escProfile(pid);
+      if(!pre || !p){ showAlert('Juntar cadastro', 'Escolha o pré-cadastro que é dessa pessoa.'); return; }
+      showConfirm('Juntar cadastros', 'Juntar o pré-cadastro "' + pre.name + '" com ' + p.name + '? As funções, o celular e as escalas do pré-cadastro passam para o cadastro dele(a), e o pré-cadastro sai da lista.', async () => {
+        const fns = Array.from(new Set([...(p.functions || []), ...(pre.functions || [])]));
+        const upd = { functions: fns, is_minister: !!(p.is_minister || pre.is_minister), is_leader: !!(p.is_leader || pre.is_leader) };
+        if(!p.phone && pre.phone) upd.phone = pre.phone;
+        let r = await esc.sb.from('profiles').update(upd).eq('id', pid); if(r.error){ showAlert('Juntar cadastro', r.error.message); return; }
+        r = await esc.sb.from('assignments').update({ profile_id: pid, pre_id: null }).eq('pre_id', pre.id); if(r.error){ showAlert('Juntar cadastro', r.error.message); return; }
+        r = await esc.sb.from('pre_profiles').update({ linked_profile: pid }).eq('id', pre.id); if(r.error){ showAlert('Juntar cadastro', r.error.message); return; }
+        await escLoadAll();
+        showImportFeedback('🔗 ' + p.name + ' e o pré-cadastro "' + pre.name + '" agora são um só.', true);
+      }, { okLabel: '🔗 Juntar' });
     });
     body.querySelectorAll('[data-perm-cancel]').forEach(b => b.onclick = () => renderEscala());
     body.querySelectorAll('[data-perm] input').forEach(cb => cb.onchange = () => { const box = cb.closest('[data-perm]'); if(box) box.classList.add('dirty'); });
@@ -12676,6 +12696,16 @@
   }
 
   document.getElementById('btnHelpTop').addEventListener('click', () => document.getElementById('btnHelp').click());
+
+  // Pré-cadastro sem e-mail: reconhece pela semelhança do nome (v247).
+  function preNameMatch(pre, prof){
+    if(!pre || !prof) return false;
+    const toks = x => foldForSearch(x || '').split(/\s+/).filter(t => t.length > 1 && !['de','da','do','dos','das','e'].includes(t));
+    const a = toks(pre.name), b = toks(prof.name);
+    if(!a.length || !b.length) return false;
+    if(a[0] !== b[0]) return false;
+    return a.every(t => b.includes(t)) || b.every(t => a.includes(t));
+  }
 
 })();
 </script>
