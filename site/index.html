@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Paraíso">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -1839,6 +1840,14 @@
     .plp-list{position:static;}
     .plp-detail{padding:14px;}
   }
+
+  /* Ícones de compartilhar e WhatsApp */
+  .ic-wa{color:#25D366; font-size:1.15em; vertical-align:-0.1em;}
+  .ic-share{font-size:1em; vertical-align:-0.05em;}
+  .btn-primary .ic-wa, .tm-btn.pri .ic-wa{color:inherit;}
+  .spl-opt span .ic-wa{font-size:26px;}
+  .spl-opt span .ic-share{font-size:20px; color:var(--accent);}
+  .tm-wa .ic-wa{font-size:18px;}
 </style>
 </head>
 <body>
@@ -2489,7 +2498,7 @@
         <li><strong>Na tela inicial:</strong> use <strong>🔍 Buscar por nome…</strong> para achar uma música na lista. Com Enter, abre a primeira que aparecer (dando preferência a quem bate pelo nome).</li>
         <li><strong>Atalho na tela inicial:</strong> marque as músicas ☑ e toque em <strong>＋ Criar playlist</strong>. Elas entram na ordem em que foram marcadas. Também dá para usar <strong>Adicionar a uma playlist…</strong> para colocar todas numa playlist que já existe.</li>
         <li>Cada playlist guarda a <strong>sua própria versão</strong> da música: mudar tom, letra ou formatação dentro dela não altera a biblioteca nem outras playlists.</li>
-        <li><strong>📤 Compartilhar playlist:</strong> abra a playlist e toque em "📤 Compartilhar playlist". Dá para enviar a lista no WhatsApp (com os tons e um link), copiar o link — quem abrir recebe a playlist pronta no Paraíso, com os mesmos tons — ou gerar um arquivo completo (importar em ⭱).</li>
+        <li><strong><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar playlist:</strong> abra a playlist e toque em "<i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar playlist". Dá para enviar a lista no WhatsApp (com os tons e um link), copiar o link — quem abrir recebe a playlist pronta no Paraíso, com os mesmos tons — ou gerar um arquivo completo (importar em ⭱).</li>
         <li><strong>Data do culto:</strong> ao criar a playlist (ou no <strong>✎</strong>), escolha a data. Se o nome tiver a data, como "Culto 21/09", ela é preenchida sozinha. A lista mostra primeiro os próximos cultos.</li>
         <li><strong>🗄️ Arquivar:</strong> tira a playlist da lista sem apagar. Ela fica em "Arquivadas" no fim da lista, continua contando nas estatísticas e volta com <strong>↩️</strong>. Depois do culto aparece o atalho para arquivar de uma vez as que já passaram.</li>
       </ul>
@@ -2568,7 +2577,7 @@
         <li><strong>👤 Perfil:</strong> celular, funções e os <strong>dias em que não pode</strong>.</li>
         <li><strong>🙋 Minhas:</strong> suas escalas — toque <strong>✅ Confirmo</strong> ou <strong>❌ Não posso</strong>.</li>
         <li><strong>📅 Escalas:</strong> líderes e ministros montam a escala (data, ministro, playlist, dress code e quem toca o quê). Quem marcou indisponível aparece com ⚠.</li>
-        <li><strong>🟢 WhatsApp:</strong> manda a escala pronta no grupo; <strong>🔔 Cobrar pendentes</strong> manda mensagem para quem ainda não respondeu.</li>
+        <li><strong><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> WhatsApp:</strong> manda a escala pronta no grupo; <strong>🔔 Cobrar pendentes</strong> manda mensagem para quem ainda não respondeu.</li>
         <li><strong>👥 Equipe:</strong> aprovar cadastros, marcar Líder/Ministro, montar equipes e convidar pelo WhatsApp.</li>
         <li><strong>☁️ Repertório do ministério:</strong> só <strong>líderes</strong> incluem, editam e excluem músicas — e todos recebem a mudança. Formatação (fonte, colunas, cores), tom, favoritas e playlists são <strong>pessoais</strong>. Se você não é líder e edita uma cifra, ela vira só sua; para voltar à oficial, use <strong>☰ → ↺ Voltar à versão do ministério</strong>.</li>
       </ul>
@@ -2580,7 +2589,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v229 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v230 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -2691,14 +2700,14 @@
 <div class="modal-overlay" id="sharePlOverlay">
   <div class="modal share-app-modal">
     <div class="notes-head">
-      <h2>📤 Compartilhar playlist</h2>
+      <h2><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar playlist</h2>
       <button class="icon-btn" id="btnCloseSharePl" type="button" aria-label="Fechar">✕</button>
     </div>
     <div class="spl-head"><div class="spl-name" id="sharePlName"></div><div class="hint" id="sharePlMeta"></div></div>
     <div class="spl-opts">
-      <button type="button" class="spl-opt" id="btnSharePlWa"><span>🟢</span><b>Enviar no WhatsApp</b><small>Lista das músicas com os tons + link para abrir no Paraíso</small></button>
+      <button type="button" class="spl-opt" id="btnSharePlWa"><span><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i></span><b>Enviar no WhatsApp</b><small>Lista das músicas com os tons + link para abrir no Paraíso</small></button>
       <button type="button" class="spl-opt" id="btnSharePlLink"><span>🔗</span><b>Copiar link da playlist</b><small>Quem abrir recebe a playlist pronta no Paraíso dele, com os mesmos tons</small></button>
-      <button type="button" class="spl-opt" id="btnSharePlNative"><span>📲</span><b>Compartilhar em outro app…</b><small>Telegram, e-mail, mensagens…</small></button>
+      <button type="button" class="spl-opt" id="btnSharePlNative"><span><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i></span><b>Compartilhar em outro app…</b><small>Telegram, e-mail, mensagens…</small></button>
       <button type="button" class="spl-opt" id="btnSharePlFile"><span>📄</span><b>Arquivo completo</b><small>Leva também as cifras editadas só nesta playlist (importar em ⭱)</small></button>
     </div>
   </div>
@@ -2713,8 +2722,8 @@
     <p class="hint">Envie o link para a equipe do louvor. Quem abrir já encontra o repertório do ministério.</p>
     <div class="share-app-link"><input id="shareAppUrl" type="text" readonly><button class="btn-secondary" id="btnShareCopy" type="button">📋 Copiar</button></div>
     <div class="share-app-actions">
-      <button class="btn-primary" id="btnShareNative" type="button">📤 Compartilhar…</button>
-      <a class="btn-secondary share-wa" id="btnShareWhats" href="#" target="_blank" rel="noopener noreferrer">🟢 WhatsApp</a>
+      <button class="btn-primary" id="btnShareNative" type="button"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar…</button>
+      <a class="btn-secondary share-wa" id="btnShareWhats" href="#" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> WhatsApp</a>
     </div>
     <div class="share-app-qr-wrap"><div id="shareAppQr" class="share-app-qr"></div><div class="hint">Aponte a câmera do celular para abrir.</div></div>
     <p class="hint share-app-tip"><strong>Instalar no celular:</strong> abra o link → menu do navegador (⋮ ou <span aria-hidden="true">⬆︎</span>) → <em>Adicionar à tela inicial</em>.<br>As playlists e edições ficam no aparelho de cada um — para levar as suas junto, envie também um backup (⭳).</p>
@@ -3696,7 +3705,7 @@
       html += '<div class="plp-head"><div><div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
         '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
-        (items.length ? '<button type="button" class="plp-btn" data-plp-share>📤 Compartilhar</button>' : '') +
+        (items.length ? '<button type="button" class="plp-btn" data-plp-share><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' : '') +
         (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp>🎧 ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar no Spotify') + '</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button></div></div>';
       if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
@@ -4465,6 +4474,7 @@
     oldCancel.parentNode.replaceChild(cancelBtn, oldCancel);
 
     okBtn.textContent = opts.okLabel || 'Confirmar';
+    if(/^<i class="fa-/.test(opts.okLabel || '')) okBtn.innerHTML = opts.okLabel;
     cancelBtn.textContent = opts.cancelLabel || 'Cancelar';
     // opts.hideCancel: usado pra virar um aviso de um botão só (sem opção
     // de "cancelar" fazendo outra coisa) — precisa resetar o display
@@ -4839,11 +4849,11 @@
     actions.className = 'pl-actions';
     const mk = (txt, tip, fn) => {
       const bt = document.createElement('button');
-      bt.className = 'order-btn'; bt.textContent = txt; bt.title = tip;
+      bt.className = 'order-btn'; bt.innerHTML = txt; bt.title = tip;
       bt.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
       actions.appendChild(bt);
     };
-    mk('📤', 'Compartilhar playlist', () => openSharePlaylist(pl.id));
+    mk('<i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i>', 'Compartilhar playlist', () => openSharePlaylist(pl.id));
     mk('✎', 'Editar nome e data', () => openPlaylistModal(pl.id));
     if(pl.archived) mk('↩️', 'Desarquivar (voltar para a lista)', () => setPlaylistArchived(pl, false));
     else mk('🗄️', 'Arquivar (sai da lista, mas continua contando nas estatísticas)', () => setPlaylistArchived(pl, true));
@@ -4985,7 +4995,7 @@
     if(pl.songIds.length){
       const shBtn = document.createElement('button');
       shBtn.type = 'button'; shBtn.className = 'add-music-btn pl-share-btn';
-      shBtn.textContent = '📤 Compartilhar';
+      shBtn.innerHTML = '<i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar';
       shBtn.title = 'Compartilhar playlist';
       shBtn.addEventListener('click', () => openSharePlaylist(pl.id));
       sideActs.appendChild(shBtn);
@@ -9377,7 +9387,7 @@
       const r = id ? await esc.sb.from('pre_profiles').update(rec).eq('id', id) : await esc.sb.from('pre_profiles').insert(rec);
       if(r.error){ showAlert('Pré-cadastro', r.error.message); return; }
       await escLoadAll();
-      if(!id && rec.phone) showConfirm('Pré-cadastro salvo ✅', 'Mandar o convite para ' + rec.name + ' pelo WhatsApp?', () => escPreInvite(rec), { okLabel: '🟢 Convidar', cancelLabel: 'Agora não', okNeutral: true });
+      if(!id && rec.phone) showConfirm('Pré-cadastro salvo ✅', 'Mandar o convite para ' + rec.name + ' pelo WhatsApp?', () => escPreInvite(rec), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Convidar', cancelLabel: 'Agora não', okNeutral: true });
     };
     const del = document.getElementById('escPreDel');
     if(del) del.onclick = () => showConfirm('Apagar pré-cadastro', 'Apagar o pré-cadastro de ' + x.name + '?', async () => { await esc.sb.from('pre_profiles').delete().eq('id', id); await escLoadAll(); }, { okLabel: 'Apagar' });
@@ -9549,7 +9559,7 @@
         let nudge = '';
         if(escCanSchedule() && a.status === 'pendente' && p && p.phone && a.profile_id !== esc.user.id){
           const msg = 'Oi ' + escFirst(a.profile_id) + '! Você está na escala do ' + (e.title || 'culto') + ' de ' + escDateLabel(e.date) + (e.time ? ' às ' + e.time : '') + ' no ' + a.function + '. Confirma pra gente? 🙏\n' + escAppLink(e.id);
-          nudge = '<a class="ev-nudge" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(msg) + '">Lembrar</a>';
+          nudge = '<a class="ev-nudge" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(msg) + '"><i class=\"fa-brands fa-whatsapp ic-wa\" aria-hidden=\"true\"></i> Lembrar</a>';
         }
         html += '<div class="ev-person">' + homeAvatar(p, null) + '<div class="ev-pmain"><div class="ev-pname">' + escH(escName(a.profile_id)) + (p && p.is_pre ? ' <small>pré-cadastro</small>' : '') + '</div><div class="ev-sub">' + escFnIcon(a.function) + ' ' + escH(a.function) +
           (unav ? ' · <em class="esc-warn">⚠ marcou que não pode</em>' : '') + (a.status === 'recusado' && a.reason ? ' · “' + escH(a.reason) + '”' : '') + '</div></div>' + st + nudge + '</div>';
@@ -9562,7 +9572,7 @@
       }
       if(e.dress_code) html += '<div class="ev-sec">Dress code</div><div class="ev-chips"><span>👔 ' + escH(e.dress_code) + '</span></div>';
       if(e.notes) html += '<div class="ev-sec">Observações</div><div class="esc-notes">' + escH(e.notes) + '</div>';
-      html += '<div class="esc-actions ev-actions"><button type="button" class="btn-secondary" data-wa="' + e.id + '">🟢 Enviar no WhatsApp</button>';
+      html += '<div class="esc-actions ev-actions"><button type="button" class="btn-secondary" data-wa="' + e.id + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp</button>';
       if(escCanSchedule()) html += '<button type="button" class="btn-secondary" data-remind="' + e.id + '">🔔 Cobrar pendentes</button><button type="button" class="btn-secondary" data-edit="' + e.id + '">✎ Editar</button><button type="button" class="btn-secondary ev-del" data-del-ev="' + e.id + '">🗑 Excluir</button>';
       html += '</div></div></div>';
     });
@@ -9604,7 +9614,7 @@
       const leader = ev && (escProfile(ev.minister_id) || esc.profiles.find(p => p.is_leader));
       if(leader && leader.phone){
         const msg = 'Oi ' + escFirst(leader.id) + '! Não vou conseguir no ' + (ev.title || 'culto') + ' de ' + escDateLabel(ev.date) + ' (' + a.function + ')' + (reason ? ': ' + reason : '') + '. 🙏';
-        showConfirm('Avisar no WhatsApp?', 'Quer avisar ' + escName(leader.id) + ' pelo WhatsApp?', () => window.open('https://wa.me/' + escPhoneDigits(leader.phone) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener'), { okLabel: '🟢 Avisar', cancelLabel: 'Agora não', okNeutral: true });
+        showConfirm('Avisar no WhatsApp?', 'Quer avisar ' + escName(leader.id) + ' pelo WhatsApp?', () => window.open('https://wa.me/' + escPhoneDigits(leader.phone) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener'), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Avisar', cancelLabel: 'Agora não', okNeutral: true });
       }
     }
   }
@@ -9638,7 +9648,7 @@
       const p = escProfile(a.profile_id);
       const msg = 'Oi ' + escFirst(a.profile_id) + '! Você está na escala do ' + (e.title || 'culto') + ' de ' + escDateLabel(e.date) + (e.time ? ' às ' + e.time : '') + ' no ' + a.function + '. Confirma pra gente? 🙏\n' + escAppLink(e.id);
       const href = p && p.phone ? 'https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(msg) : '';
-      return '<li><span>' + escFnIcon(a.function) + ' ' + escH(escName(a.profile_id)) + '</span>' + (href ? '<a class="btn-secondary" target="_blank" rel="noopener noreferrer" href="' + escH(href) + '">🟢 Mandar</a>' : '<em>sem celular no perfil</em>') + '</li>';
+      return '<li><span>' + escFnIcon(a.function) + ' ' + escH(escName(a.profile_id)) + '</span>' + (href ? '<a class="btn-secondary" target="_blank" rel="noopener noreferrer" href="' + escH(href) + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Mandar</a>' : '<em>sem celular no perfil</em>') + '</li>';
     }).join('');
     const box = document.createElement('div');
     box.className = 'esc-remind';
@@ -9803,7 +9813,7 @@
         esc.editing = null; esc.openEventId = evId;
         await escLoadAll();
         const ev = esc.events.find(x => x.id === evId);
-        if(ev) showConfirm('Escala salva ✅', 'A escala já está salva e a equipe já consegue ver no Paraíso. Quer avisar também no grupo do WhatsApp?', () => escShareEvent(evId), { okLabel: '🟢 Enviar no WhatsApp', cancelLabel: '✓ Só salvar', okNeutral: true });
+        if(ev) showConfirm('Escala salva ✅', 'A escala já está salva e a equipe já consegue ver no Paraíso. Quer avisar também no grupo do WhatsApp?', () => escShareEvent(evId), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp', cancelLabel: '✓ Só salvar', okNeutral: true });
       }catch(err){
         showAlert('Escala', 'Não consegui salvar: ' + (err.message || err));
         btn.disabled = false; btn.textContent = '💾 Salvar escala';
@@ -9827,7 +9837,7 @@
     html += '<div class="tm-top"><div class="tm-stats"><div><b>' + approvedList.filter(p => p.active !== false).length + '</b><span>pessoas</span></div>' +
       (leader ? '<div><b>' + pending.length + '</b><span>novos</span></div><div><b>' + open.length + '</b><span>pré-cadastro</span></div>' : '') +
       '<div><b>' + esc.teams.length + '</b><span>equipes</span></div></div>' +
-      '<div class="tm-actions">' + (leader && !esc.preMissing ? '<button type="button" class="tm-btn pri" id="escNewPre">＋ Pré-cadastrar</button>' : '') + '<button type="button" class="tm-btn" id="escInvite">🟢 Convidar</button></div></div>';
+      '<div class="tm-actions">' + (leader && !esc.preMissing ? '<button type="button" class="tm-btn pri" id="escNewPre">＋ Pré-cadastrar</button>' : '') + '<button type="button" class="tm-btn" id="escInvite"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Convidar</button></div></div>';
     html += '<input type="search" class="esc-input tm-search" id="tmSearch" placeholder="🔍 Buscar pessoa ou função…" autocomplete="off">';
     if(leader && pending.length){
       html += '<div class="tm-sec">Aguardando aprovação <span class="tm-count warn">' + pending.length + '</span></div><div class="tm-pending">' + pending.map(p =>
@@ -9840,7 +9850,7 @@
       const canManage = leader && p.id !== esc.user.id && !escIsAdmin(p);
       html += '<div class="tm-card' + (p.active === false ? ' inactive' : '') + '" data-search="' + escH(foldForSearch((p.name || '') + ' ' + (p.functions || []).join(' '))) + '">' +
         '<div class="tm-head">' + av(p) + '<div class="tm-main"><div class="tm-name">' + escH(p.name || p.email) + (p.id === esc.user.id ? ' <small>(você)</small>' : '') + '</div><div class="tm-badges">' + roleBadge(p) + (p.active === false ? '<span class="tm-role off">Inativo</span>' : '') + '</div></div>' +
-        (p.phone ? '<a class="tm-wa" title="' + escH(p.phone) + '" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '">🟢</a>' : '') +
+        (p.phone ? '<a class="tm-wa" title="' + escH(p.phone) + '" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i></a>' : '') +
         (canManage ? '<button type="button" class="tm-more" data-tm-toggle title="Permissões">⚙</button>' : '') + '</div>' +
         '<div class="tm-fns">' + fnChips(p.functions) + '</div>' +
         (canManage ? '<div class="tm-perm" hidden>' +
@@ -9858,7 +9868,7 @@
           '<div class="tm-card tm-pre" data-search="' + escH(foldForSearch((x.name || '') + ' ' + (x.functions || []).join(' '))) + '"><div class="tm-head">' + homeAvatar(x, null).replace('class="hc-av"', 'class="hc-av tm-av"') +
           '<div class="tm-main"><div class="tm-name">' + escH(x.name) + '</div><div class="tm-sub">' + (x.email ? '✉️ ' + escH(x.email) : 'sem e-mail — vincule ao aprovar') + '</div></div>' +
           '<button type="button" class="tm-more" data-pre-edit="' + x.id + '" title="Editar">✎</button></div><div class="tm-fns">' + fnChips(x.functions) + '</div>' +
-          (x.phone ? '<button type="button" class="tm-btn ok tm-inv" data-pre-inv="' + x.id + '">🟢 Mandar convite</button>' : '') + '</div>').join('') + '</div>';
+          (x.phone ? '<button type="button" class="tm-btn ok tm-inv" data-pre-inv="' + x.id + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Mandar convite</button>' : '') + '</div>').join('') + '</div>';
       }
     }
     html += '<div class="tm-sec">Equipes <span class="tm-count">' + esc.teams.length + '</span>' + (leader ? '<button type="button" class="tm-link" id="escNewTeam">＋ Nova equipe</button>' : '') + '</div>';
@@ -9894,7 +9904,7 @@
       renderEscala();
       if(p && p.phone){
         const msg = 'Oi ' + escFirst(p.id) + '! Seu acesso ao Paraíso foi aprovado. 🎶 Entre aqui: ' + escAppLink();
-        showConfirm('Aprovado ✅', 'Avisar ' + p.name + ' pelo WhatsApp?', () => window.open('https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener'), { okLabel: '🟢 Avisar', cancelLabel: 'Agora não', okNeutral: true });
+        showConfirm('Aprovado ✅', 'Avisar ' + p.name + ' pelo WhatsApp?', () => window.open('https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener'), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Avisar', cancelLabel: 'Agora não', okNeutral: true });
       }
     });
     body.querySelectorAll('[data-reject]').forEach(b => b.onclick = () => {
@@ -10009,7 +10019,7 @@
       '<div class="esc-sub">O que você faz no louvor?</div><div class="esc-checks">' + fnChecks + '</div>' +
       '<button class="btn-primary" id="gateSave" type="button">💾 Salvar cadastro</button><span class="gate-saved" id="gateSaved"></span></div>' +
       '<div class="gate-actions"><button class="btn-secondary" id="gateRecheck" type="button">🔄 Já fui aprovado</button>' +
-      '<button class="btn-secondary" id="gateWa" type="button">🟢 Avisar o líder</button>' +
+      '<button class="btn-secondary" id="gateWa" type="button"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Avisar o líder</button>' +
       '<button class="esc-link" id="gateOut" type="button">Sair</button></div>');
     document.getElementById('gateSave').onclick = async () => {
       const upd = { name: document.getElementById('gateName').value.trim(), phone: document.getElementById('gatePhone').value.trim(),
@@ -11033,7 +11043,7 @@
 
   // ---- IMPORTAR ----
   // O mesmo botão ⭱ aceita dois tipos de arquivo:
-  //  • PLAYLIST (gerada pelo 📤): entra como playlist nova; músicas que já
+  //  • PLAYLIST (gerada pelo <i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i>): entra como playlist nova; músicas que já
   //    existem na biblioteca (mesmo título + artista) são reaproveitadas,
   //    as que faltam são adicionadas. A versão da playlist (tom, letra,
   //    formatação de quem enviou) fica guardada só nessa playlist.
@@ -12019,7 +12029,7 @@
       getClaudeDb(); // começa a conectar em segundo plano, sem bloquear a página
     } else {
       // SITE PRÓPRIO: "🌐 Playlists compartilhadas" depende do banco do
-      // Claude — não existe aqui (a troca de playlists é pelo 📤, arquivo).
+      // Claude — não existe aqui (a troca de playlists é pelo <i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i>, arquivo).
       const sharedBtn = document.getElementById('btnSharedPlaylists');
       if(sharedBtn) sharedBtn.style.display = 'none';
       // Modo aplicativo: instalável na tela inicial do celular/computador
