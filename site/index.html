@@ -2864,7 +2864,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v254 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v255 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9881,8 +9881,11 @@
     if(e.minister_id) t += '🎤 Ministro: ' + escName(e.minister_id) + '\n';
     t += '\n';
     as.forEach(a => { t += escFnIcon(a.function) + ' ' + a.function + ': ' + escName(a.profile_id) + ' ' + escStatusIcon(a.status) + '\n'; });
-    if(e.playlist && e.playlist.songs && e.playlist.songs.length){
-      t += '\n*🎵 Repertório*\n' + e.playlist.songs.map((s, i) => (i + 1) + '. ' + s.title + (s.key ? ' (' + s.key + ')' : '')).join('\n') + '\n';
+    const pls = e.playlist ? (((e.playlist.songIds || []).length ? evPlSongs(e.playlist.songIds, e.playlist.overrides || {}) : null) || e.playlist.songs || []) : [];
+    if(pls.length){
+      t += '\n*🎵 Repertório' + (e.playlist.name ? ' — ' + e.playlist.name : '') + '*\n' + pls.map((s, i) => (i + 1) + '. ' + s.title + (s.artist ? ' — ' + s.artist : '') + (s.key ? ' (Tom ' + s.key + ')' : '')).join('\n') + '\n';
+    } else {
+      t += '\n🎵 Repertório: ainda não definido\n';
     }
     if(e.dress_code) t += '\n👔 Dress code: ' + e.dress_code + '\n';
     if(e.notes) t += '\n📝 ' + e.notes + '\n';
