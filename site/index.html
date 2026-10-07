@@ -1848,6 +1848,30 @@
   .spl-opt span .ic-wa{font-size:26px;}
   .spl-opt span .ic-share{font-size:20px; color:var(--accent);}
   .tm-wa .ic-wa{font-size:18px;}
+
+  /* Menu lateral da playlist: só resumo + botões numa linha */
+  .pl-side-info{padding:6px 14px 10px; font-size:12.5px; color:var(--text-dim); flex:1;}
+  .pl-side-open{background:none; border:none; padding:0; font:inherit; font-weight:700; color:var(--accent); cursor:pointer;}
+  .pl-side-actions{flex-wrap:nowrap; gap:5px; padding:8px 8px; align-items:stretch;}
+  .pl-side-actions{gap:4px; padding:8px 6px;}
+  .pl-side-actions > .add-music-btn{flex:0.8 1 0;}
+  .pl-side-actions > .pl-share-btn{flex:1.15 1 0;}
+  .pl-side-actions > .sp-pl-row{flex:1.35 1 0;}
+  .pl-side-actions .add-music-btn, .pl-side-actions .sp-pl-btn{font-size:11px !important; padding:6px 3px !important; gap:3px !important; letter-spacing:-0.01em;}
+  .pl-side-actions > *{flex:1 1 0; min-width:0;}
+  .pl-side-actions .add-music-btn, .pl-side-actions .sp-pl-btn{margin:0; padding:6px 6px; font-size:11.5px; font-weight:700; border-radius:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; justify-content:center; gap:5px;}
+  .pl-side-actions .sp-pl-row{flex:1.3 1 0; margin:0; gap:3px;}
+  .pl-side-actions .sp-pl-btn{border:2px solid #1DB954; background:#1DB95414; color:#1DB954;}
+  .pl-side-actions .sp-pl-btn .fa-spotify{font-size:15px;}
+  .pl-side-actions .sp-pl-open{font-size:12px; color:#1DB954; text-decoration:none; align-self:center;}
+  .plp-btn.sp .fa-spotify{font-size:15px; vertical-align:-0.1em;}
+  .plp-song{cursor:pointer;}
+  .plp-ctl{display:flex; gap:2px; margin-left:4px; opacity:.35; transition:opacity .15s;}
+  .plp-song:hover .plp-ctl, .plp-song:focus-within .plp-ctl{opacity:1;}
+  .plp-ctl button{width:26px; height:26px; border-radius:7px; border:1px solid var(--border-soft); background:var(--surface); color:var(--text-dim); cursor:pointer; font-size:11px;}
+  .plp-ctl button:hover:not(:disabled){border-color:var(--accent); color:var(--accent);}
+  .plp-ctl button:disabled{opacity:.3; cursor:default;}
+  @media (max-width: 820px){ .plp-ctl{opacity:1;} }
 </style>
 </head>
 <body>
@@ -2589,7 +2613,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v230 · 06/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v231 · 06/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3706,10 +3730,11 @@
         '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
         (items.length ? '<button type="button" class="plp-btn" data-plp-share><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' : '') +
-        (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp>🎧 ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar no Spotify') + '</button>' : '') +
+        (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp><i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar playlist') + '</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button></div></div>';
       if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
-      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); return '<button type="button" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') + '</button>'; }).join('') + '</div>';
+      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
+        '<span class="plp-ctl"><button type="button" data-mv="-1" data-ri="' + ri + '" title="Subir"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-mv="1" data-ri="' + ri + '" title="Descer"' + (i === items.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-rm="' + sg.id + '" title="Tirar da playlist">✕</button></span></div>'; }).join('') + '</div>';
     } else html += '<div class="home-empty-note">Crie uma playlist para montar o repertório do culto.</div>';
     html += '</div></div>';
     box.innerHTML = html;
@@ -3723,6 +3748,8 @@
       const sh = q('[data-plp-share]'); if(sh) sh.onclick = () => openSharePlaylist(sel.id);
       const sp = q('[data-plp-sp]'); if(sp) sp.onclick = () => spSyncPlaylist(sel, sp);
       const ed = q('[data-plp-edit]'); if(ed) ed.onclick = () => openPlaylistModal(sel.id);
+      box.querySelectorAll('.plp-ctl [data-mv]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); movePlaylistSong(sel.id, +b.dataset.ri, +b.dataset.mv); renderPlaylistsPage(); });
+      box.querySelectorAll('.plp-ctl [data-rm]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const sg = songs.find(x => x.id === b.dataset.rm); showConfirm('Tirar da playlist', 'Tirar "' + (sg ? sg.title : '') + '" da playlist "' + sel.name + '"? A música continua no repertório.', () => { removeSongFromPlaylist(sel.id, b.dataset.rm); renderSidebar(); renderPlaylistsPage(); }, { okLabel: 'Tirar' }); });
       box.querySelectorAll('[data-plp-song]').forEach(b => b.onclick = () => guardIfDirty(() => { showingHome = false; activeView = 'playlists'; openPlaylistId = sel.id; selectSong(b.dataset.plpSong, sel.id); }));
     }
   }
@@ -4968,7 +4995,7 @@
       spBtn.type = 'button'; spBtn.className = 'sp-pl-btn';
       spBtn.textContent = pl.spotifyId ? '🎧 Atualizar no Spotify' : '🎧 Criar no Spotify';
       spBtn.title = 'Cria (ou atualiza) esta playlist na sua conta do Spotify, na mesma ordem';
-      spBtn.addEventListener('click', () => spSyncPlaylist(pl, spBtn));
+      spBtn.addEventListener('click', () => spSyncPlaylist(pl, spBtn).then(() => renderSidebar()).catch(() => {}));
       spRow.appendChild(spBtn);
       if(pl.spotifyId){
         const a = document.createElement('a');
@@ -4989,7 +5016,7 @@
     // para a lista ganhar o espaço todo.
     const sideActs = document.createElement('div');
     sideActs.className = 'pl-side-actions';
-    addMusicBtn.textContent = '＋ Música';
+    addMusicBtn.textContent = '+ Música';
     addMusicBtn.title = 'Adicionar música a esta playlist';
     sideActs.appendChild(addMusicBtn);
     if(pl.songIds.length){
@@ -5000,71 +5027,18 @@
       shBtn.addEventListener('click', () => openSharePlaylist(pl.id));
       sideActs.appendChild(shBtn);
     }
-    if(plSideSp){ const sb = plSideSp.querySelector('.sp-pl-btn'); if(sb){ sb.textContent = pl.spotifyId ? '🎧 Atualizar' : '🎧 Spotify'; } sideActs.appendChild(plSideSp); }
+    if(plSideSp){ const sb = plSideSp.querySelector('.sp-pl-btn'); if(sb){ sb.innerHTML = '<i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (pl.spotifyId ? 'Atualizar' : 'Criar playlist'); } const op = plSideSp.querySelector('.sp-pl-open'); if(op){ op.textContent = '↗'; op.title = 'Abrir no Spotify'; } sideActs.appendChild(plSideSp); }
 
-    if(pl.songIds.length === 0){
-      const empty = document.createElement('div');
-      empty.className = 'empty-sidebar';
-      empty.textContent = 'Playlist vazia. Toque em "＋ Música" abaixo para escolher músicas da sua biblioteca.';
-      wrap.appendChild(empty);
-    } else {
-      const ul = document.createElement('ul');
-      ul.className = 'song-list';
-      pl.songIds.forEach((songId, idx) => {
-        const song = songs.find(s => s.id === songId);
-        if(!song) return;
-        const li = document.createElement('li');
-        li.className = 'song-item' + (song.id === currentId ? ' active' : '');
-
-        const order = document.createElement('div');
-        order.className = 'song-order';
-        const up = document.createElement('button');
-        up.className = 'order-btn'; up.textContent = '▲'; up.title = 'Mover para cima';
-        up.disabled = idx === 0; up.style.opacity = idx === 0 ? 0.25 : 1;
-        up.addEventListener('click', (e) => { e.stopPropagation(); movePlaylistSong(pl.id, idx, -1); });
-        const down = document.createElement('button');
-        down.className = 'order-btn'; down.textContent = '▼'; down.title = 'Mover para baixo';
-        down.disabled = idx === pl.songIds.length - 1; down.style.opacity = idx === pl.songIds.length - 1 ? 0.25 : 1;
-        down.addEventListener('click', (e) => { e.stopPropagation(); movePlaylistSong(pl.id, idx, 1); });
-        order.appendChild(up); order.appendChild(down);
-
-        const info = document.createElement('div');
-        info.className = 'song-info';
-        const title = document.createElement('div');
-        title.className = 'song-title';
-        title.textContent = (idx + 1) + '. ' + displayTitle(song);
-        const meta = document.createElement('div');
-        meta.className = 'song-meta';
-        const plShift = getShiftInPlaylist(pl, song);
-        const effectiveKey = plShift !== 0 ? (transposeChord(song.key, plShift) || song.key) : song.key;
-        const keyLabel = plShift !== 0 ? ('Tom ' + effectiveKey + ' (transposto)') : ('Tom ' + effectiveKey);
-        meta.textContent = [song.artist, keyLabel].filter(Boolean).join(' · ');
-        info.appendChild(title); info.appendChild(meta);
-        if(spCanUse() && pl.spotifyId && Array.isArray(pl.spotifyMissing) && pl.spotifyMissing.includes(songId)){
-          const miss = document.createElement('div');
-          miss.className = 'sp-miss-tag';
-          miss.textContent = '⚠ não está na playlist do Spotify';
-          info.appendChild(miss);
-        }
-
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'order-btn';
-        removeBtn.textContent = '✕';
-        removeBtn.title = 'Remover da playlist';
-        removeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          showConfirm(
-            'Remover da playlist',
-            'Deseja remover "' + song.title + '" da playlist "' + pl.name + '"? Ela continua na sua biblioteca e em outras playlists, sem ser afetada.',
-            () => { removeSongFromPlaylist(pl.id, song.id); renderSidebar(); }
-          );
-        });
-
-        li.appendChild(order); li.appendChild(info); li.appendChild(removeBtn);
-        li.addEventListener('click', () => selectSong(song.id, pl.id));
-        ul.appendChild(li);
-      });
-      wrap.appendChild(ul);
+    // As músicas da playlist ficam na área principal (página de Playlists);
+    // aqui fica só o resumo e os botões.
+    {
+      const info = document.createElement('div');
+      info.className = 'pl-side-info';
+      const n = pl.songIds.filter(id => songs.some(x => x.id === id)).length;
+      info.innerHTML = n ? n + (n === 1 ? ' música' : ' músicas') + ' · <button type="button" class="pl-side-open">ver e organizar ›</button>' : 'Playlist vazia. Toque em "＋ Música" para escolher músicas.';
+      const ob = info.querySelector('.pl-side-open');
+      if(ob) ob.addEventListener('click', () => guardIfDirty(() => { showHomeView(); navSel = 'playlists'; activeView = 'playlists'; openPlaylistId = pl.id; renderSidebar(); renderHomeView(); if(window.innerWidth <= 820) sidebar.classList.remove('open'); }));
+      wrap.appendChild(info);
     }
     if(plSideSpNote) wrap.appendChild(plSideSpNote);
     wrap.appendChild(sideActs);
