@@ -2067,6 +2067,14 @@
     .tm-list .tm-fns{grid-column:3; grid-row:1;}
     .tm-list .tm-wa{grid-column:4;} .tm-list .tm-more{grid-column:5;}
   }
+
+  .tm-merge-list{display:flex; flex-direction:column; gap:6px; margin-top:8px;}
+  .tm-merge-opt{display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; padding:8px 11px; border-radius:10px; border:1px solid var(--border-soft); background:var(--surface-2); color:var(--text); cursor:pointer;}
+  .tm-merge-opt small{color:var(--text-dim); font-size:12px;}
+  .tm-merge-opt.sug{border-color:var(--accent); background:rgba(232,165,63,0.10);}
+  [data-merge-open].on{border-color:var(--accent); color:var(--accent);}
+  .tm-perm-save .sp{flex:1;}
+  .tm-del-ico{width:38px; padding:0 !important; justify-content:center; font-size:15px;}
 </style>
 </head>
 <body>
@@ -2812,7 +2820,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v248 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v249 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10072,14 +10080,14 @@
         '<div class="tm-fns">' + fnChips(p.functions) + '</div>' +
         (leader && open.some(x => preNameMatch(x, p)) ? '<div class="tm-dup">⚠ Parece o pré-cadastro <b>' + escH(open.find(x => preNameMatch(x, p)).name) + '</b> — junte no ⚙</div>' : '') +
         (canManage ? '<div class="tm-perm" hidden data-perm="' + p.id + '">' +
-          (open.length ? '<div class="tm-perm-sec">Pré-cadastro</div><div class="tm-merge"><select class="esc-input" data-merge-sel="' + p.id + '"><option value="">— juntar com um pré-cadastro —</option>' + open.map(x => '<option value="' + x.id + '"' + (preNameMatch(x, p) ? ' selected' : '') + '>' + escH(x.name) + ((x.functions || []).length ? ' · ' + escH(x.functions.join(', ')) : '') + '</option>').join('') + '</select><button type="button" class="tm-btn" data-merge="' + p.id + '">🔗 Juntar</button></div>' : '') +
+          (open.length ? '<div class="tm-perm-sec">Pré-cadastro</div><div class="tm-merge"><button type="button" class="tm-btn" data-merge-open="' + p.id + '">🔗 Juntar com pré-cadastro</button></div>' +
+            '<div class="tm-merge-list" hidden data-merge-list="' + p.id + '">' + open.slice().sort((a, b) => preNameMatch(b, p) - preNameMatch(a, p)).map(x => '<button type="button" class="tm-merge-opt' + (preNameMatch(x, p) ? ' sug' : '') + '" data-merge="' + p.id + '" data-pre="' + x.id + '"><b>' + escH(x.name) + '</b><small>' + escH((x.functions || []).join(', ') || 'sem funções') + (preNameMatch(x, p) ? ' · parece ser a mesma pessoa' : '') + '</small></button>').join('') + '</div>' : '') +
           '<div class="tm-perm-sec">Funções</div><div class="tm-fn-pick">' + ESC_FUNCTIONS.filter(f => f !== 'Ministro').map(f => '<label><input type="checkbox" data-fn="' + escH(f) + '"' + ((p.functions || []).includes(f) ? ' checked' : '') + '><span>' + escFnIcon(f) + ' ' + escH(f) + '</span></label>').join('') + '</div>' +
           '<div class="tm-perm-sec">Permissões</div>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '><i></i>Líder <small>aprova pessoas, monta escalas e edita o repertório</small></label>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_minister" data-pid="' + p.id + '"' + (p.is_minister ? ' checked' : '') + '><i></i>Ministro <small>pode montar escalas</small></label>' +
           '<label class="tm-switch"><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '><i></i>Ativo <small>desligar tira o acesso ao app</small></label>' +
-          '<div class="tm-perm-save"><button type="button" class="tm-btn" data-perm-cancel="' + p.id + '">Cancelar</button><button type="button" class="tm-btn pri" data-perm-save="' + p.id + '">💾 Salvar</button></div>' +
-          '<button type="button" class="tm-btn no tm-del" data-del-member="' + p.id + '">🗑 Excluir do ministério</button></div>' : '') +
+          '<div class="tm-perm-save"><button type="button" class="tm-btn no tm-del-ico" data-del-member="' + p.id + '" title="Excluir do ministério" aria-label="Excluir do ministério">🗑</button><span class="sp"></span><button type="button" class="tm-btn" data-perm-cancel="' + p.id + '">Cancelar</button><button type="button" class="tm-btn pri" data-perm-save="' + p.id + '">💾 Salvar</button></div></div>' : '') +
         '</div>';
     });
     html += '</div>';
@@ -10150,8 +10158,8 @@
       showImportFeedback('✓ ' + ((p && p.name) || 'Pessoa') + ' atualizado(a).', true);
     });
     body.querySelectorAll('[data-merge]').forEach(b => b.onclick = () => {
-      const pid = b.dataset.merge, sel = body.querySelector('[data-merge-sel="' + pid + '"]');
-      const pre = sel && sel.value ? (esc.pre || []).find(x => x.id === sel.value) : null; const p = escProfile(pid);
+      const pid = b.dataset.merge;
+      const pre = (esc.pre || []).find(x => x.id === b.dataset.pre); const p = escProfile(pid);
       if(!pre || !p){ showAlert('Juntar cadastro', 'Escolha o pré-cadastro que é dessa pessoa.'); return; }
       showConfirm('Juntar cadastros', 'Juntar o pré-cadastro "' + pre.name + '" com ' + p.name + '? As funções, o celular e as escalas do pré-cadastro passam para o cadastro dele(a), e o pré-cadastro sai da lista.', async () => {
         const fns = Array.from(new Set([...(p.functions || []), ...(pre.functions || [])]));
@@ -10164,6 +10172,7 @@
         showImportFeedback('🔗 ' + p.name + ' e o pré-cadastro "' + pre.name + '" agora são um só.', true);
       }, { okLabel: '🔗 Juntar' });
     });
+    body.querySelectorAll('[data-merge-open]').forEach(b => b.onclick = () => { const l = body.querySelector('[data-merge-list="' + b.dataset.mergeOpen + '"]'); if(l){ l.hidden = !l.hidden; b.classList.toggle('on', !l.hidden); } });
     body.querySelectorAll('[data-perm-cancel]').forEach(b => b.onclick = () => renderEscala());
     body.querySelectorAll('[data-perm] input').forEach(cb => cb.onchange = () => { const box = cb.closest('[data-perm]'); if(box) box.classList.add('dirty'); });
     const nt = document.getElementById('escNewTeam'); if(nt) nt.onclick = () => escEditTeam(null);
