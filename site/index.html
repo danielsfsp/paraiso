@@ -2874,7 +2874,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v258 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v259 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9836,7 +9836,7 @@
       html += escPlBlockHtml(e, true);
       if(e.dress_code) html += '<div class="ev-sec">Dress code</div><div class="ev-chips"><span>👔 ' + escH(e.dress_code) + '</span></div>';
       if(e.notes) html += '<div class="ev-sec">Observações</div><div class="esc-notes">' + escH(e.notes) + '</div>';
-      html += '<div class="esc-actions ev-actions"><button type="button" class="btn-secondary" data-wa="' + e.id + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp</button>';
+      html += '<div class="esc-actions ev-actions">';
       if(escCanSchedule()) html += '<button type="button" class="btn-secondary" data-remind="' + e.id + '">🔔 Cobrar pendentes</button><button type="button" class="btn-secondary" data-edit="' + e.id + '">✎ Editar</button><button type="button" class="btn-secondary ev-del" data-del-ev="' + e.id + '">🗑 Excluir</button>';
       html += '</div></div></div>';
     });
@@ -10118,7 +10118,8 @@
         esc.editing = null; esc.openEventId = evId;
         await escLoadAll();
         const ev = esc.events.find(x => x.id === evId);
-        if(ev && esc.editMode !== 'culto') showConfirm('Escala salva ✅', 'A escala já está salva e a equipe já consegue ver no Paraíso. Quer avisar também no grupo do WhatsApp?', () => escShareEvent(evId), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp', cancelLabel: '✓ Só salvar', okNeutral: true });
+        if(ev) showImportFeedback('✓ ' + (esc.editMode === 'culto' ? 'Culto salvo.' : 'Escala salva. Para avisar a equipe, use Compartilhar em ⛪ Culto.'), true);
+        if(false) showConfirm('Escala salva ✅', 'A escala já está salva e a equipe já consegue ver no Paraíso. Quer avisar também no grupo do WhatsApp?', () => escShareEvent(evId), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp', cancelLabel: '✓ Só salvar', okNeutral: true });
       }catch(err){
         showAlert('Escala', 'Não consegui salvar: ' + (err.message || err));
         btn.disabled = false; btn.textContent = '💾 Salvar escala';
