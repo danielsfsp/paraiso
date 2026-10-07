@@ -2864,7 +2864,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v255 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v256 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9990,6 +9990,8 @@
     const isCulto = esc.editMode === 'culto';
     let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar culto' : 'Novo culto') : (d.id ? 'Editar escala' : 'Nova escala')) + '</h3>' +
       (!isCulto ? '<div class="hint ed-escala">⛪ ' + escH(d.title || 'Culto') + (d.minister_id ? ' · 🎤 ' + escH(escName(d.minister_id)) : '') + ' — nome, ministro e playlist ficam em <b>Culto</b>.</div>' : '') +
+      (isCulto && !d.id ? escLinkEscalaSelectHtml() : '') +
+      (isCulto && d.id ? '<div class="hint cu-linked">👥 Escala vinculada: ' + (d.rows.filter(r => r.profile_id).length ? d.rows.filter(r => r.profile_id).map(r => escH(escFirst(r.profile_id)) + ' <small>(' + escH(r.function) + ')</small>').join(', ') : 'ainda sem pessoas') + '</div>' : '') +
       '<div class="esc-grid"><label>Data<input type="date" id="escDate" class="esc-input" value="' + escH(d.date) + '"></label>' +
       '<label>Horário<input type="time" id="escTime" class="esc-input" value="' + escH(d.time) + '"></label></div>' +
       '<label class="ed-culto">Nome do culto<input id="escTitle" class="esc-input" value="' + escH(d.title === 'Culto' && !d.id ? '' : d.title) + '" placeholder="Escolha abaixo ou digite"></label>' +
@@ -10037,6 +10039,18 @@
       d.playlist = pl ? escPlaylistSnapshot(pl) : null;
       if(pl && pl.date && !d.id) d.date = pl.date;
       if(pl && pl.minister && !d.minister_id){ const m = esc.profiles.find(p => p.name.toLowerCase().includes(String(pl.minister).toLowerCase().replace(/^(pr|pra|presb|min|dc)\.?\s+/i, ''))); if(m) d.minister_id = m.id; }
+      renderEscala();
+    };
+    const lk = document.getElementById('cuLinkEsc');
+    if(lk) lk.onchange = () => {
+      if(!lk.value) return;
+      grab();
+      const keep = { title: d.title, minister_id: d.minister_id, playlist: d.playlist, playlistId: d.playlistId };
+      escStartEdit(lk.value, 'culto');
+      const n = esc.editing;
+      if(keep.title && keep.title !== 'Culto') n.title = keep.title;
+      if(keep.minister_id) n.minister_id = keep.minister_id;
+      if(keep.playlist){ n.playlist = keep.playlist; n.playlistId = keep.playlistId; }
       renderEscala();
     };
     body.querySelectorAll('[data-cuname]').forEach(b => b.onclick = () => { document.getElementById('escTitle').value = b.dataset.cuname; body.querySelectorAll('[data-cuname]').forEach(x => x.classList.toggle('on', x === b)); });
@@ -12854,6 +12868,16 @@
     const used = (esc.events || []).map(e => (e.title || '').trim()).filter(t => t && t !== 'Culto');
     const out = []; [...used.reverse(), ...base].forEach(n => { if(!out.some(x => x.toLowerCase() === n.toLowerCase())) out.push(n); });
     return out.slice(0, 12);
+  }
+
+  // Novo culto: usar uma escala que já foi montada (v256)
+  function escLinkEscalaSelectHtml(){
+    const y = isoFromDate(new Date(Date.now() - 86400000));
+    const evs = esc.events.filter(e => e.date >= y).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    if(!evs.length) return '';
+    return '<label class="ed-culto">👥 Vincular a uma escala já montada<select id="cuLinkEsc" class="esc-input"><option value="">— não, criar escala nova para este culto —</option>' +
+      evs.map(e => { const n = escEventAssignments(e.id).length; return '<option value="' + e.id + '">' + escH(fmtDateBR(e.date).slice(0, 5) + (e.time ? ' · ' + e.time : '') + ' · ' + (e.title || 'Culto') + ' · ' + n + (n === 1 ? ' pessoa' : ' pessoas')) + '</option>'; }).join('') +
+      '</select></label>';
   }
 
 })();
