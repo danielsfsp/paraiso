@@ -2114,6 +2114,9 @@
     #escalaOverlay .esc-modal{padding:14px 14px calc(12px + env(safe-area-inset-bottom));}
     body.home-on #escalaOverlay .esc-modal{padding-bottom:calc(76px + env(safe-area-inset-bottom));}
   }
+
+  .cu-names{margin-top:-4px; margin-bottom:8px;}
+  .cu-names button.on{background:rgba(232,165,63,0.16); border-color:var(--accent); color:var(--accent);}
 </style>
 </head>
 <body>
@@ -2861,7 +2864,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v253 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v254 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9986,7 +9989,8 @@
       (!isCulto ? '<div class="hint ed-escala">⛪ ' + escH(d.title || 'Culto') + (d.minister_id ? ' · 🎤 ' + escH(escName(d.minister_id)) : '') + ' — nome, ministro e playlist ficam em <b>Culto</b>.</div>' : '') +
       '<div class="esc-grid"><label>Data<input type="date" id="escDate" class="esc-input" value="' + escH(d.date) + '"></label>' +
       '<label>Horário<input type="time" id="escTime" class="esc-input" value="' + escH(d.time) + '"></label></div>' +
-      '<label class="ed-culto">Nome do culto<input id="escTitle" class="esc-input" value="' + escH(d.title) + '" placeholder="Culto de domingo"></label>' +
+      '<label class="ed-culto">Nome do culto<input id="escTitle" class="esc-input" value="' + escH(d.title === 'Culto' && !d.id ? '' : d.title) + '" placeholder="Escolha abaixo ou digite"></label>' +
+      '<div class="esc-dress-chips ed-culto cu-names">' + escCultoNames().map(x => '<button type="button" data-cuname="' + escH(x) + '"' + (x === d.title ? ' class="on"' : '') + '>' + escH(x) + '</button>').join('') + '</div>' +
       '<label class="ed-culto">🎤 Ministro<select id="escMinister" class="esc-input">' + personOpts(d.minister_id, 'Ministro') + '</select></label>' +
       '<label class="ed-culto">🎵 Playlist do culto<select id="escPlaylist" class="esc-input">' + plOpts + '</select></label>' +
       (d.playlist ? '<div class="hint ed-culto">🎵 ' + d.playlist.songs.map(x => escH(x.title) + (x.key ? ' <b class="esc-key">' + escH(x.key) + '</b>' : '')).join(' · ') + '</div>' : '') +
@@ -10032,6 +10036,7 @@
       if(pl && pl.minister && !d.minister_id){ const m = esc.profiles.find(p => p.name.toLowerCase().includes(String(pl.minister).toLowerCase().replace(/^(pr|pra|presb|min|dc)\.?\s+/i, ''))); if(m) d.minister_id = m.id; }
       renderEscala();
     };
+    body.querySelectorAll('[data-cuname]').forEach(b => b.onclick = () => { document.getElementById('escTitle').value = b.dataset.cuname; body.querySelectorAll('[data-cuname]').forEach(x => x.classList.toggle('on', x === b)); });
     body.querySelectorAll('[data-dress]').forEach(b => b.onclick = () => { document.getElementById('escDress').value = b.dataset.dress; });
     const cl = document.getElementById('escCopyLast');
     if(cl) cl.onclick = () => {
@@ -12839,6 +12844,14 @@
     const t = e.target.closest('.side-nav-item:not(.esc-open-btn), #mobileTabbar [data-tb]:not([data-tb="escala"]), #btnLogo, .brand');
     if(t) closeEscala();
   }, true);
+
+  // Nomes de culto: os mais comuns + os que já foram usados (v254)
+  function escCultoNames(){
+    const base = ['Culto de Domingo', 'Culto da Família', 'Culto de Oração', 'Santa Ceia', 'Culto Jovem', 'Culto de Celebração', 'Ensaio'];
+    const used = (esc.events || []).map(e => (e.title || '').trim()).filter(t => t && t !== 'Culto');
+    const out = []; [...used.reverse(), ...base].forEach(n => { if(!out.some(x => x.toLowerCase() === n.toLowerCase())) out.push(n); });
+    return out.slice(0, 12);
+  }
 
 })();
 </script>
