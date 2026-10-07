@@ -2029,6 +2029,17 @@
   }
 
   .btn-help-top{font-weight:800; color:var(--accent) !important; border-color:var(--accent-dim) !important; background:rgba(232,165,63,0.12) !important;}
+
+  /* v246: funções e permissões com Salvar */
+  .tm-perm-sec{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin:10px 0 6px;}
+  .tm-perm-sec:first-child{margin-top:4px;}
+  .tm-fn-pick{display:flex; flex-wrap:wrap; gap:6px;}
+  .tm-fn-pick label{cursor:pointer;}
+  .tm-fn-pick input{display:none;}
+  .tm-fn-pick span{display:inline-block; padding:5px 10px; border-radius:99px; border:1px solid var(--border); font-size:12.5px; color:var(--text-dim);}
+  .tm-fn-pick input:checked + span{background:rgba(232,165,63,0.16); border-color:var(--accent); color:var(--accent); font-weight:700;}
+  .tm-perm-save{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
+  .tm-perm.dirty .tm-perm-save [data-perm-save]{animation:saveBtnPulse 1.6s ease-in-out infinite;}
 </style>
 </head>
 <body>
@@ -2774,7 +2785,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v245 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v246 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10032,10 +10043,13 @@
         (p.phone ? '<a class="tm-wa" title="' + escH(p.phone) + '" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i></a>' : '') +
         (canManage ? '<button type="button" class="tm-more" data-tm-toggle title="Permissões">⚙</button>' : '') + '</div>' +
         '<div class="tm-fns">' + fnChips(p.functions) + '</div>' +
-        (canManage ? '<div class="tm-perm" hidden>' +
+        (canManage ? '<div class="tm-perm" hidden data-perm="' + p.id + '">' +
+          '<div class="tm-perm-sec">Funções</div><div class="tm-fn-pick">' + ESC_FUNCTIONS.filter(f => f !== 'Ministro').map(f => '<label><input type="checkbox" data-fn="' + escH(f) + '"' + ((p.functions || []).includes(f) ? ' checked' : '') + '><span>' + escFnIcon(f) + ' ' + escH(f) + '</span></label>').join('') + '</div>' +
+          '<div class="tm-perm-sec">Permissões</div>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '><i></i>Líder <small>aprova pessoas, monta escalas e edita o repertório</small></label>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_minister" data-pid="' + p.id + '"' + (p.is_minister ? ' checked' : '') + '><i></i>Ministro <small>pode montar escalas</small></label>' +
           '<label class="tm-switch"><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '><i></i>Ativo <small>desligar tira o acesso ao app</small></label>' +
+          '<div class="tm-perm-save"><button type="button" class="tm-btn" data-perm-cancel="' + p.id + '">Cancelar</button><button type="button" class="tm-btn pri" data-perm-save="' + p.id + '">💾 Salvar</button></div>' +
           '<button type="button" class="tm-btn no tm-del" data-del-member="' + p.id + '">🗑 Excluir do ministério</button></div>' : '') +
         '</div>';
     });
@@ -10094,12 +10108,20 @@
         if(p) p.active = false; renderEscala(); escLoadAll();
       }, { okLabel: 'Recusar' });
     });
-    body.querySelectorAll('[data-role]').forEach(cb => cb.onchange = async () => {
-      const upd = {}; upd[cb.dataset.role] = cb.checked;
-      const { error } = await esc.sb.from('profiles').update(upd).eq('id', cb.dataset.pid);
-      if(error){ showAlert('Equipe', error.message); cb.checked = !cb.checked; return; }
-      const p = escProfile(cb.dataset.pid); if(p) p[cb.dataset.role] = cb.checked;
+    // Funções e permissões: só gravam ao tocar em 💾 Salvar (v246)
+    body.querySelectorAll('[data-perm-save]').forEach(b => b.onclick = async () => {
+      const pid = b.dataset.permSave, box = body.querySelector('[data-perm="' + pid + '"]'); if(!box) return;
+      const upd = { functions: Array.from(box.querySelectorAll('[data-fn]')).filter(x => x.checked).map(x => x.dataset.fn) };
+      box.querySelectorAll('[data-role]').forEach(cb => { upd[cb.dataset.role] = cb.checked; });
+      b.disabled = true; b.textContent = 'Salvando…';
+      const { error } = await esc.sb.from('profiles').update(upd).eq('id', pid);
+      if(error){ b.disabled = false; b.textContent = '💾 Salvar'; showAlert('Equipe', 'Não consegui salvar: ' + error.message); return; }
+      const p = escProfile(pid); if(p) Object.assign(p, upd);
+      renderEscala();
+      showImportFeedback('✓ ' + ((p && p.name) || 'Pessoa') + ' atualizado(a).', true);
     });
+    body.querySelectorAll('[data-perm-cancel]').forEach(b => b.onclick = () => renderEscala());
+    body.querySelectorAll('[data-perm] input').forEach(cb => cb.onchange = () => { const box = cb.closest('[data-perm]'); if(box) box.classList.add('dirty'); });
     const nt = document.getElementById('escNewTeam'); if(nt) nt.onclick = () => escEditTeam(null);
     body.querySelectorAll('[data-del-member]').forEach(b => b.onclick = () => {
       const p = escProfile(b.dataset.delMember); if(!p) return;
