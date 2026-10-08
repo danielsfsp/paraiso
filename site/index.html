@@ -2175,16 +2175,16 @@
   .decl-acts .go.ok{background:#4CAF6A; border-color:#4CAF6A;}
 
   /* v271: identidade de cada área — Playlist (roxo), Culto (dourado), Escala (azul), Equipe (verde) */
-  :root{--sec-pl:#A98BEA; --sec-cu:#E8A33D; --sec-es:#6E9BE0; --sec-eq:#5DB89A;}
+  :root{--sec-pl:#B566FF; --sec-cu:#FFAE1F; --sec-es:#1FC8F0; --sec-eq:#FF4D5E;}
   .sec-pl{--c:var(--sec-pl);} .sec-cu{--c:var(--sec-cu);} .sec-es{--c:var(--sec-es);} .sec-eq{--c:var(--sec-eq);}
   .c-pl{color:var(--sec-pl) !important;} .c-cu{color:var(--sec-cu) !important;} .c-es{color:var(--sec-es) !important;} .c-eq{color:var(--sec-eq) !important;}
   .sec-h{display:inline-flex; align-items:center; gap:12px; vertical-align:middle;}
   .sec-ico{display:inline-flex; align-items:center; justify-content:center; width:42px; height:42px; flex-shrink:0; border-radius:12px; font-size:21px; line-height:1;
-    background:color-mix(in srgb, var(--c) 18%, transparent); border:1px solid color-mix(in srgb, var(--c) 50%, transparent);}
+    background:color-mix(in srgb, var(--c) 26%, transparent); border:1.5px solid var(--c); box-shadow:0 0 14px color-mix(in srgb, var(--c) 30%, transparent);}
   .sec-h-txt{display:flex; flex-direction:column; line-height:1.1;}
   .sec-h-txt small{font-family:inherit; font-size:12.5px; font-weight:500; color:var(--text-dim); letter-spacing:0; margin-top:4px; font-family:var(--font-body, inherit);}
   .sec-tag{display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--c);
-    background:color-mix(in srgb, var(--c) 15%, transparent); border:1px solid color-mix(in srgb, var(--c) 35%, transparent); border-radius:99px; padding:2px 8px; margin-bottom:6px; width:max-content;}
+    background:color-mix(in srgb, var(--c) 22%, transparent); border:1px solid color-mix(in srgb, var(--c) 70%, transparent); border-radius:99px; padding:2px 8px; margin-bottom:6px; width:max-content;}
   .sec-from{font-size:12px; color:var(--text-dim); margin:-2px 0 6px;}
   .plp-detail{border-top:3px solid var(--sec-pl) !important;}
   .plp-item.on{border-color:var(--sec-pl) !important; background:color-mix(in srgb, var(--sec-pl) 12%, var(--surface)) !important;}
@@ -2212,6 +2212,7 @@
   .ev-pl-ico{background:color-mix(in srgb, var(--sec-pl) 16%, transparent) !important; color:var(--sec-pl) !important;}
   .ev-pl{border-left:3px solid color-mix(in srgb, var(--sec-pl) 60%, transparent);}
   .ev-sec.c-pl, .ev-sec.c-pl span{color:var(--sec-pl) !important;}
+  .ev-card{border-left-width:5px !important;} .cu-card{border-left-width:5px !important;} .plp-detail{border-top-width:4px !important;}
 </style>
 </head>
 <body>
@@ -2985,7 +2986,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v271 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v272 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
