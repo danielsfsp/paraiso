@@ -3022,7 +3022,7 @@
       <ul>
         <li><strong>📅 Escalas:</strong> as escalas montadas (data, horário, quem toca o quê, dress code). <strong>🙋 Minhas:</strong> só as suas.</li>
         <li>Toque em <strong>✓ Confirmo</strong> ou <strong>✕ Não posso</strong> (escolha o motivo). Escalas esperando sua resposta aparecem no Início.</li>
-        <li>Líderes: <strong>✎ Editar</strong> monta a escala (⚡ equipe pronta ou "Igual ao último"); <strong>🔔 Cobrar pendentes</strong> manda mensagem para quem não respondeu; <strong>🗑 Excluir</strong> tira só as pessoas — o culto continua.</li>
+        <li>Líderes: <strong>✎ Editar</strong> monta a escala (⚡ equipe pronta); <strong>🔔 Cobrar pendentes</strong> manda mensagem para quem não respondeu; <strong>🗑 Excluir</strong> tira só as pessoas — o culto continua.</li>
       </ul>
     </details>
 
@@ -3052,7 +3052,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v280 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v281 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10274,7 +10274,7 @@
       '<div class="ed-escala"><div class="esc-sub">Quem toca o quê</div>';
     const lastEv = esc.events.filter(x => x.id !== d.id && x.date < (d.date || '9999') && escEventAssignments(x.id).length).sort((a, b) => b.date.localeCompare(a.date))[0];
     html += '<div class="esc-team-fill">' + esc.teams.map(t => '<button type="button" class="btn-secondary" data-team="' + t.id + '">⚡ ' + escH(t.name) + '</button>').join(' ') +
-      (lastEv ? ' <button type="button" class="btn-secondary" id="escCopyLast" title="Copia quem tocou o quê no culto de ' + escH(escDateLabel(lastEv.date)) + '">↺ Igual ao último (' + escH(fmtDateBR(lastEv.date).slice(0, 5)) + ')</button>' : '') + '</div>';
+      '</div>';
     html += '<div id="escRows">';
     d.rows.forEach((r, i) => {
       html += '<div class="esc-row" data-i="' + i + '"><select class="esc-input esc-fn-sel">' + fnOpts(r.function) + '</select>' +
