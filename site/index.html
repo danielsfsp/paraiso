@@ -2127,6 +2127,10 @@
   .ev-sec-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
   .ev-sec-row > span{font-size:11px !important; font-weight:800 !important; letter-spacing:.1em !important; text-transform:uppercase !important; color:var(--text-dim) !important;}
   .ev-swap-top{margin:0 !important; padding:6px 12px !important; font-size:13px !important; text-transform:none; letter-spacing:0; font-weight:600;}
+
+  /* v260: sem Favoritas no menu */
+  .sidebar-tabs [data-view="favorites"]{display:none !important;}
+  .tabbar button{font-size:10.5px !important;}
 </style>
 </head>
 <body>
@@ -2156,9 +2160,9 @@
         <button data-view="playlists" class="active side-nav-item"><span class="sn-ico">☰</span><span class="sn-lab">Playlists</span><span class="sn-count" id="navCountPl"></span></button>
         <button data-view="favorites" class="side-nav-item"><span class="sn-ico">★</span><span class="sn-lab">Favoritas</span><span class="sn-count" id="navCountFav"></span></button>
       </div>
+      <button type="button" class="esc-open-btn side-nav-item" id="btnCultos"><span class="sn-ico">⛪</span><span class="sn-lab">Culto</span><span class="sn-count" id="navCountCulto"></span></button>
       <button type="button" class="esc-open-btn side-nav-item" id="btnEscala"><span class="sn-ico">📅</span><span class="sn-lab">Escala</span><span class="sn-count sn-alert" id="navCountEsc"></span></button>
       <button type="button" class="esc-open-btn side-nav-item" id="btnEquipe"><span class="sn-ico">👥</span><span class="sn-lab">Equipe</span><span class="sn-count sn-alert" id="navCountEq"></span></button>
-      <button type="button" class="esc-open-btn side-nav-item" id="btnCultos"><span class="sn-ico">⛪</span><span class="sn-lab">Culto</span><span class="sn-count" id="navCountCulto"></span></button>
     </nav>
     <div class="side-section-title" id="sideSectionTitle">Playlists</div>
     <div class="storage-banner" id="storageBanner" style="display:none;">
@@ -2462,8 +2466,9 @@
   <nav class="tabbar" id="mobileTabbar" aria-label="Navegação">
     <button type="button" data-tb="home"><i>⌂</i>Início</button>
     <button type="button" data-tb="playlists"><i>☰</i>Playlists</button>
-    <button type="button" data-tb="favorites"><i>★</i>Favoritas</button>
+    <button type="button" data-tb="culto"><i>⛪</i>Culto</button>
     <button type="button" data-tb="escala"><i>📅</i>Escala<b class="tb-badge" id="tbEscBadge"></b></button>
+    <button type="button" data-tb="equipe"><i>👥</i>Equipe<b class="tb-badge" id="tbEqBadge"></b></button>
     <button type="button" data-tb="mais"><i>⋯</i>Mais</button>
   </nav>
 
@@ -2874,7 +2879,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v259 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v260 · 07/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4044,7 +4049,7 @@
       ec.textContent = n || ''; ec.title = n ? n + ' escala(s) esperando sua resposta' : '';
       const tb = document.getElementById('tbEscBadge'); if(tb) tb.textContent = n || '';
       const eq = document.getElementById('navCountEq');
-      if(eq){ let k = 0; try{ if(esc.me && esc.me.is_leader) k = esc.profiles.filter(p => !p.approved && p.active !== false).length; }catch(e){} eq.textContent = k || ''; eq.title = k ? k + ' cadastro(s) aguardando aprovação' : ''; }
+      if(eq){ let k = 0; try{ if(esc.me && esc.me.is_leader) k = esc.profiles.filter(p => !p.approved && p.active !== false).length; }catch(e){} eq.textContent = k || ''; const tq = document.getElementById('tbEqBadge'); if(tq) tq.textContent = k || ''; eq.title = k ? k + ' cadastro(s) aguardando aprovação' : ''; }
     }
     const tt = document.getElementById('sideSectionTitle');
     if(tt) tt.textContent = sidebarTab === 'favorites' ? 'Favoritas' : 'Playlists';
@@ -9704,7 +9709,7 @@
     renderEscala();
   }
   function closeEscala(){ escOverlay().classList.remove('open'); esc.editing = null; document.body.classList.remove('esc-page-on'); markEscNav(); try{ syncNavActive(); }catch(e){} }
-  function markEscNav(){ const on = escOverlay().classList.contains('open'); const map = { escalas:'btnEscala', minhas:'btnEscala', equipe:'btnEquipe', cultos:'btnCultos' }; ['btnEscala','btnEquipe','btnCultos'].forEach(id => { const b = document.getElementById(id); if(b) b.classList.toggle('on', on && map[esc.tab] === id); }); if(on) document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.classList.toggle('on', b.dataset.tb === 'escala' && (esc.tab === 'escalas' || esc.tab === 'minhas'))); }
+  function markEscNav(){ const on = escOverlay().classList.contains('open'); const map = { escalas:'btnEscala', minhas:'btnEscala', equipe:'btnEquipe', cultos:'btnCultos' }; ['btnEscala','btnEquipe','btnCultos'].forEach(id => { const b = document.getElementById(id); if(b) b.classList.toggle('on', on && map[esc.tab] === id); }); if(on){ const want = esc.tab === 'cultos' ? 'culto' : esc.tab === 'equipe' ? 'equipe' : 'escala'; document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.classList.toggle('on', b.dataset.tb === want)); } }
 
   // ---------- RENDER ----------
   function renderEscala(){
@@ -12075,6 +12080,8 @@
   document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.addEventListener('click', () => {
     const t = b.dataset.tb;
     if(t === 'home'){ guardIfDirty(() => showHomeView()); sidebar.classList.remove('open'); return; }
+    if(t === 'culto'){ esc.tab = 'cultos'; esc.editing = null; openEscala(); return; }
+    if(t === 'equipe'){ esc.tab = 'equipe'; esc.editing = null; openEscala(); return; }
     if(t === 'escala'){ if(esc.tab === 'perfil' || esc.tab === 'equipe' || esc.tab === 'cultos') esc.tab = 'escalas'; esc.editing = null; openEscala(); return; }
     if(t === 'playlists'){ guardIfDirty(() => { showHomeView(); activeView = 'playlists'; navSel = 'playlists'; renderSidebar(); renderHomeView(); sidebar.classList.remove('open'); }); return; }
     if(t === 'favorites'){ guardIfDirty(() => { activeView = t; openPlaylistId = null; navSel = t; renderSidebar(); sidebar.classList.add('open'); }); return; }
@@ -12877,7 +12884,7 @@
   // Outros itens do menu fecham a página de Escala/Equipe/Culto (v253)
   document.addEventListener('click', (e) => {
     if(!document.body.classList.contains('esc-page-on')) return;
-    const t = e.target.closest('.side-nav-item:not(.esc-open-btn), #mobileTabbar [data-tb]:not([data-tb="escala"]), #btnLogo, .brand');
+    const t = e.target.closest('.side-nav-item:not(.esc-open-btn), #mobileTabbar [data-tb="home"], #mobileTabbar [data-tb="playlists"], #mobileTabbar [data-tb="mais"], #btnLogo, .brand');
     if(t) closeEscala();
   }, true);
 
