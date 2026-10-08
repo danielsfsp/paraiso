@@ -2936,7 +2936,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v267 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v268 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3280,6 +3280,34 @@
     flushGroup();
     return frag;
   }
+  // Pedaço de extensão escrito separado do acorde ("D9 7+", "G7 5b", "Eb9 7 13b").
+  const CHORD_EXT_FRAG_RE = /^\(?[#b]?\d{1,2}[+\-#b]?\)?$/;
+  // Cifras coladas TODAS EM MAIÚSCULAS ("BM7", "EB9", "F#7SUS4", "C#9+ 7 5+"):
+  // nas linhas que viram acordes, devolve a grafia normal (Bm7, Eb9, F#7sus4).
+  function normCapsChordTok(tok){
+    if(/^\|+$/.test(tok)) return tok;
+    if(/^\(?[#B]?\d{1,2}[+\-#B]?\)?$/.test(tok)) return tok.replace(/B/g, 'b');
+    const fix = part => {
+      const m = part.match(/^([A-G])(B|#)?(.*)$/);
+      if(!m) return part;
+      let rest = m[3].replace(/^MAJ/, 'maj').replace(/SUS/g, 'sus').replace(/ADD/g, 'add').replace(/DIM/g, 'dim').replace(/AUG/g, 'aug');
+      rest = rest.replace(/^M(?!aj)/, 'm').replace(/(\d)B$/, '$1b');
+      return m[1] + (m[2] === 'B' ? 'b' : (m[2] || '')) + rest;
+    };
+    const t = tok.replace(/\/$/, '');
+    return t.split('/').map(fix).join('/');
+  }
+  function normalizeCapsCifra(body){
+    const letters = String(body || '').replace(/\{[^}]*\}|\[[^\]]*\]/g, '').match(/[A-Za-zÀ-ÿ]/g) || [];
+    if(letters.length < 40) return body;
+    const low = letters.filter(c => c !== c.toUpperCase()).length;
+    if(low / letters.length > 0.05) return body;
+    return String(body).split('\n').map(l => {
+      if(!/\S/.test(l)) return l;
+      const c = l.replace(/\S+/g, normCapsChordTok);
+      return (c !== l && isChordLine(c)) ? c : l;
+    }).join('\n');
+  }
   function isChordLine(line){
     const trimmed = line.trim();
     if(!trimmed) return false;
@@ -3290,7 +3318,8 @@
     const NOTE_RE = /^\(?(riff|solo|bis|base|intro|final|x?\d{1,2}x?|\d{1,2}ª?)\)?:?$/i;
     let chords = 0;
     const ok = tokens.every(tok => {
-      if(tok === '(' || tok === ')' || tok === '|' || tok === '-') return true;
+      if(tok === '(' || tok === ')' || /^\|+:?$/.test(tok) || /^:?\|+$/.test(tok) || tok === '-') return true;
+      if(chords > 0 && CHORD_EXT_FRAG_RE.test(tok)) return true;
       const m = tok.match(/^\{([^{}]+)\}$/);
       if(CHORD_TOKEN_RE.test(m ? m[1] : tok)){ chords++; return true; }
       return NOTE_RE.test(tok);
@@ -5625,7 +5654,7 @@
   // mesma palavra.
   function buildCifraLines(body, shift){
     const prev = SIMPLIFY_ACTIVE; SIMPLIFY_ACTIVE = simplifyOn;
-    try{ return buildCifraLinesRaw(body, shift); } finally { SIMPLIFY_ACTIVE = prev; }
+    try{ return buildCifraLinesRaw(normalizeCapsCifra(body), shift); } finally { SIMPLIFY_ACTIVE = prev; }
   }
   function buildCifraLinesRaw(body, shift){
     // Espaços no fim da linha não têm efeito visível, mas ocupam largura
@@ -8166,7 +8195,7 @@
   // notação "(5-)"/("(5+)" que alguns usam pra 5ª bemol/sustenida.
   const CHORD_ALTERATION_GROUP = '(\\([#b]?\\d+[+-]?(?:[,\\s]+[#b]?\\d+[+-]?)*\\))?';
   const CHORD_TOKEN_RE = new RegExp(
-    '^[A-G](#|b)?(maj7|maj9|madd9|add9|sus2|sus4|dim7|dim|aug|min|m7b5|m6|m7|m9|m11|m13|m|6\\/9|7M|M7|6|7|9|11|13|5|4|2|°|ø|\\+)?' +
+    '^[A-G](#|b)?(7sus4|7sus2|9sus4|7\\+|9\\+|maj7|maj9|madd9|add9|sus2|sus4|dim7|dim|aug|min|m7b5|m6|m7|m9|m11|m13|m|6\\/9|7M|M7|6|7|9|11|13|5|4|2|°|ø|\\+)?' +
     CHORD_ALTERATION_GROUP +
     '(\\/[A-G](#|b)?(maj7|maj9|add9|sus2|sus4|dim7|dim|aug|min|m7b5|m6|m7|m9|m11|m13|m|7M|M7|6|7|9|11|13|5|4|2|°|ø|\\+)?' +
     CHORD_ALTERATION_GROUP +
