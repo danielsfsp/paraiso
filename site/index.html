@@ -2173,6 +2173,45 @@
   .chg-list li:last-child{border-bottom:none;}
   .chg-list li small{color:var(--text-dim);}
   .decl-acts .go.ok{background:#4CAF6A; border-color:#4CAF6A;}
+
+  /* v271: identidade de cada área — Playlist (roxo), Culto (dourado), Escala (azul), Equipe (verde) */
+  :root{--sec-pl:#A98BEA; --sec-cu:#E8A33D; --sec-es:#6E9BE0; --sec-eq:#5DB89A;}
+  .sec-pl{--c:var(--sec-pl);} .sec-cu{--c:var(--sec-cu);} .sec-es{--c:var(--sec-es);} .sec-eq{--c:var(--sec-eq);}
+  .c-pl{color:var(--sec-pl) !important;} .c-cu{color:var(--sec-cu) !important;} .c-es{color:var(--sec-es) !important;} .c-eq{color:var(--sec-eq) !important;}
+  .sec-h{display:inline-flex; align-items:center; gap:12px; vertical-align:middle;}
+  .sec-ico{display:inline-flex; align-items:center; justify-content:center; width:42px; height:42px; flex-shrink:0; border-radius:12px; font-size:21px; line-height:1;
+    background:color-mix(in srgb, var(--c) 18%, transparent); border:1px solid color-mix(in srgb, var(--c) 50%, transparent);}
+  .sec-h-txt{display:flex; flex-direction:column; line-height:1.1;}
+  .sec-h-txt small{font-family:inherit; font-size:12.5px; font-weight:500; color:var(--text-dim); letter-spacing:0; margin-top:4px; font-family:var(--font-body, inherit);}
+  .sec-tag{display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--c);
+    background:color-mix(in srgb, var(--c) 15%, transparent); border:1px solid color-mix(in srgb, var(--c) 35%, transparent); border-radius:99px; padding:2px 8px; margin-bottom:6px; width:max-content;}
+  .sec-from{font-size:12px; color:var(--text-dim); margin:-2px 0 6px;}
+  .plp-detail{border-top:3px solid var(--sec-pl) !important;}
+  .plp-item.on{border-color:var(--sec-pl) !important; background:color-mix(in srgb, var(--sec-pl) 12%, var(--surface)) !important;}
+  .plp-ico{background:color-mix(in srgb, var(--sec-pl) 16%, transparent) !important;}
+  .ev-card{border-left:4px solid var(--sec-es) !important;}
+  .cu-card{border-left:4px solid var(--sec-cu) !important;}
+  .ev-card .sec-tag{margin-bottom:6px;}
+  .cu-main .sec-tag{margin-bottom:4px;}
+  .ev-sec.c-es, .ev-sec.c-pl{font-weight:800;}
+  /* menu: barra colorida da área ativa */
+  .side-nav [data-view="playlists"]{--c:var(--sec-pl);} #btnCultos{--c:var(--sec-cu);} #btnEscala{--c:var(--sec-es);} #btnEquipe{--c:var(--sec-eq);}
+  .side-nav [data-view="playlists"].active, #btnCultos.on, #btnEscala.on, #btnEquipe.on{box-shadow:inset 3px 0 0 var(--c); color:var(--c) !important; background:color-mix(in srgb, var(--c) 14%, transparent) !important;}
+  body.nav-home .side-nav [data-view="playlists"].active, body.esc-page-on .side-nav [data-view="playlists"].active{box-shadow:none; color:var(--text-dim) !important; background:transparent !important;}
+  #mobileTabbar [data-tb="playlists"].on{color:var(--sec-pl) !important;} #mobileTabbar [data-tb="culto"].on{color:var(--sec-cu) !important;} #mobileTabbar [data-tb="escala"].on{color:var(--sec-es) !important;} #mobileTabbar [data-tb="equipe"].on{color:var(--sec-eq) !important;}
+  @media (max-width: 820px){ .sec-ico{width:36px; height:36px; font-size:18px; border-radius:10px;} .sec-h-txt small{font-size:11.5px;} }
+
+  .side-nav .sidebar-tabs button.side-nav-item.active[data-view="playlists"]{box-shadow:inset 3px 0 0 var(--sec-pl); color:var(--sec-pl) !important; background:color-mix(in srgb, var(--sec-pl) 14%, transparent) !important;}
+  .side-nav .sidebar-tabs button.side-nav-item.active[data-view="playlists"] .sn-count{background:var(--sec-pl); color:#1A1206;}
+  body.nav-home .side-nav .sidebar-tabs button.side-nav-item.active[data-view="playlists"], body.esc-page-on .side-nav .sidebar-tabs button.side-nav-item.active[data-view="playlists"]{box-shadow:none; color:var(--text-dim) !important; background:transparent !important;}
+  body.nav-home .side-nav .sidebar-tabs button.side-nav-item.active[data-view="playlists"] .sn-count, body.esc-page-on .side-nav .sidebar-tabs button.side-nav-item.active[data-view="playlists"] .sn-count{background:var(--surface-2); color:var(--text-dim);}
+  #btnEscala.on .sn-count{background:var(--sec-es);} #btnEquipe.on .sn-count{background:var(--sec-eq);}
+  .sec-h-txt small{font-family:var(--font-ui) !important;}
+  .ev-card .ev-eyebrow{color:var(--sec-es);}
+  .ev-pl-badge.on{background:color-mix(in srgb, var(--sec-pl) 16%, transparent) !important; color:var(--sec-pl) !important;}
+  .ev-pl-ico{background:color-mix(in srgb, var(--sec-pl) 16%, transparent) !important; color:var(--sec-pl) !important;}
+  .ev-pl{border-left:3px solid color-mix(in srgb, var(--sec-pl) 60%, transparent);}
+  .ev-sec.c-pl, .ev-sec.c-pl span{color:var(--sec-pl) !important;}
 </style>
 </head>
 <body>
@@ -2199,7 +2238,7 @@
     <nav class="side-nav" aria-label="Navegação">
       <button type="button" class="side-nav-item" id="navHome"><span class="sn-ico">⌂</span><span class="sn-lab">Início</span></button>
       <div class="sidebar-tabs">
-        <button data-view="playlists" class="active side-nav-item"><span class="sn-ico">☰</span><span class="sn-lab">Playlists</span><span class="sn-count" id="navCountPl"></span></button>
+        <button data-view="playlists" class="active side-nav-item"><span class="sn-ico">🎵</span><span class="sn-lab">Playlists</span><span class="sn-count" id="navCountPl"></span></button>
         <button data-view="favorites" class="side-nav-item"><span class="sn-ico">★</span><span class="sn-lab">Favoritas</span><span class="sn-count" id="navCountFav"></span></button>
       </div>
       <button type="button" class="esc-open-btn side-nav-item" id="btnCultos"><span class="sn-ico">⛪</span><span class="sn-lab">Culto</span><span class="sn-count" id="navCountCulto"></span></button>
@@ -2507,7 +2546,7 @@
   </main>
   <nav class="tabbar" id="mobileTabbar" aria-label="Navegação">
     <button type="button" data-tb="home"><i>⌂</i>Início</button>
-    <button type="button" data-tb="playlists"><i>☰</i>Playlists</button>
+    <button type="button" data-tb="playlists"><i>🎵</i>Playlists</button>
     <button type="button" data-tb="culto"><i>⛪</i>Culto</button>
     <button type="button" data-tb="escala"><i>📅</i>Escala<b class="tb-badge" id="tbEscBadge"></b></button>
     <button type="button" data-tb="equipe"><i>👥</i>Equipe<b class="tb-badge" id="tbEqBadge"></b></button>
@@ -2946,7 +2985,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v270 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v271 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4082,13 +4121,13 @@
     const act = sortPlaylistsForList(playlists.filter(p => !p.archived));
     const arch = sortPlaylistsForList(playlists.filter(p => p.archived));
     let sel = playlists.find(p => p.id === openPlaylistId) || act[0] || null;
-    if(h1) h1.textContent = 'Playlists';
-    if(sub) sub.textContent = act.length + (act.length === 1 ? ' playlist ativa' : ' playlists ativas') + (arch.length ? ' · ' + arch.length + ' arquivada' + (arch.length === 1 ? '' : 's') : '');
+    if(h1) h1.innerHTML = secHead('pl', '🎵', 'Playlists');
+    if(sub) sub.textContent = 'Suas listas de músicas (pessoais) · ' + act.length + (act.length === 1 ? ' playlist ativa' : ' playlists ativas') + (arch.length ? ' · ' + arch.length + ' arquivada' + (arch.length === 1 ? '' : 's') : '');
     const card = pl => {
       const n = pl.songIds.filter(id => songs.some(s => s.id === id)).length;
       const today = todayIso();
       const when = pl.date ? (pl.date === today ? 'Hoje' : (pl.date > today ? WEEKDAYS_PT[isoToDate(pl.date).getDay()] + ', ' + fmtDateBR(pl.date).slice(0, 5) : 'Tocada em ' + fmtDateBR(pl.date))) : 'Sem data';
-      return '<button type="button" class="plp-item' + (sel && sel.id === pl.id ? ' on' : '') + (pl.date && pl.date >= today ? ' future' : '') + '" data-plp="' + pl.id + '"><span class="plp-ico">' + (pl.date && pl.date >= today ? '📅' : '♫') + '</span><span class="plp-txt"><b>' + escapeHtml(pl.name) + '</b><small>' + escapeHtml(when) + ' · ' + n + (n === 1 ? ' música' : ' músicas') + '</small></span></button>';
+      return '<button type="button" class="plp-item' + (sel && sel.id === pl.id ? ' on' : '') + (pl.date && pl.date >= today ? ' future' : '') + '" data-plp="' + pl.id + '"><span class="plp-ico">🎵</span><span class="plp-txt"><b>' + escapeHtml(pl.name) + '</b><small>' + escapeHtml(when) + ' · ' + n + (n === 1 ? ' música' : ' músicas') + '</small></span></button>';
     };
     let html = '<div class="plp-wrap"><div class="plp-list"><button type="button" class="plp-new" id="plpNew">＋ Nova playlist</button>' + act.map(card).join('') +
       (arch.length ? '<button type="button" class="plp-arch-toggle" id="plpArch">🗄️ Arquivadas (' + arch.length + ') ' + (plPageShowArchived ? '▴' : '▾') + '</button>' + (plPageShowArchived ? arch.map(card).join('') : '') : '') +
@@ -4096,7 +4135,8 @@
     html += '<div class="plp-detail">';
     if(sel){
       const items = sel.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
-      html += '<div class="plp-head"><div><div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
+      const fromEv = sel.fromEvent && typeof esc !== 'undefined' ? (esc.events || []).find(e => e.id === sel.fromEvent) : null;
+      html += '<div class="plp-head"><div><div class="sec-tag sec-pl">🎵 Playlist</div>' + (sel.fromEvent ? '<div class="sec-from">recebida do <b class="c-cu">⛪ Culto</b>' + (fromEv ? ' “' + escapeHtml(fromEv.title || 'Culto') + '” · ' + escapeHtml(escDateLabel(fromEv.date)) : '') + '</div>' : '') + '<div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
         '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
         (sel.fromEvent && items.length ? '<button type="button" class="plp-btn chg" data-plp-chg title="Enviar suas alterações (tom, formatação, cifra) para a equipe do culto">📣 Compartilhar alterações</button>' : '') +
@@ -9873,7 +9913,7 @@
     const isProfile = esc.tab === 'perfil' && !esc.editing;
     document.body.classList.toggle('esc-page-on', escOverlay().classList.contains('open')); markEscNav();
     const isTeam = esc.tab === 'equipe', isCultos = esc.tab === 'cultos';
-    document.getElementById('escalaTitle').textContent = isProfile ? '👤 Meu perfil' : isTeam ? '👥 Equipe' : isCultos ? '⛪ Culto' : '📅 Escala';
+    document.getElementById('escalaTitle').innerHTML = isProfile ? '👤 Meu perfil' : isTeam ? secHead('eq', '👥', 'Equipe', 'Pessoas, funções e equipes') : isCultos ? secHead('cu', '⛪', 'Culto', 'Cada culto: data, ministro, playlist e escala') : secHead('es', '📅', 'Escala', 'Quem toca o quê em cada culto');
     tabsEl.style.display = (isProfile || isTeam || isCultos) ? 'none' : '';
     tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === esc.tab));
     if(esc.editing){ renderEscEditor(body); return; }
@@ -9925,8 +9965,8 @@
       const sub = [e.time ? escH(e.time) : '', minister ? '🎤 ' + escH(hero ? minister : minister.split(' ')[0]) : '🎤 a definir'].filter(Boolean).join(' · ');
       const stack = '<div class="hc-stack">' + as.slice(0, hero ? 8 : 5).map(a => homeAvatar(escProfile(a.profile_id), a.status)).join('') + '</div>';
       html += '<div class="esc-card ev-card' + (hero ? ' ev-hero' : '') + (open ? ' open' : '') + '" data-ev="' + e.id + '">';
-      html += '<div class="esc-card-head">';
-      if(hero) html += '<div class="ev-eyebrow">' + (mineOnly ? 'Sua próxima escala' : 'Próximo culto') + ' · ' + whenTxt(e.date) + '</div>';
+      html += '<div class="esc-card-head"><div class="sec-tag sec-es">📅 Escala</div>';
+      if(hero) html += '<div class="ev-eyebrow">' + (mineOnly ? 'Sua próxima escala' : 'Próxima escala') + ' · ' + whenTxt(e.date) + '</div>';
       html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + '</div><div class="ev-sub">' + sub + '</div>' + escPlBadge(e) +
         (!hero && as.length ? '<div class="ev-mini">' + stack + '</div>' : '') + '</div>' + pillFor(e, mine) + '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></div>';
       if(hero){
@@ -12839,10 +12879,10 @@
   }
   function escPlBlockHtml(e, readOnly){
     const can = escCanSchedule() && !readOnly;
-    let h = '<div class="ev-sec ev-sec-row"><span>🎵 Playlist do culto</span>' + (can && e.playlist ? '<button type="button" class="btn-secondary ev-swap-top" data-pl-swap="' + e.id + '">🔁 Trocar playlist</button>' : '') + '</div><div class="ev-pl">';
+    let h = '<div class="ev-sec ev-sec-row c-pl"><span>🎵 Playlist do culto</span>' + (can && e.playlist ? '<button type="button" class="btn-secondary ev-swap-top" data-pl-swap="' + e.id + '">🔁 Trocar playlist</button>' : '') + '</div><div class="ev-pl">';
     if(e.playlist){
       const pl = plForEvent(e), n = escPlCount(e);
-      h += '<div class="ev-pl-head"><div class="ev-pl-ico">♫</div><div class="ev-pl-txt"><b>' + escH(e.playlist.name || 'Playlist') + '</b><small>' + n + (n === 1 ? ' música' : ' músicas') + '</small></div>' +
+      h += '<div class="ev-pl-head"><div class="ev-pl-ico">🎵</div><div class="ev-pl-txt"><b>' + escH(e.playlist.name || 'Playlist') + '</b><small>' + n + (n === 1 ? ' música' : ' músicas') + '</small></div>' +
         (pl ? '<button type="button" class="btn-primary ev-pl-open" data-openpl="' + pl.id + '">▶ Abrir</button>' : '') + '</div>';
       if(e.playlist.songs && e.playlist.songs.length) h += escPlSongRowsHtml(e, can);
       else h += '<div class="ev-pl-empty">Nenhuma música ainda.</div>';
@@ -13027,10 +13067,10 @@
       const dd = isoToDate(e.date), as = escEventAssignments(e.id), conf = as.filter(a => a.status === 'confirmado').length;
       html += '<div class="cu-card" data-cu="' + e.id + '">' +
         '<div class="cu-head"><div class="ev-date big"><div class="w">' + WEEKDAYS_PT[dd.getDay()].toUpperCase() + '</div><div class="d">' + String(dd.getDate()).padStart(2, '0') + '</div><div class="m">' + ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][dd.getMonth()] + '</div></div>' +
-        '<div class="cu-main"><div class="cu-title">' + escH(e.title || 'Culto') + '</div><div class="cu-sub">' + [e.time ? escH(e.time) : '', e.minister_id ? '🎤 ' + escH(escName(e.minister_id)) : '🎤 ministro a definir'].filter(Boolean).join(' · ') + '</div></div>' +
+        '<div class="cu-main"><div class="sec-tag sec-cu">⛪ Culto</div><div class="cu-title">' + escH(e.title || 'Culto') + '</div><div class="cu-sub">' + [e.time ? escH(e.time) : '', e.minister_id ? '🎤 ' + escH(escName(e.minister_id)) : '🎤 ministro a definir'].filter(Boolean).join(' · ') + '</div></div>' +
         '<button type="button" class="btn-secondary cu-share" data-cu-share="' + e.id + '" title="Compartilhar no WhatsApp: culto, escala e músicas"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
         (can ? '<button type="button" class="tm-more" data-cu-edit="' + e.id + '" title="Editar culto">✎</button>' : '') + '</div>' +
-        '<div class="ev-sec">👥 Escala</div><div class="cu-esc">' +
+        '<div class="ev-sec c-es">📅 Escala</div><div class="cu-esc">' +
           (as.length ? '<div class="hc-stack">' + as.slice(0, 10).map(a => homeAvatar(escProfile(a.profile_id), a.status)).join('') + '</div><span>' + as.length + (as.length === 1 ? ' pessoa' : ' pessoas') + ' · ' + conf + ' confirmada' + (conf === 1 ? '' : 's') + '</span>' : '<span class="cu-none">Escala ainda não montada</span>') +
           '<span class="cu-sp"></span>' + (can ? '<button type="button" class="btn-secondary" data-cu-esc="' + e.id + '">' + (as.length ? '✎ Editar escala' : '👥 Montar escala') + '</button>' : '<button type="button" class="btn-secondary" data-cu-see="' + e.id + '">Ver escala</button>') +
         '</div>' + escPlBlockHtml(e) + '</div>';
@@ -13384,6 +13424,11 @@
       }, () => { plChMarkSeen(c.id); next(); }, true);
   }
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') setTimeout(() => { try{ plChCheck(); }catch(e){} }, 1500); });
+
+  // Cabeçalho de página com a cor/ícone da área (v271)
+  function secHead(k, ico, title, desc){
+    return '<span class="sec-h sec-' + k + '"><span class="sec-ico">' + ico + '</span><span class="sec-h-txt"><span>' + title + '</span>' + (desc ? '<small>' + desc + '</small>' : '') + '</span></span>';
+  }
 
 })();
 </script>
