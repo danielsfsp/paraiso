@@ -1559,7 +1559,7 @@
   .home-songs-grid a, .home-songs-grid .home-song-row > a{flex:1; display:flex; align-items:center; gap:12px; padding:9px 12px; min-width:0; color:var(--text);}
   .home-songs-grid a:hover .home-song-name{text-decoration:none; color:var(--accent);}
   .home-song-num{display:none;}
-  .home-song-ini{width:38px; height:38px; flex-shrink:0; border-radius:10px; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--accent);}
+  .home-song-ini{display:none !important;} .home-song-ini-old{width:38px; height:38px; flex-shrink:0; border-radius:10px; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--accent);}
   .home-song-txt{display:flex; flex-direction:column; min-width:0; flex:1;}
   .home-song-name{font-size:13.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .home-song-artist{font-size:12px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -2936,7 +2936,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v265 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v266 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3859,7 +3859,6 @@
         art.textContent = song.artist || '';
         txt.appendChild(name); txt.appendChild(art);
         a.appendChild(num);
-        a.appendChild(ini);
         a.appendChild(txt);
         if(song.favorite){ const st = document.createElement('span'); st.className = 'home-song-star'; st.textContent = '★'; a.appendChild(st); }
         if(song.key){ const k = document.createElement('span'); k.className = 'home-song-key'; k.textContent = song.key; a.appendChild(k); }
