@@ -2253,6 +2253,15 @@
     #mobileTabbar button{flex:1 1 0;}
   }
   @media (max-width: 820px){ .sidebar.open{z-index:3000 !important;} }
+
+  /* v278: ambiente de teste (TH) bem diferente da PRODUÇÃO */
+  body.env-th{--bg:#1A0E08; --bg-glow:#3A1608; --surface:#22130B; --surface-2:#2B1A10; --surface-3:#352015; --border:#55301A; --border-soft:#3A2214;}
+  .env-th-strip{position:fixed; left:0; right:0; top:0; height:22px; z-index:5999; display:flex; align-items:center; justify-content:center; pointer-events:none;
+    background:repeating-linear-gradient(135deg, #FF6A13 0 14px, #E0450A 14px 28px); color:#fff; font:800 11px/1 var(--font-ui, sans-serif); letter-spacing:.06em; box-shadow:0 2px 10px rgba(255,90,0,.45);}
+  body.env-th{padding-top:22px;}
+  body.env-th .sidebar, body.env-th #escalaOverlay, body.env-th .modal-overlay{top:22px !important;}
+  .th-tag{background:#FF6A13; color:#fff; font:800 11px/1 var(--font-ui, sans-serif); padding:3px 6px; border-radius:6px; vertical-align:middle; margin-left:4px;}
+  body.env-th .env-badge{display:none !important;}
 </style>
 </head>
 <body>
@@ -3025,7 +3034,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v277 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v278 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3277,7 +3286,9 @@
     return SIMPLIFY_ACTIVE === 'bass' ? bassChord(ch) : SIMPLIFY_ACTIVE ? simplifyChord(ch) : ch;
   }
 
-  var PARAISO_LOGO = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGJnIiB4MT0iMC4yIiB5MT0iMCIgeDI9IjAuNSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4RTNDRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjUiIHN0b3AtY29sb3I9IiM1NDE4RTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMUEwQzc4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJwZ2xvdyIgY3g9IjAuMSIgY3k9IjAuMSIgcj0iMC42Ij4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAuOTUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjIiIHN0b3AtY29sb3I9IiNFQkQ5RkYiIHN0b3Atb3BhY2l0eT0iMC43Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMC41NSIgc3RvcC1jb2xvcj0iIzlDN0JGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJwc3RyZWFrIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMCI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMC41IiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAuMTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMjIiIGZpbGw9InVybCgjcGJnKSIvPgogIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMjIiIGZpbGw9InVybCgjcGdsb3cpIi8+CiAgPGcgb3BhY2l0eT0iMC45Ij4KICAgIDxyZWN0IHg9IjU4IiB5PSIwIiB3aWR0aD0iNSIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjcHN0cmVhaykiIHRyYW5zZm9ybT0icm90YXRlKDggNjAgNTApIi8+CiAgICA8cmVjdCB4PSI3MCIgeT0iMCIgd2lkdGg9IjMiIGhlaWdodD0iMTAwIiBmaWxsPSJ1cmwoI3BzdHJlYWspIiB0cmFuc2Zvcm09InJvdGF0ZSg4IDcwIDUwKSIvPgogICAgPHJlY3QgeD0iODAiIHk9IjAiIHdpZHRoPSI2IiBoZWlnaHQ9IjEwMCIgZmlsbD0idXJsKCNwc3RyZWFrKSIgdHJhbnNmb3JtPSJyb3RhdGUoOCA4MiA1MCkiLz4KICA8L2c+CiAgPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTQ2LjUgMTIgSDU1LjUgVjI2LjUgSDc3LjUgVjM5LjUgSDU1LjUgQzU2IDQ2IDYzLjUgNTAgNjMgNTguNSBDNjIuNSA2NC41IDU2IDY2LjUgNTQuMyA3MS41IEM1Mi44IDc3IDU0LjMgODQgNTkgODguNSBDNjIuNSA5MiA2NyA5NC42IDcyLjUgOTYgQzYxIDk2LjYgNTEuNiA5Mi41IDQ4LjQgODQuMiBDNDYuNyA3OS4zIDQ2LjUgNzIuNSA0Ni41IDY2IFYzOS41IEgyNC41IFYyNi41IEg0Ni41IFoiLz4KPC9zdmc+';
+  var IS_TH = /paraiso-teste|workers\.dev/.test(location.hostname);
+  var PARAISO_LOGO_TH = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGJnIiB4MT0iMC4yIiB5MT0iMCIgeDI9IjAuNSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkIxM0IiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjUiIHN0b3AtY29sb3I9IiNGRjZBMTMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjQjMxMjBBIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJwZ2xvdyIgY3g9IjAuMSIgY3k9IjAuMSIgcj0iMC42Ij4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAuOTUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjIiIHN0b3AtY29sb3I9IiNGRkYxRDYiIHN0b3Atb3BhY2l0eT0iMC43Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMC41NSIgc3RvcC1jb2xvcj0iIzlDN0JGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJwc3RyZWFrIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMCI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMC41IiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAuMTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMjIiIGZpbGw9InVybCgjcGJnKSIvPgogIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMjIiIGZpbGw9InVybCgjcGdsb3cpIi8+CiAgPGcgb3BhY2l0eT0iMC45Ij4KICAgIDxyZWN0IHg9IjU4IiB5PSIwIiB3aWR0aD0iNSIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjcHN0cmVhaykiIHRyYW5zZm9ybT0icm90YXRlKDggNjAgNTApIi8+CiAgICA8cmVjdCB4PSI3MCIgeT0iMCIgd2lkdGg9IjMiIGhlaWdodD0iMTAwIiBmaWxsPSJ1cmwoI3BzdHJlYWspIiB0cmFuc2Zvcm09InJvdGF0ZSg4IDcwIDUwKSIvPgogICAgPHJlY3QgeD0iODAiIHk9IjAiIHdpZHRoPSI2IiBoZWlnaHQ9IjEwMCIgZmlsbD0idXJsKCNwc3RyZWFrKSIgdHJhbnNmb3JtPSJyb3RhdGUoOCA4MiA1MCkiLz4KICA8L2c+CiAgPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTQ2LjUgMTIgSDU1LjUgVjI2LjUgSDc3LjUgVjM5LjUgSDU1LjUgQzU2IDQ2IDYzLjUgNTAgNjMgNTguNSBDNjIuNSA2NC41IDU2IDY2LjUgNTQuMyA3MS41IEM1Mi44IDc3IDU0LjMgODQgNTkgODguNSBDNjIuNSA5MiA2NyA5NC42IDcyLjUgOTYgQzYxIDk2LjYgNTEuNiA5Mi41IDQ4LjQgODQuMiBDNDYuNyA3OS4zIDQ2LjUgNzIuNSA0Ni41IDY2IFYzOS41IEgyNC41IFYyNi41IEg0Ni41IFoiLz4KPGc+PHJlY3QgeD0iNTgiIHk9IjQiIHdpZHRoPSIzOCIgaGVpZ2h0PSIyMSIgcng9IjciIGZpbGw9IiNGRkZGRkYiLz48dGV4dCB4PSI3NyIgeT0iMjAuNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSIxNSIgZmlsbD0iI0MyMTYwQSI+VEg8L3RleHQ+PC9nPjwvc3ZnPg==';
+  var PARAISO_LOGO = IS_TH ? PARAISO_LOGO_TH : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGJnIiB4MT0iMC4yIiB5MT0iMCIgeDI9IjAuNSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4RTNDRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjUiIHN0b3AtY29sb3I9IiM1NDE4RTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMUEwQzc4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJwZ2xvdyIgY3g9IjAuMSIgY3k9IjAuMSIgcj0iMC42Ij4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAuOTUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjIiIHN0b3AtY29sb3I9IiNFQkQ5RkYiIHN0b3Atb3BhY2l0eT0iMC43Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMC41NSIgc3RvcC1jb2xvcj0iIzlDN0JGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJwc3RyZWFrIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMCI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMC41IiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAuMTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMjIiIGZpbGw9InVybCgjcGJnKSIvPgogIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMjIiIGZpbGw9InVybCgjcGdsb3cpIi8+CiAgPGcgb3BhY2l0eT0iMC45Ij4KICAgIDxyZWN0IHg9IjU4IiB5PSIwIiB3aWR0aD0iNSIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjcHN0cmVhaykiIHRyYW5zZm9ybT0icm90YXRlKDggNjAgNTApIi8+CiAgICA8cmVjdCB4PSI3MCIgeT0iMCIgd2lkdGg9IjMiIGhlaWdodD0iMTAwIiBmaWxsPSJ1cmwoI3BzdHJlYWspIiB0cmFuc2Zvcm09InJvdGF0ZSg4IDcwIDUwKSIvPgogICAgPHJlY3QgeD0iODAiIHk9IjAiIHdpZHRoPSI2IiBoZWlnaHQ9IjEwMCIgZmlsbD0idXJsKCNwc3RyZWFrKSIgdHJhbnNmb3JtPSJyb3RhdGUoOCA4MiA1MCkiLz4KICA8L2c+CiAgPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTQ2LjUgMTIgSDU1LjUgVjI2LjUgSDc3LjUgVjM5LjUgSDU1LjUgQzU2IDQ2IDYzLjUgNTAgNjMgNTguNSBDNjIuNSA2NC41IDU2IDY2LjUgNTQuMyA3MS41IEM1Mi44IDc3IDU0LjMgODQgNTkgODguNSBDNjIuNSA5MiA2NyA5NC42IDcyLjUgOTYgQzYxIDk2LjYgNTEuNiA5Mi41IDQ4LjQgODQuMiBDNDYuNyA3OS4zIDQ2LjUgNzIuNSA0Ni41IDY2IFYzOS41IEgyNC41IFYyNi41IEg0Ni41IFoiLz4KPC9zdmc+';
   function lsGetEarly(k){ try{ return localStorage.getItem('cifraset:' + k); }catch(e){ return null; } }
   function simplifyChord(ch){
     const m = String(ch).match(/^([A-G][#b]?)([^\/]*)(?:\/.*)?$/);
@@ -10874,6 +10885,12 @@
       b.title = 'Este é o ambiente de TESTE (TH). A PRODUÇÃO é cep-minist-louvor.netlify.app';
       document.body.appendChild(b);
       document.title = '[TH] ' + document.title;
+      document.body.classList.add('env-th');
+      document.querySelectorAll('.brand-logo-img').forEach(im => { im.src = PARAISO_LOGO_TH; });
+      document.querySelectorAll('link[rel="icon"]').forEach(l => { if(/^data:/.test(l.href)) l.href = PARAISO_LOGO_TH; });
+      const tc = document.querySelector('meta[name="theme-color"]'); if(tc) tc.content = '#C2410C';
+      const bt = document.querySelector('#brandLogo span'); if(bt) bt.innerHTML = 'Paraíso <b class="th-tag">TH</b>';
+      const strip = document.createElement('div'); strip.className = 'env-th-strip'; strip.innerHTML = '<span>🧪 AMBIENTE DE TESTE (TH) — não é o app oficial</span>'; document.body.appendChild(strip);
     }catch(e){}
   })();
 
@@ -12638,9 +12655,9 @@
           if(extra) Object.assign(l, extra);
           document.head.appendChild(l);
         };
-        addLink('manifest', 'manifest.webmanifest');
-        addLink('icon', 'icon-192.png', { type: 'image/png' });
-        addLink('apple-touch-icon', 'apple-touch-icon.png');
+        addLink('manifest', IS_TH ? 'manifest-th.webmanifest' : 'manifest.webmanifest');
+        addLink('icon', IS_TH ? 'icon-th-192.png' : 'icon-192.png', { type: 'image/png' });
+        addLink('apple-touch-icon', IS_TH ? 'apple-touch-icon-th.png' : 'apple-touch-icon.png');
         if('serviceWorker' in navigator){
           navigator.serviceWorker.register('sw.js').catch(() => {});
         }
