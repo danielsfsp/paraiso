@@ -2889,7 +2889,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v263 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v264 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -12942,6 +12942,26 @@
     r = await esc.sb.from('events').update({ dress_code: '', notes: '' }).eq('id', evId);
     return r.error || null;
   }
+
+  // v264: colou a página do Cifra Club direto no campo da cifra? Preenche tudo.
+  (function(){
+    const fill = (txt) => {
+      if(!txt || !/(^|\n)\s*Tom:\s*[A-G]/.test(txt)) return false;
+      const d = ccParsePageText(txt); if(!d || !d.body) return false;
+      return ccFillFromPage(txt);
+    };
+    inputBody.addEventListener('paste', (e) => {
+      const txt = (e.clipboardData || window.clipboardData) ? (e.clipboardData || window.clipboardData).getData('text') : '';
+      if(fill(txt)){ e.preventDefault(); try{ inputTitle.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(err){} }
+    });
+    // Alguns teclados de celular não disparam "paste": confere quando o campo muda de uma vez.
+    let last = '';
+    inputBody.addEventListener('input', () => {
+      const v = inputBody.value;
+      if(v.length - last.length > 200 && !inputTitle.value.trim() && fill(v)){ last = inputBody.value; return; }
+      last = v;
+    });
+  })();
 
 })();
 </script>
