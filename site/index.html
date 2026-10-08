@@ -2133,6 +2133,13 @@
   .tabbar button{font-size:10.5px !important;}
 
   .home-song-ini{display:none !important;}
+
+  /* v263: Nova música mais enxuta no celular */
+  #ccImportRow.cc-done .cc-steps, #ccImportRow.cc-done #btnCcBookmarkHelp{display:none;}
+  @media (max-width: 820px){
+    #ccImportRow + .hint{display:none;}
+    #btnCcBookmarkHelp{display:none;}
+  }
 </style>
 </head>
 <body>
@@ -2483,8 +2490,9 @@
     <div class="cc-import" id="ccImportRow">
       <label>⚡ Criar a partir do Cifra Club</label>
       <ol class="cc-steps">
-        <li>No Cifra Club (no Chrome), <strong>segure o dedo em cima da letra</strong> → <strong>Selecionar tudo</strong> → <strong>Copiar</strong>.</li>
-        <li>Volte aqui e toque em:</li>
+        <li>Abra a música no <strong>cifraclub.com.br pelo Chrome</strong>, <strong>segure o dedo em cima da letra</strong> → <strong>Selecionar tudo</strong>.</li>
+        <li><strong>Mais rápido:</strong> toque em <strong>Compartilhar → Paraíso</strong> (com o app instalado) — a música já abre aqui preenchida.</li>
+        <li>Ou toque em <strong>Copiar</strong>, volte aqui e toque em:</li>
       </ol>
       <button class="btn-primary cc-paste-big" id="btnCcPastePage" type="button">📋 Colar do Cifra Club</button>
       <textarea id="ccPasteArea" class="cc-paste-area" rows="3" placeholder="Segure o dedo aqui e toque em Colar" hidden></textarea>
@@ -2881,7 +2889,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v262 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v263 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8531,6 +8539,7 @@
       inputKey.readOnly = false; inputKey.title = '';
       document.getElementById('inputKeyLabel').textContent = 'Tom *';
       document.getElementById('ccImportUrl').value = '';
+      document.getElementById('ccImportRow').classList.remove('cc-done');
       document.getElementById('ccPasteArea').hidden = true;
       document.getElementById('ccBmHelp').hidden = true;
       ccStatus('');
@@ -9417,6 +9426,7 @@
     [inputTitle, inputArtist, inputKey].forEach(el => el.classList.remove('field-invalid'));
     if(typeof renderEditorHighlight === 'function') renderEditorHighlight();
     document.getElementById('ccPasteArea').hidden = true;
+    document.getElementById('ccImportRow').classList.add('cc-done');
     const miss = [!d.title && 'título', !d.artist && 'artista', !d.key && 'tom'].filter(Boolean);
     ccStatus('✓ Cifra colada! Confira ' + (miss.length ? 'e preencha: ' + miss.join(', ') : 'título, artista e tom') + ' — depois toque em Salvar.', 'ok');
     return true;
@@ -9489,15 +9499,24 @@
   (function handleShareTarget(){
     try{
       const q = new URLSearchParams(location.search);
-      if(!q.has('share')) return;
-      const url = ccNormalizeUrl([q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '));
+      if(!q.has('share') && !q.has('text') && !q.has('url') && !q.has('title')) return;
+      const all = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n');
+      const url = ccNormalizeUrl(all);
       history.replaceState(null, '', location.pathname);
-      if(!url) return;
-      setTimeout(() => {
+      if(!all.trim()) return;
+      // v263: compartilhar o TEXTO da cifra (Selecionar tudo → Compartilhar → Paraíso)
+      const tryOpen = (n) => {
+        if(typeof openSongModal !== 'function' || (n < 20 && !document.getElementById('modalOverlay'))) return setTimeout(() => tryOpen(n + 1), 300);
         openSongModal(null);
-        document.getElementById('ccImportUrl').value = url;
-        ccImport();
-      }, 400);
+        setTimeout(() => {
+          if(ccFillFromPage(all)) return;
+          if(url){
+            inputLink.value = url;
+            ccStatus('Recebi só o link da música. Para trazer a cifra: abra a música no Chrome, segure o dedo na letra → Selecionar tudo → Compartilhar → Paraíso.', 'err');
+          }
+        }, 250);
+      };
+      setTimeout(() => tryOpen(0), 500);
     }catch(e){}
   })();
 
