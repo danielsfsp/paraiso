@@ -2879,7 +2879,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v260 · 07/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v261 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9773,6 +9773,8 @@
     const today = todayIso();
     let evs = esc.events.filter(e => e.date >= today).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
     if(mineOnly) evs = evs.filter(e => e.minister_id === esc.user.id || esc.assignments.some(a => a.event_id === e.id && a.profile_id === esc.user.id));
+    // Escala sem ninguém = culto sem escala: fica só em ⛪ Culto (v261)
+    evs = evs.filter(e => esc.assignments.some(a => a.event_id === e.id));
     const MES = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
     const MES3 = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
     const dateBlock = (iso, big) => { const d = isoToDate(iso); return '<div class="ev-date' + (big ? ' big' : '') + '"><div class="w">' + WEEKDAYS_PT[d.getDay()].toUpperCase() + '</div><div class="d">' + String(d.getDate()).padStart(2, '0') + '</div>' + (big ? '<div class="m">' + MES3[d.getMonth()] + '</div>' : '') + '</div>'; };
@@ -9787,7 +9789,7 @@
       return '<span class="ev-pill mute">Sem você</span>';
     };
     let html = '';
-    if(!evs.length) html += '<div class="esc-empty">' + (mineOnly ? 'Você não está em nenhuma escala por enquanto. 🙌' : 'Nenhuma escala marcada.') + '</div>';
+    if(!evs.length) html += '<div class="esc-empty">' + (mineOnly ? 'Você não está em nenhuma escala por enquanto. 🙌' : 'Nenhuma escala montada.' + (escCanSchedule() ? ' Monte pelo ⛪ Culto (👥 Montar escala) ou em ＋ Nova escala.' : '')) + '</div>';
     let lastMonth = -1;
     evs.forEach((e, idx) => {
       const as = escEventAssignments(e.id);
@@ -9860,12 +9862,12 @@
     body.querySelectorAll('[data-wa]').forEach(b => b.onclick = () => escShareEvent(b.dataset.wa));
     body.querySelectorAll('[data-del-ev]').forEach(b => b.onclick = () => {
       const ev = esc.events.find(x => x.id === b.dataset.delEv); if(!ev) return;
-      showConfirm('Excluir escala', 'Excluir a escala "' + (ev.title || 'Culto') + '" de ' + escDateLabel(ev.date) + ' para todos? Isso não pode ser desfeito.', async () => {
-        const { error } = await esc.sb.from('events').delete().eq('id', ev.id);
-        if(error){ showAlert('Escala', 'Não consegui excluir: ' + error.message); return; }
+      showConfirm('Excluir escala', 'Tirar todas as pessoas da escala do culto "' + (ev.title || 'Culto') + '" de ' + escDateLabel(ev.date) + '? O culto e a playlist continuam em ⛪ Culto (para apagar o culto, use o Culto).', async () => {
+        const err = await escClearEscala(ev.id);
+        if(err){ showAlert('Escala', 'Não consegui excluir: ' + err.message); return; }
         esc.openEventId = null; await escLoadAll();
-        showImportFeedback('🗑 Escala excluída.', true);
-      }, { okLabel: 'Excluir' });
+        showImportFeedback('🗑 Escala excluída — o culto continua em ⛪ Culto.', true);
+      }, { okLabel: 'Excluir escala' });
     });
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
     body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
@@ -10088,11 +10090,17 @@
       renderEscala();
     });
     const del = document.getElementById('escDelete');
-    if(del) del.onclick = () => showConfirm('Apagar escala', 'Apagar esta escala para todos?', async () => {
-      const { error } = await esc.sb.from('events').delete().eq('id', d.id);
-      if(error){ showAlert('Escala', error.message); return; }
-      esc.editing = null; await escLoadAll();
-    }, { okLabel: 'Apagar' });
+    if(del) del.onclick = () => esc.editMode === 'culto'
+      ? showConfirm('Apagar culto', 'Apagar o culto "' + (d.title || 'Culto') + '" para todos? A escala (pessoas) deste culto também é apagada. A playlist continua em Playlists.', async () => {
+          const { error } = await esc.sb.from('events').delete().eq('id', d.id);
+          if(error){ showAlert('Culto', error.message); return; }
+          esc.editing = null; await escLoadAll();
+        }, { okLabel: 'Apagar culto' })
+      : showConfirm('Excluir escala', 'Tirar todas as pessoas desta escala? O culto e a playlist continuam em ⛪ Culto.', async () => {
+          const err = await escClearEscala(d.id);
+          if(err){ showAlert('Escala', err.message); return; }
+          esc.editing = null; await escLoadAll();
+        }, { okLabel: 'Excluir escala' });
     document.getElementById('escSave').onclick = async () => {
       grab();
       const btn = document.getElementById('escSave'); btn.disabled = true; btn.textContent = '⏳ Salvando…';
@@ -12904,6 +12912,14 @@
     return '<label class="ed-culto">👥 Vincular a uma escala já montada<select id="cuLinkEsc" class="esc-input"><option value="">— não, criar escala nova para este culto —</option>' +
       evs.map(e => { const n = escEventAssignments(e.id).length; return '<option value="' + e.id + '">' + escH(fmtDateBR(e.date).slice(0, 5) + (e.time ? ' · ' + e.time : '') + ' · ' + (e.title || 'Culto') + ' · ' + n + (n === 1 ? ' pessoa' : ' pessoas')) + '</option>'; }).join('') +
       '</select></label>';
+  }
+
+  // Excluir ESCALA = tirar as pessoas (e dress code/observações); o culto fica (v261)
+  async function escClearEscala(evId){
+    let r = await esc.sb.from('assignments').delete().eq('event_id', evId);
+    if(r.error) return r.error;
+    r = await esc.sb.from('events').update({ dress_code: '', notes: '' }).eq('id', evId);
+    return r.error || null;
   }
 
 })();
