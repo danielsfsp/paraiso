@@ -2371,6 +2371,24 @@
   }
   .ag-day{overflow:hidden;} .ag-pills{display:flex; flex-direction:column; gap:3px; width:100%; min-width:0;} .ag-pill{display:block; max-width:100%;}
   @media (max-width: 820px){ .ag-day .ag-pills{flex-direction:row;} .ag-pill{display:inline-block;} .esc-head{min-width:0;} #escalaTitle{min-width:0; flex:1; overflow:hidden;} .sec-h, .sec-h-txt{min-width:0;} .sec-h-txt small{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;} }
+
+  /* v292: tour de apresentação */
+  .tour-again{width:100%; margin:4px 0 10px;}
+  .tour-ov{position:fixed; inset:0; z-index:7000;}
+  .tour-spot{position:fixed; border-radius:14px; box-shadow:0 0 0 9999px rgba(8,5,20,.72), 0 0 0 3px var(--accent), 0 0 24px 6px color-mix(in srgb, var(--accent) 55%, transparent); transition:all .28s var(--ease); pointer-events:none;}
+  .tour-spot.none{left:50% !important; top:45% !important; width:0 !important; height:0 !important; box-shadow:0 0 0 9999px rgba(8,5,20,.78);}
+  .tour-card{position:fixed; width:min(340px, calc(100vw - 32px)); background:var(--surface); border:1px solid var(--border); border-top:4px solid var(--accent); border-radius:16px; padding:16px 16px 12px; box-shadow:0 18px 50px rgba(0,0,0,.55); color:var(--text); transition:top .28s var(--ease), left .28s var(--ease);}
+  .tour-card h3{margin:0 0 6px; font-size:17px;}
+  .tour-card p{margin:0; font-size:14px; line-height:1.5; color:var(--text-dim);}
+  .tour-card p b{color:var(--text);}
+  .tour-foot{display:flex; align-items:center; gap:8px; margin-top:14px;}
+  .tour-dots{display:flex; gap:4px; flex:1;}
+  .tour-dots i{width:7px; height:7px; border-radius:50%; background:var(--border);}
+  .tour-dots i.on{background:var(--accent); width:16px; border-radius:4px;}
+  .tour-foot button{font:inherit; font-size:13.5px; font-weight:800; border-radius:10px; padding:8px 12px; cursor:pointer; border:1px solid var(--border); background:var(--surface-2); color:var(--text);}
+  .tour-foot .tour-next{background:var(--accent); border-color:var(--accent); color:#120E08;}
+  .tour-skip{position:absolute; top:10px; right:12px; background:none; border:none; color:var(--text-dim); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;}
+  .tour-logo{width:56px; height:56px; border-radius:14px; display:block; margin:0 0 10px; box-shadow:0 6px 24px rgba(110,40,255,.45);}
 </style>
 </head>
 <body>
@@ -2953,7 +2971,8 @@
 <div class="modal-overlay" id="helpModalOverlay">
   <div class="modal help-modal" style="max-width:600px;">
     <h2>Guia rápido</h2>
-    <p class="hint">Toque num assunto para abrir.</p>
+    <button type="button" class="btn-primary tour-again" id="btnTourAgain">▶ Fazer o tour pelo app</button>
+    <p class="hint">Ou toque num assunto para abrir.</p>
 
     <details class="help-section" open>
       <summary>🏠 Primeiros passos</summary>
@@ -3143,7 +3162,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v291 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v292 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10731,7 +10750,7 @@
   // verificação roda em segundo plano. Dentro do Claude não há porta.
   const gateEl = () => document.getElementById('authGate');
   function gateShow(html){ const g = gateEl(); g.querySelector('.gate-box').innerHTML = html; g.hidden = false; document.body.classList.add('gate-on'); }
-  function gateHide(){ gateEl().hidden = true; document.body.classList.remove('gate-on'); }
+  function gateHide(){ gateEl().hidden = true; document.body.classList.remove('gate-on'); try{ setTimeout(tourMaybeStart, 1800); }catch(e){} }
   function gateCachedOk(){ return !!lsGet('authOk'); }
   function gateLoginScreen(msg){
     gateShow('<div class="gate-logo"><img src="' + PARAISO_LOGO + '" alt="CEP Louvor"></div><h1>CEP Louvor</h1><p class="gate-sub">Letras, cifras e escalas do ministério de louvor</p>' +
@@ -13768,6 +13787,82 @@
       setTimeout(() => { const l = body.querySelector('.ag-daylist'); if(l && window.innerWidth <= 820) l.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
     });
   }
+
+  // ================= TOUR DE APRESENTAÇÃO (v292) =================
+  var TOUR_KEY = 'tourV1';
+  function tourSteps(){
+    const m = window.innerWidth <= 820;
+    const tb = k => '#mobileTabbar [data-tb="' + k + '"]';
+    return [
+      { title: 'Bem-vindo ao CEP Louvor 🎶', text: 'Um tour rapidinho (1 minuto) pelas principais partes do app. Dá para pular quando quiser.', logo: true },
+      { sel: m ? tb('songs') : '#navSongs', title: '🎼 Músicas', text: 'O <b>repertório do ministério</b>. Busque por nome, artista ou trecho da letra. Na música: <b>mudar o tom</b>, rolagem automática e <b>tela cheia</b> para tocar.' },
+      { sel: m ? tb('playlists') : '.side-nav [data-view="playlists"]', title: '🎵 Playlists', text: 'Suas listas de músicas — <b>são só suas</b>. Para montar: marque as músicas ☑ na lista e toque em criar playlist.' },
+      { sel: m ? tb('culto') : '#btnCultos', title: '🗓️ Agenda', text: '<b>Cultos, ensaios e outros eventos</b> em calendário (mês, semana ou lista). Em cada um: a <b>playlist</b>, a <b>escala</b> e o botão <b>Compartilhar</b> no WhatsApp.' },
+      { sel: m ? tb('escala') : '#btnEscala', title: '📅 Escala', text: 'Quem toca o quê. Quando você for escalado, responda <b>✓ Confirmar</b> ou <b>✕ Não posso</b>. O número em cima mostra o que espera a sua resposta.' },
+      { sel: m ? tb('equipe') : '#btnEquipe', title: '👥 Equipe', text: 'As pessoas do ministério e suas funções. Líderes aprovam novos cadastros e montam as equipes.' },
+      { sel: '#homeCards', title: '🏠 Início', text: 'Aqui aparecem o <b>próximo culto</b>, as escalas que <b>esperam sua resposta</b> e atalhos para a playlist do culto.' },
+      { sel: m ? '#btnMenuHome' : '.sidebar-footer', title: m ? '☰ Menu' : '⚙️ Atalhos', text: m ? 'Toque no <b>logo</b> no canto de cima para abrir o menu: Estatísticas, <b>Ajuda</b>, Notas e Mais (tema claro/escuro, backup).' : 'Estatísticas, <b>Ajuda</b>, Notas e Mais (tema claro/escuro, backup) ficam aqui embaixo.' },
+      { title: 'Pronto! 🙌', text: 'Quer rever? Abra <b>❔ Ajuda</b> e toque em <b>▶ Fazer o tour</b>. Bom louvor!', logo: true }
+    ];
+  }
+  function tourMaybeStart(){
+    try{
+      if(lsGet(TOUR_KEY)) return;
+      if(document.body.classList.contains('gate-on')) return;
+      if(document.querySelector('.modal-overlay.open, .decl-ov, .tour-ov')) { setTimeout(tourMaybeStart, 4000); return; }
+      tourStart();
+    }catch(e){}
+  }
+  function tourStart(){
+    if(document.querySelector('.tour-ov')) return;
+    try{ document.getElementById('helpModalOverlay').classList.remove('open'); }catch(e){}
+    try{ if(typeof closeEscala === 'function' && document.body.classList.contains('esc-page-on')) closeEscala(); }catch(e){}
+    try{ if(!showingHome || navSel !== 'home'){ navSel = 'home'; showHomeView(); } }catch(e){}
+    try{ sidebar.classList.remove('open'); }catch(e){}
+    const steps = tourSteps().filter(st => !st.sel || (() => { const el = document.querySelector(st.sel); return el && el.getClientRects().length && el.offsetParent !== null; })());
+    let i = 0;
+    const ov = document.createElement('div'); ov.className = 'tour-ov';
+    ov.innerHTML = '<div class="tour-spot"></div><div class="tour-card" role="dialog" aria-modal="true"><button type="button" class="tour-skip">Pular</button><div class="tour-body"></div>' +
+      '<div class="tour-foot"><div class="tour-dots"></div><button type="button" class="tour-prev">Voltar</button><button type="button" class="tour-next">Próximo</button></div></div>';
+    document.body.appendChild(ov);
+    const spot = ov.querySelector('.tour-spot'), card = ov.querySelector('.tour-card');
+    const end = () => { lsSet(TOUR_KEY, String(Date.now())); ov.remove(); window.removeEventListener('resize', place); };
+    function place(){
+      const st = steps[i]; const el = st.sel ? document.querySelector(st.sel) : null;
+      const vw = window.innerWidth, vh = window.innerHeight, cw = card.offsetWidth, ch = card.offsetHeight;
+      if(el){
+        try{ el.scrollIntoView({ block: 'nearest' }); }catch(e){}
+        const r = el.getBoundingClientRect(), pad = 6;
+        spot.classList.remove('none');
+        Object.assign(spot.style, { left: (r.left - pad) + 'px', top: (r.top - pad) + 'px', width: (r.width + pad * 2) + 'px', height: (r.height + pad * 2) + 'px' });
+        let top = r.bottom + 14; if(top + ch > vh - 10) top = r.top - ch - 14; if(top < 10) top = Math.max(10, (vh - ch) / 2);
+        let left = r.left + r.width / 2 - cw / 2;
+        if(r.right + cw + 20 < vw && r.width < 320 && vw > 820){ left = r.right + 18; top = Math.min(Math.max(10, r.top + r.height / 2 - ch / 2), vh - ch - 10); }
+        left = Math.min(Math.max(16, left), vw - cw - 16);
+        card.style.left = left + 'px'; card.style.top = top + 'px';
+      } else {
+        spot.classList.add('none');
+        card.style.left = Math.max(16, (vw - cw) / 2) + 'px'; card.style.top = Math.max(16, (vh - ch) / 2) + 'px';
+      }
+    }
+    function show(){
+      const st = steps[i];
+      ov.querySelector('.tour-body').innerHTML = (st.logo ? '<img class="tour-logo" src="' + PARAISO_LOGO + '" alt="">' : '') + '<h3>' + st.title + '</h3><p>' + st.text + '</p>';
+      ov.querySelector('.tour-dots').innerHTML = steps.map((_, k) => '<i' + (k === i ? ' class="on"' : '') + '></i>').join('');
+      ov.querySelector('.tour-prev').style.visibility = i ? 'visible' : 'hidden';
+      ov.querySelector('.tour-next').textContent = i === steps.length - 1 ? 'Começar' : (i === 0 ? 'Vamos lá' : 'Próximo');
+      ov.querySelector('.tour-skip').style.display = i === steps.length - 1 ? 'none' : '';
+      place();
+    }
+    ov.querySelector('.tour-next').onclick = () => { if(i >= steps.length - 1) end(); else { i++; show(); } };
+    ov.querySelector('.tour-prev').onclick = () => { if(i){ i--; show(); } };
+    ov.querySelector('.tour-skip').onclick = end;
+    document.addEventListener('keydown', function k(e){ if(!document.body.contains(ov)){ document.removeEventListener('keydown', k); return; } if(e.key === 'Escape') end(); if(e.key === 'ArrowRight') ov.querySelector('.tour-next').click(); if(e.key === 'ArrowLeft') ov.querySelector('.tour-prev').click(); });
+    window.addEventListener('resize', place);
+    show();
+  }
+  document.getElementById('btnTourAgain').addEventListener('click', () => { lsSet(TOUR_KEY, ''); tourStart(); });
+  setTimeout(() => { if(!escCanOnline()) tourMaybeStart(); }, 3000);
 
 })();
 </script>
