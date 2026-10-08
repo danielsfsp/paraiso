@@ -2263,6 +2263,23 @@
   .th-tag{background:#FF6A13; color:#fff; font:800 11px/1 var(--font-ui, sans-serif); padding:3px 6px; border-radius:6px; vertical-align:middle; margin-left:4px;}
   body.env-th .env-badge{display:none !important;}
   #brandLogo{min-width:0; gap:8px;} #brandLogo > span{white-space:nowrap; font-size:17px; letter-spacing:-.01em;} #brandLogo .th-tag{font-size:9.5px; padding:2px 4px; margin-left:3px;}
+
+  /* v280: menu lateral reorganizado — cabeçalho limpo e atalhos fixos no rodapé */
+  .sidebar-header{align-items:center !important; padding:16px 14px 12px 16px !important;}
+  #brandLogo{flex:1; min-width:0; display:flex; align-items:center; gap:10px;}
+  #brandLogo > span{overflow:hidden; text-overflow:ellipsis; font-size:19px !important;}
+  .sidebar-header #btnHelpTop, .sidebar-header #btnNotes, .sidebar-header #btnAddSong{display:none !important;}
+  .sidebar-footer{margin-top:auto !important; display:grid !important; grid-template-columns:repeat(4, 1fr); gap:6px !important; padding:10px 10px calc(10px + env(safe-area-inset-bottom)) !important; border-top:1px solid var(--border-soft) !important; background:color-mix(in srgb, var(--surface-2) 55%, transparent);}
+  .sidebar-footer .sf-tile, .sidebar-footer .more-wrap .sf-btn{display:flex !important; flex-direction:column; align-items:center; justify-content:center; gap:3px; height:auto !important; min-height:54px; padding:7px 2px !important;
+    border:1px solid transparent !important; background:transparent !important; border-radius:12px !important; color:var(--text-dim) !important; font-size:11px !important; font-weight:700 !important; cursor:pointer; width:100%; max-width:none !important;}
+  .sidebar-footer .sf-tile:hover, .sidebar-footer .more-wrap .sf-btn:hover, .sidebar-footer .more-wrap .sf-btn[aria-expanded="true"]{background:var(--surface-3) !important; color:var(--text) !important; border-color:var(--border) !important;}
+  .sf-tile .sf-ico{font-size:19px; line-height:1;}
+  .sidebar-footer .more-wrap{display:flex; flex:none !important; position:relative;}
+  .sidebar-footer .more-menu{right:0; bottom:calc(100% + 8px);}
+  .sidebar-footer #btnHelp{display:none !important;}
+  .side-nav{padding-bottom:6px;}
+  body.env-th .app-shell{height:calc(100vh - 22px); height:calc(100dvh - 22px);}
+  @media (max-width: 820px){ body.env-th .sidebar{top:22px !important; height:auto;} }
 </style>
 </head>
 <body>
@@ -3035,7 +3052,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v279 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v280 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -13514,6 +13531,18 @@
     if(window.innerWidth > 820){ setSidebarCollapsed(false); return; }
     sidebar.classList.add('open');
   });
+
+  // Rodapé do menu: 4 atalhos fixos embaixo (v280)
+  (function sidebarFooterTiles(){
+    const foot = document.querySelector('.sidebar-footer'); if(!foot) return;
+    const tile = (btn, ico, label, title) => { if(!btn) return null; btn.className = 'sf-tile'; btn.innerHTML = '<span class="sf-ico">' + ico + '</span><span>' + label + '</span>'; if(title) btn.title = title; return btn; };
+    const stats = tile(document.getElementById('btnStats'), '📊', 'Estatísticas');
+    const help = tile(document.getElementById('btnHelpTop'), '❔', 'Ajuda', 'Ajuda e guia rápido');
+    const notes = tile(document.getElementById('btnNotes'), '📝', 'Notas', 'Anotações (bloco de notas)');
+    const moreWrap = foot.querySelector('.more-wrap');
+    const more = document.getElementById('btnMore'); if(more){ more.classList.add('sf-tile'); more.innerHTML = '<span class="sf-ico">⚙️</span><span>Mais</span>'; more.title = 'Mais opções: tema, backup, importar…'; }
+    [stats, help, notes].forEach(b => { if(b) foot.insertBefore(b, moreWrap); });
+  })();
 
 })();
 </script>
