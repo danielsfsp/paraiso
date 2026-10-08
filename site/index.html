@@ -2175,7 +2175,8 @@
   .decl-acts .go.ok{background:#4CAF6A; border-color:#4CAF6A;}
 
   /* v271: identidade de cada área — Playlist (roxo), Culto (dourado), Escala (azul), Equipe (verde) */
-  :root{--sec-pl:#B566FF; --sec-cu:#FFAE1F; --sec-es:#1FC8F0; --sec-eq:#FF4D5E;}
+  :root{--sec-pl:#B566FF; --sec-cu:#FFAE1F; --sec-es:#1FC8F0; --sec-eq:#FF4D5E; --sec-mu:#2EDB7F;}
+  .sec-mu{--c:var(--sec-mu);}
   .sec-pl{--c:var(--sec-pl);} .sec-cu{--c:var(--sec-cu);} .sec-es{--c:var(--sec-es);} .sec-eq{--c:var(--sec-eq);}
   .c-pl{color:var(--sec-pl) !important;} .c-cu{color:var(--sec-cu) !important;} .c-es{color:var(--sec-es) !important;} .c-eq{color:var(--sec-eq) !important;}
   .sec-h{display:inline-flex; align-items:center; gap:12px; vertical-align:middle;}
@@ -2213,6 +2214,14 @@
   .ev-pl{border-left:3px solid color-mix(in srgb, var(--sec-pl) 60%, transparent);}
   .ev-sec.c-pl, .ev-sec.c-pl span{color:var(--sec-pl) !important;}
   .ev-card{border-left-width:5px !important;} .cu-card{border-left-width:5px !important;} .plp-detail{border-top-width:4px !important;}
+
+  /* v273: página Músicas */
+  body.nav-songs .home-cards{display:none !important;}
+  #navSongs{--c:var(--sec-mu);}
+  #navSongs.active{box-shadow:inset 3px 0 0 var(--sec-mu); color:var(--sec-mu) !important; background:color-mix(in srgb, var(--sec-mu) 14%, transparent) !important;}
+  #mobileTabbar [data-tb="songs"].on{color:var(--sec-mu) !important;}
+  body.nav-songs .home-song-row{border-left:3px solid color-mix(in srgb, var(--sec-mu) 55%, transparent);}
+  #mobileTabbar button{min-width:0;}
 </style>
 </head>
 <body>
@@ -2238,6 +2247,7 @@
     </div>
     <nav class="side-nav" aria-label="Navegação">
       <button type="button" class="side-nav-item" id="navHome"><span class="sn-ico">⌂</span><span class="sn-lab">Início</span></button>
+      <button type="button" class="side-nav-item" id="navSongs"><span class="sn-ico">🎼</span><span class="sn-lab">Músicas</span><span class="sn-count" id="navCountSongs"></span></button>
       <div class="sidebar-tabs">
         <button data-view="playlists" class="active side-nav-item"><span class="sn-ico">🎵</span><span class="sn-lab">Playlists</span><span class="sn-count" id="navCountPl"></span></button>
         <button data-view="favorites" class="side-nav-item"><span class="sn-ico">★</span><span class="sn-lab">Favoritas</span><span class="sn-count" id="navCountFav"></span></button>
@@ -2547,6 +2557,7 @@
   </main>
   <nav class="tabbar" id="mobileTabbar" aria-label="Navegação">
     <button type="button" data-tb="home"><i>⌂</i>Início</button>
+    <button type="button" data-tb="songs"><i>🎼</i>Músicas</button>
     <button type="button" data-tb="playlists"><i>🎵</i>Playlists</button>
     <button type="button" data-tb="culto"><i>⛪</i>Culto</button>
     <button type="button" data-tb="escala"><i>📅</i>Escala<b class="tb-badge" id="tbEscBadge"></b></button>
@@ -2801,7 +2812,7 @@
     <details class="help-section" open>
       <summary>🏠 Primeiros passos</summary>
       <ul>
-        <li><strong>Menu</strong> (lateral no computador, barra de baixo no celular): <strong>Início · Playlists · ⛪ Culto · 📅 Escala · 👥 Equipe · Mais</strong>.</li>
+        <li><strong>Menu</strong> (lateral no computador, barra de baixo no celular): <strong>Início · 🎼 Músicas · 🎵 Playlists · ⛪ Culto · 📅 Escala · 👥 Equipe · Mais</strong>.</li>
         <li><strong>Início:</strong> saudação, o <strong>próximo culto</strong> (com Compartilhar e ▶ Playlist) e a lista de todas as músicas.</li>
         <li><strong>🔍 Buscar:</strong> digite o <em>nome</em>, o <em>artista</em> ou um <em>trecho da letra</em>.</li>
         <li>Filtros da lista: <strong>Todas · ★ Favoritas · Por artista · Tocadas recentemente</strong>. Marque músicas ☑ para criar uma playlist com elas.</li>
@@ -2986,7 +2997,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v272 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v273 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4036,6 +4047,13 @@
     const em = h >= 5 && h < 18 ? '☀️' : '🌙';
     const nm = homeFirstName();
     const el = document.getElementById('homeGreeting');
+    if(navSel === 'songs'){
+      if(el) el.innerHTML = secHead('mu', '🎼', 'Músicas', 'Repertório do ministério');
+      const sb = document.getElementById('homeSubline');
+      const arts = new Set(songs.map(x => (x.artist || '').trim()).filter(Boolean)).size;
+      if(sb) sb.textContent = songs.length + (songs.length === 1 ? ' música' : ' músicas') + ' · ' + arts + ' artistas';
+      return;
+    }
     if(el) el.textContent = g + (nm ? ', ' + nm : '') + ' ' + em;
     const d = new Date();
     const wd = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][d.getDay()];
@@ -4179,8 +4197,10 @@
     if(!showingHome && navSel === 'home') navSel = sidebarTab;
     const nh = document.getElementById('navHome');
     if(nh) nh.classList.toggle('active', navSel === 'home');
+    const ns = document.getElementById('navSongs'); if(ns) ns.classList.toggle('active', navSel === 'songs');
+    document.body.classList.toggle('nav-songs', navSel === 'songs' && !!showingHome);
     document.body.classList.toggle('home-on', !!showingHome);
-    document.body.classList.toggle('nav-home', navSel === 'home');
+    document.body.classList.toggle('nav-home', navSel === 'home' || navSel === 'songs');
     document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.classList.toggle('on', b.dataset.tb === (navSel === 'home' ? 'home' : navSel)));
     const pc = document.getElementById('navCountPl'); if(pc){ const n = playlists.filter(p => !p.archived).length; pc.textContent = n || ''; }
     const fc = document.getElementById('navCountFav'); if(fc){ const n = songs.filter(s => s.favorite).length; fc.textContent = n || ''; }
@@ -12255,10 +12275,13 @@
     else sidebar.classList.remove('open');
   });
   document.getElementById('navHome').addEventListener('click', () => guardIfDirty(() => { navSel = 'home'; showHomeView(); }));
+  function goSongsPage(){ guardIfDirty(() => { showHomeView(); navSel = 'songs'; renderHomeView(); try{ document.getElementById('homeView').scrollTop = 0; window.scrollTo(0, 0); }catch(e){} sidebar.classList.remove('open'); }); }
+  document.getElementById('navSongs').addEventListener('click', goSongsPage);
   // Barra de navegação de baixo (celular)
   document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.addEventListener('click', () => {
     const t = b.dataset.tb;
     if(t === 'home'){ guardIfDirty(() => showHomeView()); sidebar.classList.remove('open'); return; }
+    if(t === 'songs'){ goSongsPage(); return; }
     if(t === 'culto'){ esc.tab = 'cultos'; esc.editing = null; openEscala(); return; }
     if(t === 'equipe'){ esc.tab = 'equipe'; esc.editing = null; openEscala(); return; }
     if(t === 'escala'){ if(esc.tab === 'perfil' || esc.tab === 'equipe' || esc.tab === 'cultos') esc.tab = 'escalas'; esc.editing = null; openEscala(); return; }
@@ -13089,7 +13112,7 @@
   // Outros itens do menu fecham a página de Escala/Equipe/Culto (v253)
   document.addEventListener('click', (e) => {
     if(!document.body.classList.contains('esc-page-on')) return;
-    const t = e.target.closest('.side-nav-item:not(.esc-open-btn), #mobileTabbar [data-tb="home"], #mobileTabbar [data-tb="playlists"], #mobileTabbar [data-tb="mais"], #btnLogo, .brand');
+    const t = e.target.closest('.side-nav-item:not(.esc-open-btn), #mobileTabbar [data-tb="home"], #mobileTabbar [data-tb="songs"], #mobileTabbar [data-tb="playlists"], #mobileTabbar [data-tb="mais"], #btnLogo, .brand');
     if(t) closeEscala();
   }, true);
 
