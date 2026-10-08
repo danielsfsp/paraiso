@@ -1711,6 +1711,7 @@
     .tabbar button.on{color:var(--accent);}
     .tb-badge{position:absolute; top:-2px; left:calc(50% + 6px); background:var(--accent); color:#1A1206; font-size:10px; border-radius:99px; padding:0 5px; min-width:16px;}
     .tb-badge:empty{display:none;}
+    .tb-badge.tb-quiet{background:rgba(255,255,255,.18); color:#fff;}
     body.home-on .home-view{padding-bottom:90px;}
     .sidebar.open ~ .tabbar{display:none !important;}
     .home-cards.no-event{display:none;}
@@ -2446,7 +2447,7 @@
         <button data-view="favorites" class="side-nav-item"><span class="sn-ico">★</span><span class="sn-lab">Favoritas</span><span class="sn-count" id="navCountFav"></span></button>
       </div>
       <button type="button" class="esc-open-btn side-nav-item" id="btnCultos"><span class="sn-ico">🗓️</span><span class="sn-lab">Agenda</span><span class="sn-count" id="navCountCulto"></span></button>
-      <button type="button" class="esc-open-btn side-nav-item" id="btnEscala"><span class="sn-ico">📅</span><span class="sn-lab">Escala</span><span class="sn-count sn-alert" id="navCountEsc"></span></button>
+      <button type="button" class="esc-open-btn side-nav-item" id="btnEscala"><span class="sn-ico">📅</span><span class="sn-lab">Escala</span><span class="sn-count" id="navCountEsc"></span></button>
       <button type="button" class="esc-open-btn side-nav-item" id="btnEquipe"><span class="sn-ico">👥</span><span class="sn-lab">Equipe</span><span class="sn-count sn-alert" id="navCountEq"></span></button>
     </nav>
     <div class="side-section-title" id="sideSectionTitle">Playlists</div>
@@ -3190,7 +3191,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v298 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v299 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4408,10 +4409,17 @@
     if(cc){ let n = 0; try{ if(esc.user){ const t = todayIso(); n = (esc.events || []).filter(e => e.date >= t).length; } }catch(e){} cc.textContent = n || ''; cc.title = n ? n + (n === 1 ? ' compromisso na agenda' : ' compromissos na agenda') : ''; }
     const ec = document.getElementById('navCountEsc');
     if(ec){
-      let n = 0;
-      try{ if(esc.user){ const t = todayIso(); n = esc.assignments.filter(a => a.profile_id === esc.user.id && a.status === 'pendente' && ((esc.events.find(e => e.id === a.event_id) || {}).date || '') >= t).length; } }catch(e){}
-      ec.textContent = n || ''; ec.title = n ? n + ' escala(s) esperando sua resposta' : '';
-      const tb = document.getElementById('tbEscBadge'); if(tb) tb.textContent = n || '';
+      let n = 0, tot = 0;
+      try{ if(esc.user){ const t = todayIso();
+        n = esc.assignments.filter(a => a.profile_id === esc.user.id && a.status === 'pendente' && ((esc.events.find(e => e.id === a.event_id) || {}).date || '') >= t).length;
+        const withEsc = new Set((esc.assignments || []).map(a => a.event_id));
+        tot = (esc.events || []).filter(e => e.date >= t && withEsc.has(e.id)).length; } }catch(e){}
+      // v299: o número é a quantidade de escalas futuras; fica destacado
+      // (cor de alerta) quando há escala esperando a SUA resposta.
+      const shown = tot || n;
+      ec.textContent = shown || ''; ec.classList.toggle('sn-alert', n > 0);
+      ec.title = (tot ? tot + (tot === 1 ? ' escala programada' : ' escalas programadas') : '') + (n ? (tot ? ' · ' : '') + n + ' esperando sua resposta' : '');
+      const tb = document.getElementById('tbEscBadge'); if(tb){ tb.textContent = shown || ''; tb.classList.toggle('tb-quiet', n === 0); }
       const eq = document.getElementById('navCountEq');
       if(eq){ let k = 0; try{ if(esc.me && esc.me.is_leader) k = esc.profiles.filter(p => !p.approved && p.active !== false).length; }catch(e){} eq.textContent = k || ''; const tq = document.getElementById('tbEqBadge'); if(tq) tq.textContent = k || ''; eq.title = k ? k + ' cadastro(s) aguardando aprovação' : ''; }
     }
