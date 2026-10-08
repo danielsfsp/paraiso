@@ -2353,7 +2353,7 @@
   .ag-whead b{display:block; font-size:18px; color:var(--text); font-family:var(--font-display);}
   .ag-wev{border-radius:9px; padding:6px 7px; background:color-mix(in srgb, var(--kc) 20%, transparent); border-left:4px solid var(--kc); font-size:12px; min-width:0;}
   .ag-wev b{display:block; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .ag-wev small{color:var(--text-dim);}
+  .ag-wev small{color:var(--text-dim); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .ag-daylist{margin-top:14px;}
   .ag-daylist h4{margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim);}
   .cu-card.k-culto, .cu-card.k-ensaio, .cu-card.k-evento{border-left-color:var(--kc) !important;}
@@ -2395,6 +2395,13 @@
   /* v294: Início enxuto (as músicas ficam em 🎼 Músicas) */
   body.nav-inicio .home-columns{display:none !important;}
   body.nav-inicio .home-cards{margin-bottom:10px;}
+
+  /* v295: lixeira no card da Agenda */
+  .cu-card.cu-compact{position:relative;}
+  .cu-compact .cu-row{padding-right:84px;}
+  .cu-trash{position:absolute; right:44px; top:10px; width:34px; height:34px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); cursor:pointer; font-size:15px; line-height:1;}
+  .cu-trash:hover{border-color:#E06B5B; background:rgba(224,107,91,.15);}
+  .cu-compact .ev-chev{position:absolute; right:16px; top:18px;}
 </style>
 </head>
 <body>
@@ -3168,7 +3175,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v294 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v295 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10374,7 +10381,7 @@
       .map(p => '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + escH(p.name) + (p.is_pre ? ' · pré-cadastro' : '') + (does(p, fn) ? '' : ' (outra função)') + (unavOn(p.id) ? ' ⚠ indisponível' : '') + (busyOn(p.id) ? ' • já escalado no dia' : '') + '</option>').join('');
     const fnOpts = sel => ESC_FUNCTIONS.map(f => '<option' + (f === sel ? ' selected' : '') + '>' + escH(f) + '</option>').join('');
     if(d.playlistId === undefined && d.playlist){ const m = playlists.find(p => p.name === d.playlist.name); d.playlistId = m ? m.id : ''; }
-    const plOpts = '<option value="">— nenhuma —</option>' + sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '"' + (p.id === d.playlistId ? ' selected' : '') + '>' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + '</option>').join('');
+    const plOpts = '<option value="">— nenhuma —</option>' + sortPlaylistsForList(playlists.filter(p => !p.archived && (!p.fromEvent || p.id === d.playlistId))).map(p => '<option value="' + p.id + '"' + (p.id === d.playlistId ? ' selected' : '') + '>' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + '</option>').join('');
     const isCulto = esc.editMode === 'culto';
     let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + (!isCulto && d.pickCulto && d.id ? ' pick-existing' : '') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar ' : 'Novo ') + ({ culto: 'culto', ensaio: 'ensaio', evento: 'evento' }[d.kind || 'culto']) : (d.id && !d.pickCulto ? 'Editar escala' : 'Nova escala')) + '</h3>' +
       (!isCulto && d.pickCulto ? escPickCultoHtml(d) : '') +
@@ -10405,7 +10412,7 @@
         '<button type="button" class="esc-x" title="Tirar">✕</button></div>';
     });
     html += '</div><button type="button" class="btn-secondary" id="escAddRow">＋ Adicionar função</button></div>' +
-      '<div class="esc-actions esc-save-row">' + (d.id && !d.pickCulto ? '<button type="button" class="btn-secondary esc-del" id="escDelete">🗑 ' + (isCulto ? 'Apagar culto' : 'Apagar escala') + '</button>' : '') +
+      '<div class="esc-actions esc-save-row">' + (d.id && !d.pickCulto ? '<button type="button" class="btn-secondary esc-del" id="escDelete">🗑 Apagar</button>' : '') +
       '<button type="button" class="btn-primary" id="escSave">💾 ' + (isCulto ? 'Salvar ' + ({ culto: 'culto', ensaio: 'ensaio', evento: 'evento' }[d.kind || 'culto']) : 'Salvar escala') + '</button></div></div>';
     body.innerHTML = html;
     const grab = () => {
@@ -10486,11 +10493,7 @@
     });
     const del = document.getElementById('escDelete');
     if(del) del.onclick = () => esc.editMode === 'culto'
-      ? showConfirm('Apagar culto', 'Apagar o culto "' + (d.title || 'Culto') + '" para todos? A escala (pessoas) deste culto também é apagada. A playlist continua em Playlists.', async () => {
-          const { error } = await esc.sb.from('events').delete().eq('id', d.id);
-          if(error){ showAlert('Culto', error.message); return; }
-          esc.editing = null; await escLoadAll();
-        }, { okLabel: 'Apagar culto' })
+      ? agDeleteAsk(d.id)
       : showConfirm('Excluir escala', 'Tirar todas as pessoas desta escala? O culto e a playlist continuam em ⛪ Culto.', async () => {
           const err = await escClearEscala(d.id);
           if(err){ showAlert('Escala', err.message); return; }
@@ -13135,7 +13138,7 @@
       h += '<div class="ev-pl-empty">Repertório ainda não definido' + (escCanSchedule() ? ' — vincule a playlist na 🗓️ Agenda.' : ' pelo líder.') + '</div>';
     }
     if(can && esc.plSwap === e.id){
-      const opts = sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '">' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + ' (' + p.songIds.length + ')</option>').join('');
+      const opts = sortPlaylistsForList(playlists.filter(p => !p.archived && !p.fromEvent)).map(p => '<option value="' + p.id + '">' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + ' (' + p.songIds.length + ')</option>').join('');
       h += '<div class="ev-pl-swap"><select data-pl-pick="' + e.id + '"><option value="">Escolha uma playlist…</option>' + opts + (e.playlist ? '<option value="__none">— tirar a playlist deste culto —</option>' : '') + '</select>' +
         '<div class="ev-pl-swap-btns"><button type="button" class="btn-secondary" data-pl-swap-cancel>Cancelar</button><button type="button" class="btn-primary" data-pl-swap-save="' + e.id + '" disabled>💾 Salvar</button></div></div>';
     }
@@ -13309,6 +13312,7 @@
         '<button type="button" class="cu-row" data-cu-toggle="' + e.id + '"><span class="cu-ico">' + EVK[k].ico + '</span>' +
         '<span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + '</span><span class="cu-sub"><b class="cu-kind' + (k !== 'culto' ? ' other' : '') + '">' + EVK[k].label + '</b> · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date).slice(0, 5)) + (e.time ? ' · ' + escH(e.time) : '') + '</span></span>' +
         '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></button>' +
+        (can ? '<button type="button" class="cu-trash" data-cu-del="' + e.id + '" title="Apagar" aria-label="Apagar">🗑</button>' : '') +
         (open ? '<div class="cu-body"><div class="cu-acts">' + '<button type="button" class="btn-secondary cu-share" data-cu-share="' + e.id + '" title="Compartilhar no WhatsApp: culto, escala e músicas"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
         (can ? '<button type="button" class="tm-more" data-cu-edit="' + e.id + '" title="Editar culto">✎</button>' : '') + '</div>' +
         '<div class="ev-sec c-es">📅 Escala</div><div class="cu-esc">' +
@@ -13321,6 +13325,7 @@
     try{ bindAgCalendar(body); }catch(err){ console.error(err); }
     const nb = document.getElementById('cuNew'); if(nb) nb.onclick = () => { const m = document.getElementById('cuNewMenu'); m.hidden = !m.hidden; };
     body.querySelectorAll('[data-newkind]').forEach(b => b.onclick = () => { escStartEdit(null, 'culto'); if(esc.agView !== 'lista' && esc.agSel && esc.agSel >= todayIso()) esc.editing.date = esc.agSel; const k = b.dataset.newkind; esc.editing.kind = k; esc.editing.title = k === 'culto' ? 'Culto' : (k === 'ensaio' ? 'Ensaio' : ''); esc.editOrig = escEditKey(esc.editing); renderEscala(); });
+    body.querySelectorAll('[data-cu-del]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); agDeleteAsk(b.dataset.cuDel); });
     body.querySelectorAll('[data-cu-toggle]').forEach(b => b.onclick = () => { esc.openCu = esc.openCu === b.dataset.cuToggle ? null : b.dataset.cuToggle; renderEscala(); });
     body.querySelectorAll('[data-cu-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEdit, 'culto'));
     body.querySelectorAll('[data-cu-esc]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEsc, 'escala'));
@@ -13753,7 +13758,7 @@
       h += '<div class="ag-nav"><button type="button" data-agnav="-1" aria-label="Anterior">‹</button><span class="ag-title">' + title + '</span><button type="button" data-agnav="1" aria-label="Próximo">›</button><button type="button" data-agnav="0">Hoje</button></div>';
     }
     h += '</div><div class="ag-legend"><span class="k-culto"><i></i>Culto</span><span class="k-ensaio"><i></i>Ensaio</span><span class="k-evento"><i></i>Outros</span></div>';
-    const pill = e => '<span class="ag-pill k-' + (e.kind || 'culto') + '" title="' + escH((e.time ? e.time + ' · ' : '') + (e.title || '')) + '">' + escH((e.time ? e.time + ' ' : '') + (e.title || EVK[e.kind || 'culto'].label)) + '</span>';
+    const pill = e => '<span class="ag-pill k-' + (e.kind || 'culto') + '" title="' + escH((e.time ? e.time + ' · ' : '') + (e.title || '')) + '">' + escH((e.time ? e.time + ' ' : '') + EVK[e.kind || 'culto'].label + (e.title && e.title !== EVK[e.kind || 'culto'].label ? ' · ' + e.title : '')) + '</span>';
     if(v === 'mes'){
       const first = isoFromDate(new Date(cur.getFullYear(), cur.getMonth(), 1));
       const start = agAddDays(first, -((isoToDate(first).getDay() + 6) % 7));
@@ -13771,7 +13776,7 @@
       for(let i = 0; i < 7; i++){
         const iso = agAddDays(ws, i), d = isoToDate(iso), evs = agEventsOn(iso);
         h += '<div class="ag-wcol' + (iso === today ? ' today' : '') + (iso === esc.agSel ? ' sel' : '') + '" data-agday="' + iso + '"><div class="ag-whead">' + AG_WD[d.getDay()] + '<b>' + d.getDate() + '</b></div>' +
-          evs.map(e => '<div class="ag-wev k-' + (e.kind || 'culto') + '" data-agev="' + e.id + '"><b>' + escH(e.title || EVK[e.kind || 'culto'].label) + '</b><small>' + EVK[e.kind || 'culto'].ico + ' ' + (e.time ? escH(e.time) : '') + '</small></div>').join('') + '</div>';
+          evs.map(e => '<div class="ag-wev k-' + (e.kind || 'culto') + '" data-agev="' + e.id + '"><b>' + EVK[e.kind || 'culto'].ico + ' ' + EVK[e.kind || 'culto'].label + '</b><small>' + escH([e.time || '', e.title && e.title !== EVK[e.kind || 'culto'].label ? e.title : ''].filter(Boolean).join(' · ')) + '</small></div>').join('') + '</div>';
       }
       h += '</div>';
     }
@@ -13881,6 +13886,21 @@
   }
   document.getElementById('btnTourAgain').addEventListener('click', () => { tourStart(); });
   setTimeout(() => { if(!escCanOnline()) tourMaybeStart(); }, 3000);
+
+  // Apagar culto/ensaio/evento (v295) — pela lixeira do card ou pelo editor
+  function agDeleteAsk(id){
+    const e = (esc.events || []).find(x => x.id === id); if(!e) return;
+    const k = EVK[e.kind || 'culto'];
+    const n = escEventAssignments(e.id).length;
+    showConfirm('Apagar', 'Apagar "' + (e.title || k.label) + '" (' + k.label.toLowerCase() + ' de ' + escDateLabel(e.date) + (e.time ? ' às ' + e.time : '') + ') para todos?' + (n ? ' A escala (' + n + (n === 1 ? ' pessoa' : ' pessoas') + ') também é apagada.' : '') + (e.playlist ? ' A playlist continua em Playlists.' : ''), async () => {
+      await esc.sb.from('assignments').delete().eq('event_id', id);
+      const { error } = await esc.sb.from('events').delete().eq('id', id);
+      if(error){ showAlert('Agenda', error.message); return; }
+      if(esc.openCu === id) esc.openCu = null;
+      esc.editing = null; await escLoadAll();
+      showImportFeedback('🗑 Apagado da Agenda.', true);
+    }, { okLabel: '🗑 Apagar' });
+  }
 
 })();
 </script>
