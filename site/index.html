@@ -3052,7 +3052,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v281 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v282 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4265,6 +4265,8 @@
     document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.classList.toggle('on', b.dataset.tb === (navSel === 'home' ? 'home' : navSel)));
     const pc = document.getElementById('navCountPl'); if(pc){ const n = playlists.filter(p => !p.archived).length; pc.textContent = n || ''; }
     const fc = document.getElementById('navCountFav'); if(fc){ const n = songs.filter(s => s.favorite).length; fc.textContent = n || ''; }
+    const cc = document.getElementById('navCountCulto');
+    if(cc){ let n = 0; try{ if(esc.user){ const t = todayIso(); n = (esc.events || []).filter(e => e.date >= t).length; } }catch(e){} cc.textContent = n || ''; cc.title = n ? n + (n === 1 ? ' culto agendado' : ' cultos agendados') : ''; }
     const ec = document.getElementById('navCountEsc');
     if(ec){
       let n = 0;
