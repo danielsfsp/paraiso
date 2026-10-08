@@ -2287,6 +2287,8 @@
   .esc-pick-culto select{margin-top:6px;}
   .esc-pick-culto small{display:block; color:var(--text-dim); margin-top:6px;}
   .esc-editor.mode-escala.pick-existing .esc-grid{display:none;}
+  /* v296: escala não cria evento — antes de escolher, só o seletor */
+  .esc-editor.mode-escala.pick-none > :not(#escBack):not(h3):not(.esc-pick-culto){display:none !important;}
 
   /* v284: escala de ensaio / evento */
   .esc-kind-row{display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 8px;}
@@ -3175,7 +3177,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v295 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v296 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10383,7 +10385,7 @@
     if(d.playlistId === undefined && d.playlist){ const m = playlists.find(p => p.name === d.playlist.name); d.playlistId = m ? m.id : ''; }
     const plOpts = '<option value="">— nenhuma —</option>' + sortPlaylistsForList(playlists.filter(p => !p.archived && (!p.fromEvent || p.id === d.playlistId))).map(p => '<option value="' + p.id + '"' + (p.id === d.playlistId ? ' selected' : '') + '>' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + '</option>').join('');
     const isCulto = esc.editMode === 'culto';
-    let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + (!isCulto && d.pickCulto && d.id ? ' pick-existing' : '') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar ' : 'Novo ') + ({ culto: 'culto', ensaio: 'ensaio', evento: 'evento' }[d.kind || 'culto']) : (d.id && !d.pickCulto ? 'Editar escala' : 'Nova escala')) + '</h3>' +
+    let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + (!isCulto && d.pickCulto && d.id ? ' pick-existing' : '') + (!isCulto && !d.id ? ' pick-none' : '') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar ' : 'Novo ') + ({ culto: 'culto', ensaio: 'ensaio', evento: 'evento' }[d.kind || 'culto']) : (d.id && !d.pickCulto ? 'Editar escala' : 'Nova escala')) + '</h3>' +
       (!isCulto && d.pickCulto ? escPickCultoHtml(d) : '') +
       (!isCulto && d.pickCulto && d.id ? '<div class="hint pick-when">📅 ' + escH(escDateLabel(d.date)) + (d.time ? ' às ' + escH(d.time) : '') + ' — para outra data, escolha <b>➕ Novo</b> acima.</div>' : '') +
       (!isCulto && !d.pickCulto ? '<div class="hint ed-escala">⛪ ' + escH(d.title || 'Culto') + (d.minister_id ? ' · 🎤 ' + escH(escName(d.minister_id)) : '') + ' — nome, ministro e playlist ficam na <b>Agenda</b>.</div>' : '') +
@@ -10470,6 +10472,8 @@
       if(!d.title || d.title === EVK[old].label) d.title = EVK[d.kind].label;
       renderEscala();
     });
+    const ga = document.getElementById('escGoAgenda');
+    if(ga) ga.onclick = () => { esc.editing = null; esc.tab = 'cultos'; renderEscala(); };
     const pc = document.getElementById('escPickCulto');
     if(pc) pc.onchange = () => {
       grab();
@@ -10501,6 +10505,7 @@
         }, { okLabel: 'Excluir escala' });
     document.getElementById('escSave').onclick = async () => {
       grab();
+      if(esc.editMode !== 'culto' && !d.id){ showAlert('Escala', 'Escolha primeiro o culto, ensaio ou evento da 🗓️ Agenda. A escala não cria eventos na Agenda.'); return; }
       if(esc.editMode !== 'culto' && !d.rows.some(r => r.profile_id)){ showAlert('Escala', 'Coloque pelo menos uma pessoa em "Quem toca o quê" antes de salvar.'); return; }
       const btn = document.getElementById('escSave'); btn.disabled = true; btn.textContent = '⏳ Salvando…';
       try{
@@ -13721,8 +13726,9 @@
     if(d.id && !list.some(e => e.id === d.id)){ const cur = esc.events.find(e => e.id === d.id); if(cur) list.unshift(cur); }
     const opt = e => '<option value="' + e.id + '"' + (e.id === d.id ? ' selected' : '') + '>' + EVK[e.kind || 'culto'].ico + ' ' + escH(fmtDateBR(e.date).slice(0, 5) + ' · ' + WEEKDAYS_PT[isoToDate(e.date).getDay()] + (e.time ? ' · ' + e.time : '') + ' · ' + (e.title || 'Culto')) + '</option>';
     return '<label class="esc-pick-culto">⛪ <b>Para qual culto ou evento é esta escala?</b><select id="escPickCulto" class="esc-input">' +
-      '<option value=""' + (!d.id ? ' selected' : '') + '>➕ Novo: culto, ensaio ou evento</option>' + (list.length ? '<optgroup label="Já marcados, ainda sem escala">' + list.map(opt).join('') + '</optgroup>' : '') + '</select>' +
-      '<small>' + (list.length ? 'Escolha um que já está marcado ou crie um novo (tipo, nome e data abaixo).' : 'Escolha o tipo (culto, ensaio ou evento), o nome e a data abaixo.') + '</small></label>';
+      '<option value=""' + (!d.id ? ' selected' : '') + ' disabled>— escolha um evento da Agenda —</option>' + (list.length ? '<optgroup label="Na Agenda, ainda sem escala">' + list.map(opt).join('') + '</optgroup>' : '') + '</select>' +
+      '<small>' + (list.length ? 'A escala é sempre de um culto, ensaio ou evento que já está na 🗓️ Agenda.' : 'Nenhum culto, ensaio ou evento futuro sem escala na Agenda.') + ' Para marcar um novo, use <b>＋ Novo</b> na Agenda.</small>' +
+      '<button type="button" class="btn-secondary" id="escGoAgenda" style="margin-top:8px">🗓️ Ir para a Agenda</button></label>';
   }
 
   // Menu no celular: fundo escuro atrás; tocar fora (ou arrastar) fecha (v285)
