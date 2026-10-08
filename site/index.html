@@ -2404,6 +2404,19 @@
   .cu-trash{position:absolute; right:44px; top:10px; width:34px; height:34px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); cursor:pointer; font-size:15px; line-height:1;}
   .cu-trash:hover{border-color:#E06B5B; background:rgba(224,107,91,.15);}
   .cu-compact .ev-chev{position:absolute; right:16px; top:18px;}
+
+  /* v296: conferir a playlist antes de compartilhar */
+  .shr-list{margin:8px 0 4px; padding:0; list-style:none; max-height:42vh; overflow:auto; border:1px solid var(--border-soft); border-radius:12px;}
+  .shr-list li{display:flex; gap:10px; align-items:center; padding:8px 10px; border-bottom:1px solid var(--border-soft); font-size:13.5px;}
+  .shr-list li:last-child{border-bottom:none;}
+  .shr-list .n{color:var(--text-dim); width:18px; text-align:right; font-weight:700;}
+  .shr-list .t{flex:1; min-width:0;} .shr-list .t small{display:block; color:var(--text-dim);}
+  .shr-list .k{font-family:var(--font-display); font-weight:700; color:var(--sec-cu); background:color-mix(in srgb, var(--sec-cu) 15%, transparent); border-radius:7px; padding:1px 7px;}
+  .shr-warn{color:#E06B5B; font-size:13px; margin:6px 0 0;}
+  .shr-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .shr-acts button{flex:1 1 auto; font:inherit; font-weight:800; font-size:14px; padding:10px 12px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;}
+  .shr-acts .go{background:#25D366; border-color:#25D366; color:#062b14;}
+  .shr-acts .pl{color:var(--sec-pl); border-color:color-mix(in srgb, var(--sec-pl) 50%, transparent);}
 </style>
 </head>
 <body>
@@ -3177,7 +3190,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v296 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v297 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4300,7 +4313,7 @@
     box.innerHTML = html;
     box.classList.toggle('no-event', !ev);
     box.querySelectorAll('[data-hc-song]').forEach(b => b.onclick = () => guardIfDirty(() => { activeView = 'library'; openPlaylistId = null; selectSong(b.dataset.hcSong); }));
-    box.querySelectorAll('[data-hc-share]').forEach(b => b.onclick = () => escShareEvent(b.dataset.hcShare));
+    box.querySelectorAll('[data-hc-share]').forEach(b => b.onclick = () => escShareAsk(b.dataset.hcShare));
     box.querySelectorAll('[data-hc-ok]').forEach(b => b.onclick = () => escRespond(b.dataset.hcOk, 'confirmado'));
     box.querySelectorAll('[data-hc-no]').forEach(b => b.onclick = () => escDeclineAsk(b.dataset.hcNo));
     box.querySelectorAll('[data-hc-ev]').forEach(b => b.onclick = () => { esc.tab = 'escalas'; openEscala(b.dataset.hcEv); });
@@ -13334,7 +13347,7 @@
     body.querySelectorAll('[data-cu-toggle]').forEach(b => b.onclick = () => { esc.openCu = esc.openCu === b.dataset.cuToggle ? null : b.dataset.cuToggle; renderEscala(); });
     body.querySelectorAll('[data-cu-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEdit, 'culto'));
     body.querySelectorAll('[data-cu-esc]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEsc, 'escala'));
-    body.querySelectorAll('[data-cu-share]').forEach(b => b.onclick = () => escShareEvent(b.dataset.cuShare));
+    body.querySelectorAll('[data-cu-share]').forEach(b => b.onclick = () => escShareAsk(b.dataset.cuShare));
     body.querySelectorAll('[data-cu-see]').forEach(b => b.onclick = () => { esc.tab = 'escalas'; esc.openEventId = b.dataset.cuSee; renderEscala(); });
     body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
@@ -13906,6 +13919,30 @@
       esc.editing = null; await escLoadAll();
       showImportFeedback('🗑 Apagado da Agenda.', true);
     }, { okLabel: '🗑 Apagar' });
+  }
+
+  // Compartilhar culto: antes, conferir se a playlist está validada (v296)
+  function escShareAsk(evId){
+    const e = (esc.events || []).find(x => x.id === evId); if(!e) return;
+    const k = EVK[e.kind || 'culto'];
+    const pls = e.playlist ? (((e.playlist.songIds || []).length ? evPlSongs(e.playlist.songIds, e.playlist.overrides || {}) : null) || e.playlist.songs || []) : [];
+    const pl = typeof plForEvent === 'function' ? plForEvent(e) : null;
+    const ov = document.createElement('div'); ov.className = 'decl-ov';
+    ov.innerHTML = '<div class="decl-box" role="dialog" aria-modal="true" style="max-width:440px"><h3>📤 Compartilhar ' + escH(k.label.toLowerCase()) + '</h3>' +
+      '<p>' + escH((e.title || k.label) + ' · ' + escDateLabel(e.date) + (e.time ? ' às ' + e.time : '')) + '</p>' +
+      (pls.length ? '<p><b>A playlist está validada?</b> Confira as músicas e os tons antes de enviar:</p><ul class="shr-list">' +
+          pls.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span class="t">' + escH(x.title) + (x.artist ? '<small>' + escH(x.artist) + '</small>' : '') + '</span>' + (x.key ? '<span class="k">' + escH(x.key) + '</span>' : '') + '</li>').join('') + '</ul>'
+        : '<p class="shr-warn">⚠ Este ' + escH(k.label.toLowerCase()) + ' ainda não tem playlist. Se enviar agora, a mensagem vai com "Repertório: ainda não definido".</p>') +
+      '<div class="shr-acts"><button type="button" class="cancel">Cancelar</button>' +
+      (pl ? '<button type="button" class="pl">🎵 Abrir a playlist</button>' : '') +
+      '<button type="button" class="go"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> ' + (pls.length ? 'OK, enviar' : 'Enviar assim mesmo') + '</button></div></div>';
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', ev => { if(ev.target === ov) close(); });
+    ov.querySelector('.cancel').onclick = close;
+    ov.querySelector('.go').onclick = () => { close(); escShareEvent(evId); };
+    const ob = ov.querySelector('.pl');
+    if(ob) ob.onclick = () => { close(); try{ if(escOverlay().classList.contains('open')) closeEscala(); }catch(_){} guardIfDirty(() => goHomeToPlaylist(pl)); };
   }
 
 })();
