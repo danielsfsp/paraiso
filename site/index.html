@@ -3084,7 +3084,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v287 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v288 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10321,7 +10321,7 @@
     });
     html += '</div><button type="button" class="btn-secondary" id="escAddRow">＋ Adicionar função</button></div>' +
       '<div class="esc-actions esc-save-row">' + (d.id && !d.pickCulto ? '<button type="button" class="btn-secondary esc-del" id="escDelete">🗑 ' + (isCulto ? 'Apagar culto' : 'Apagar escala') + '</button>' : '') +
-      '<button type="button" class="btn-primary" id="escSave">💾 ' + (isCulto ? 'Salvar culto' : 'Salvar escala') + '</button></div></div>';
+      '<button type="button" class="btn-primary" id="escSave">💾 ' + (isCulto ? 'Salvar ' + ({ culto: 'culto', ensaio: 'ensaio', evento: 'evento' }[d.kind || 'culto']) : 'Salvar escala') + '</button></div></div>';
     body.innerHTML = html;
     const grab = () => {
       d.date = document.getElementById('escDate').value || d.date;
@@ -10442,7 +10442,7 @@
         esc.editing = null; esc.openEventId = evId;
         await escLoadAll();
         const ev = esc.events.find(x => x.id === evId);
-        if(ev) showImportFeedback('✓ ' + (esc.editMode === 'culto' ? 'Culto salvo.' : 'Escala salva. Para avisar a equipe, use Compartilhar na 🗓️ Agenda.'), true);
+        if(ev) showImportFeedback('✓ ' + (esc.editMode === 'culto' ? 'Salvo na Agenda.' : 'Escala salva. Para avisar a equipe, use Compartilhar na 🗓️ Agenda.'), true);
         if(false) showConfirm('Escala salva ✅', 'A escala já está salva e a equipe já consegue ver no CEP Louvor. Quer avisar também no grupo do WhatsApp?', () => escShareEvent(evId), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp', cancelLabel: '✓ Só salvar', okNeutral: true });
       }catch(err){
         showAlert('Escala', 'Não consegui salvar: ' + (err.message || err));
