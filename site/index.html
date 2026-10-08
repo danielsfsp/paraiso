@@ -2389,6 +2389,8 @@
   .tour-foot .tour-next{background:var(--accent); border-color:var(--accent); color:#120E08;}
   .tour-skip{position:absolute; top:10px; right:12px; background:none; border:none; color:var(--text-dim); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;}
   .tour-logo{width:56px; height:56px; border-radius:14px; display:block; margin:0 0 10px; box-shadow:0 6px 24px rgba(110,40,255,.45);}
+  .tour-never{display:flex; align-items:center; gap:8px; margin-top:12px; font-size:13px; color:var(--text-dim); cursor:pointer; user-select:none;}
+  .tour-never input{width:17px; height:17px; accent-color:var(--accent); margin:0;}
 </style>
 </head>
 <body>
@@ -3162,7 +3164,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v292 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v293 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -13789,7 +13791,7 @@
   }
 
   // ================= TOUR DE APRESENTAÇÃO (v292) =================
-  var TOUR_KEY = 'tourV1';
+  var TOUR_KEY = 'tourV1', tourShownThisVisit = false;
   function tourSteps(){
     const m = window.innerWidth <= 820;
     const tb = k => '#mobileTabbar [data-tb="' + k + '"]';
@@ -13807,7 +13809,7 @@
   }
   function tourMaybeStart(){
     try{
-      if(lsGet(TOUR_KEY)) return;
+      if(lsGet(TOUR_KEY) || tourShownThisVisit) return;
       if(document.body.classList.contains('gate-on')) return;
       if(document.querySelector('.modal-overlay.open, .decl-ov, .tour-ov')) { setTimeout(tourMaybeStart, 4000); return; }
       tourStart();
@@ -13823,10 +13825,11 @@
     let i = 0;
     const ov = document.createElement('div'); ov.className = 'tour-ov';
     ov.innerHTML = '<div class="tour-spot"></div><div class="tour-card" role="dialog" aria-modal="true"><button type="button" class="tour-skip">Pular</button><div class="tour-body"></div>' +
+      '<label class="tour-never"><input type="checkbox" id="tourNever"> Não apresentar mais</label>' +
       '<div class="tour-foot"><div class="tour-dots"></div><button type="button" class="tour-prev">Voltar</button><button type="button" class="tour-next">Próximo</button></div></div>';
     document.body.appendChild(ov);
     const spot = ov.querySelector('.tour-spot'), card = ov.querySelector('.tour-card');
-    const end = () => { lsSet(TOUR_KEY, String(Date.now())); ov.remove(); window.removeEventListener('resize', place); };
+    const end = () => { if(ov.querySelector('#tourNever').checked) lsSet(TOUR_KEY, String(Date.now())); tourShownThisVisit = true; ov.remove(); window.removeEventListener('resize', place); };
     function place(){
       const st = steps[i]; const el = st.sel ? document.querySelector(st.sel) : null;
       const vw = window.innerWidth, vh = window.innerHeight, cw = card.offsetWidth, ch = card.offsetHeight;
@@ -13861,7 +13864,7 @@
     window.addEventListener('resize', place);
     show();
   }
-  document.getElementById('btnTourAgain').addEventListener('click', () => { lsSet(TOUR_KEY, ''); tourStart(); });
+  document.getElementById('btnTourAgain').addEventListener('click', () => { tourStart(); });
   setTimeout(() => { if(!escCanOnline()) tourMaybeStart(); }, 3000);
 
 })();
