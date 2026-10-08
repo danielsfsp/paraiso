@@ -2302,6 +2302,16 @@
     .side-backdrop.on{display:block; opacity:1;}
   }
   .pick-when{margin:-4px 0 10px;}
+
+  /* v287: Agenda (culto, ensaio, outros) */
+  .cu-new-wrap{position:relative; margin-bottom:12px;}
+  .cu-new-wrap .cu-new{width:100%; margin:0 !important;}
+  .cu-new-menu{position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:20; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.45);}
+  .cu-new-menu[hidden]{display:none;}
+  .cu-new-menu button{font:inherit; font-size:15px; font-weight:800; padding:14px 8px; border-radius:12px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;}
+  .cu-new-menu button:hover{border-color:var(--accent); color:var(--accent);}
+  .esc-editor.mode-culto .hide-nonculto{display:none !important;}
+  .esc-editor.mode-culto .esc-kind-row{display:flex !important;}
 </style>
 </head>
 <body>
@@ -2330,7 +2340,7 @@
         <button data-view="playlists" class="active side-nav-item"><span class="sn-ico">🎵</span><span class="sn-lab">Playlists</span><span class="sn-count" id="navCountPl"></span></button>
         <button data-view="favorites" class="side-nav-item"><span class="sn-ico">★</span><span class="sn-lab">Favoritas</span><span class="sn-count" id="navCountFav"></span></button>
       </div>
-      <button type="button" class="esc-open-btn side-nav-item" id="btnCultos"><span class="sn-ico">⛪</span><span class="sn-lab">Culto</span><span class="sn-count" id="navCountCulto"></span></button>
+      <button type="button" class="esc-open-btn side-nav-item" id="btnCultos"><span class="sn-ico">🗓️</span><span class="sn-lab">Agenda</span><span class="sn-count" id="navCountCulto"></span></button>
       <button type="button" class="esc-open-btn side-nav-item" id="btnEscala"><span class="sn-ico">📅</span><span class="sn-lab">Escala</span><span class="sn-count sn-alert" id="navCountEsc"></span></button>
       <button type="button" class="esc-open-btn side-nav-item" id="btnEquipe"><span class="sn-ico">👥</span><span class="sn-lab">Equipe</span><span class="sn-count sn-alert" id="navCountEq"></span></button>
     </nav>
@@ -2637,7 +2647,7 @@
     <button type="button" data-tb="home"><i>⌂</i>Início</button>
     <button type="button" data-tb="songs"><i>🎼</i>Músicas</button>
     <button type="button" data-tb="playlists"><i>🎵</i>Playlists</button>
-    <button type="button" data-tb="culto"><i>⛪</i>Culto</button>
+    <button type="button" data-tb="culto"><i>🗓️</i>Agenda</button>
     <button type="button" data-tb="escala"><i>📅</i>Escala<b class="tb-badge" id="tbEscBadge"></b></button>
     <button type="button" data-tb="equipe"><i>👥</i>Equipe<b class="tb-badge" id="tbEqBadge"></b></button>
   </nav>
@@ -2889,7 +2899,7 @@
     <details class="help-section" open>
       <summary>🏠 Primeiros passos</summary>
       <ul>
-        <li><strong>Menu</strong> (lateral no computador, barra de baixo no celular): <strong>Início · 🎼 Músicas · 🎵 Playlists · ⛪ Culto · 📅 Escala · 👥 Equipe · Mais</strong>.</li>
+        <li><strong>Menu</strong> (lateral no computador, barra de baixo no celular): <strong>Início · 🎼 Músicas · 🎵 Playlists · 🗓️ Agenda · 📅 Escala · 👥 Equipe · Mais</strong>.</li>
         <li><strong>Início:</strong> saudação, o <strong>próximo culto</strong> (com Compartilhar e ▶ Playlist) e a lista de todas as músicas.</li>
         <li><strong>🔍 Buscar:</strong> digite o <em>nome</em>, o <em>artista</em> ou um <em>trecho da letra</em>.</li>
         <li>Filtros da lista: <strong>Todas · ★ Favoritas · Por artista · Tocadas recentemente</strong>. Marque músicas ☑ para criar uma playlist com elas.</li>
@@ -2957,7 +2967,7 @@
         <li>Suas playlists são <strong>suas</strong>: mudar música, ordem ou tom nelas não muda nada para os outros.</li>
         <li>Crie em <strong>Playlists → ＋ Nova playlist</strong>, ou marque músicas ☑ no Início e toque em <strong>＋ Criar playlist</strong>. Reordene com ▲ ▼.</li>
         <li><strong>Compartilhar:</strong> manda uma <em>cópia</em> (link, WhatsApp ou arquivo). <strong>🗄️ Arquivar</strong> tira da lista sem apagar; <strong>🗑️ Excluir</strong> apaga.</li>
-        <li>A playlist do <strong>culto</strong> é escolhida em <strong>⛪ Culto</strong>. Quem está escalado recebe uma cópia dela automaticamente.</li>
+        <li>A playlist do <strong>culto</strong> é escolhida na <strong>🗓️ Agenda</strong>. Quem está escalado recebe uma cópia dela automaticamente.</li>
         <li>A cópia chega <strong>como foi montada</strong> (tom, cifra e formatação). Depois, o que você muda nela é <strong>só seu</strong>.</li>
         <li>Quer que a equipe tenha suas mudanças? Abra a playlist e toque <strong>📣 Compartilhar alterações</strong>: cada um recebe um aviso dizendo <strong>quem</strong> alterou e <strong>o quê</strong>, e escolhe <strong>Aceitar</strong> ou <strong>Manter a minha</strong>.</li>
       </ul>
@@ -3074,7 +3084,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v286 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v287 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4237,7 +4247,7 @@
     if(sel){
       const items = sel.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
       const fromEv = sel.fromEvent && typeof esc !== 'undefined' ? (esc.events || []).find(e => e.id === sel.fromEvent) : null;
-      html += '<div class="plp-head"><div><div class="sec-tag sec-pl">🎵 Playlist</div>' + (sel.fromEvent ? '<div class="sec-from">recebida do <b class="c-cu">⛪ Culto</b>' + (fromEv ? ' “' + escapeHtml(fromEv.title || 'Culto') + '” · ' + escapeHtml(escDateLabel(fromEv.date)) : '') + '</div>' : '') + '<div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
+      html += '<div class="plp-head"><div><div class="sec-tag sec-pl">🎵 Playlist</div>' + (sel.fromEvent ? '<div class="sec-from">recebida da <b class="c-cu">🗓️ Agenda</b>' + (fromEv ? ' “' + escapeHtml(fromEv.title || 'Culto') + '” · ' + escapeHtml(escDateLabel(fromEv.date)) : '') + '</div>' : '') + '<div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
         '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
         (sel.fromEvent && items.length ? '<button type="button" class="plp-btn chg" data-plp-chg title="Enviar suas alterações (tom, formatação, cifra) para a equipe do culto">📣 Compartilhar alterações</button>' : '') +
@@ -4288,7 +4298,7 @@
     const pc = document.getElementById('navCountPl'); if(pc){ const n = playlists.filter(p => !p.archived).length; pc.textContent = n || ''; }
     const fc = document.getElementById('navCountFav'); if(fc){ const n = songs.filter(s => s.favorite).length; fc.textContent = n || ''; }
     const cc = document.getElementById('navCountCulto');
-    if(cc){ let n = 0; try{ if(esc.user){ const t = todayIso(); n = (esc.events || []).filter(e => e.date >= t && (e.kind || 'culto') === 'culto').length; } }catch(e){} cc.textContent = n || ''; cc.title = n ? n + (n === 1 ? ' culto agendado' : ' cultos agendados') : ''; }
+    if(cc){ let n = 0; try{ if(esc.user){ const t = todayIso(); n = (esc.events || []).filter(e => e.date >= t).length; } }catch(e){} cc.textContent = n || ''; cc.title = n ? n + (n === 1 ? ' compromisso na agenda' : ' compromissos na agenda') : ''; }
     const ec = document.getElementById('navCountEsc');
     if(ec){
       let n = 0;
@@ -10020,7 +10030,7 @@
     document.body.classList.toggle('esc-page-on', escOverlay().classList.contains('open')); markEscNav();
     const isTeam = esc.tab === 'equipe', isCultos = esc.tab === 'cultos';
     { const ov = escOverlay(); ov.classList.remove('acc-es', 'acc-eq', 'acc-cu'); if(!isProfile) ov.classList.add(isTeam ? 'acc-eq' : isCultos ? 'acc-cu' : 'acc-es'); }
-    document.getElementById('escalaTitle').innerHTML = isProfile ? '👤 Meu perfil' : isTeam ? secHead('eq', '👥', 'Equipe', 'Pessoas, funções e equipes') : isCultos ? secHead('cu', '⛪', 'Culto', 'Cada culto: data, ministro, playlist e escala') : secHead('es', '📅', 'Escala', 'Quem toca o quê em cada culto, ensaio ou evento');
+    document.getElementById('escalaTitle').innerHTML = isProfile ? '👤 Meu perfil' : isTeam ? secHead('eq', '👥', 'Equipe', 'Pessoas, funções e equipes') : isCultos ? secHead('cu', '🗓️', 'Agenda', 'Cultos, ensaios e outros eventos — com playlist e escala') : secHead('es', '📅', 'Escala', 'Quem toca o quê em cada culto, ensaio ou evento');
     tabsEl.style.display = (isProfile || isTeam || isCultos) ? 'none' : '';
     tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === esc.tab));
     if(esc.editing){ renderEscEditor(body); return; }
@@ -10057,7 +10067,7 @@
       return '<span class="ev-pill mute">Sem você</span>';
     };
     let html = '';
-    if(!evs.length) html += '<div class="esc-empty">' + (mineOnly ? 'Você não está em nenhuma escala por enquanto. 🙌' : 'Nenhuma escala montada.' + (escCanSchedule() ? ' Monte pelo ⛪ Culto (👥 Montar escala) ou em ＋ Nova escala.' : '')) + '</div>';
+    if(!evs.length) html += '<div class="esc-empty">' + (mineOnly ? 'Você não está em nenhuma escala por enquanto. 🙌' : 'Nenhuma escala montada.' + (escCanSchedule() ? ' Monte pela 🗓️ Agenda (👥 Montar escala) ou em ＋ Nova escala.' : '')) + '</div>';
     let lastMonth = -1;
     evs.forEach((e, idx) => {
       const as = escEventAssignments(e.id);
@@ -10128,7 +10138,7 @@
     body.querySelectorAll('[data-wa]').forEach(b => b.onclick = () => escShareEvent(b.dataset.wa));
     body.querySelectorAll('[data-del-ev]').forEach(b => b.onclick = () => {
       const ev = esc.events.find(x => x.id === b.dataset.delEv); if(!ev) return;
-      showConfirm('Excluir escala', 'Tirar todas as pessoas da escala do culto "' + (ev.title || 'Culto') + '" de ' + escDateLabel(ev.date) + '? O culto e a playlist continuam em ⛪ Culto (para apagar o culto, use o Culto).', async () => {
+      showConfirm('Excluir escala', 'Tirar todas as pessoas da escala do culto "' + (ev.title || 'Culto') + '" de ' + escDateLabel(ev.date) + '? O culto e a playlist continuam na 🗓️ Agenda (para apagar o culto, use a Aulto).', async () => {
         const err = await escClearEscala(ev.id);
         if(err){ showAlert('Escala', 'Não consegui excluir: ' + err.message); return; }
         esc.openEventId = null; await escLoadAll();
@@ -10281,18 +10291,19 @@
     if(d.playlistId === undefined && d.playlist){ const m = playlists.find(p => p.name === d.playlist.name); d.playlistId = m ? m.id : ''; }
     const plOpts = '<option value="">— nenhuma —</option>' + sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '"' + (p.id === d.playlistId ? ' selected' : '') + '>' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + '</option>').join('');
     const isCulto = esc.editMode === 'culto';
-    let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + (!isCulto && d.pickCulto && d.id ? ' pick-existing' : '') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar culto' : 'Novo culto') : (d.id && !d.pickCulto ? 'Editar escala' : 'Nova escala')) + '</h3>' +
+    let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + (!isCulto && d.pickCulto && d.id ? ' pick-existing' : '') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar ' : 'Novo ') + ({ culto: 'culto', ensaio: 'ensaio', evento: 'evento' }[d.kind || 'culto']) : (d.id && !d.pickCulto ? 'Editar escala' : 'Nova escala')) + '</h3>' +
       (!isCulto && d.pickCulto ? escPickCultoHtml(d) : '') +
       (!isCulto && d.pickCulto && d.id ? '<div class="hint pick-when">📅 ' + escH(escDateLabel(d.date)) + (d.time ? ' às ' + escH(d.time) : '') + ' — para outra data, escolha <b>➕ Novo</b> acima.</div>' : '') +
-      (!isCulto && !d.pickCulto ? '<div class="hint ed-escala">⛪ ' + escH(d.title || 'Culto') + (d.minister_id ? ' · 🎤 ' + escH(escName(d.minister_id)) : '') + ' — nome, ministro e playlist ficam em <b>Culto</b>.</div>' : '') +
+      (!isCulto && !d.pickCulto ? '<div class="hint ed-escala">⛪ ' + escH(d.title || 'Culto') + (d.minister_id ? ' · 🎤 ' + escH(escName(d.minister_id)) : '') + ' — nome, ministro e playlist ficam na <b>Agenda</b>.</div>' : '') +
       (isCulto && d.id ? '<div class="hint cu-linked">👥 Escala vinculada: ' + (d.rows.filter(r => r.profile_id).length ? d.rows.filter(r => r.profile_id).map(r => escH(escFirst(r.profile_id)) + ' <small>(' + escH(r.function) + ')</small>').join(', ') : 'ainda sem pessoas') + '</div>' : '') +
       '<div class="esc-grid"><label>Data<input type="date" id="escDate" class="esc-input" value="' + escH(d.date) + '"></label>' +
       '<label>Horário<input type="time" id="escTime" class="esc-input" value="' + escH(d.time) + '"></label></div>' +
-      ((!isCulto && ((d.kind && d.kind !== 'culto') || (d.pickCulto && !d.id))) ? '<div class="ed-escala esc-kind-row">' + Object.keys(EVK).map(k => '<button type="button" data-evkind="' + k + '"' + ((d.kind || 'culto') === k ? ' class="on"' : '') + '>' + EVK[k].ico + ' ' + EVK[k].label + '</button>').join('') + '</div>' +
+      ((!isCulto && ((d.kind && d.kind !== 'culto') || (d.pickCulto && !d.id))) ? '<div class="ed-escala esc-kind-row">' + Object.keys(EVK).map(k => '<button type="button" data-evkind="' + k + '"' + ((d.kind || 'culto') === k ? ' class="on"' : '') + '>' + EVK[k].ico + ' ' + (k === 'evento' ? 'Outros' : EVK[k].label) + '</button>').join('') + '</div>' +
         '<label class="ed-escala">Nome<input id="escEvName" class="esc-input" value="' + escH(d.title || EVK[d.kind || 'culto'].label) + '" placeholder="Ex.: Ensaio geral, Casamento…"></label>' : '') +
-      '<label class="ed-culto">Nome do culto<input id="escTitle" class="esc-input" value="' + escH(d.title === 'Culto' && !d.id ? '' : d.title) + '" placeholder="Escolha abaixo ou digite"></label>' +
-      '<div class="esc-dress-chips ed-culto cu-names">' + escCultoNames().map(x => '<button type="button" data-cuname="' + escH(x) + '"' + (x === d.title ? ' class="on"' : '') + '>' + escH(x) + '</button>').join('') + '</div>' +
-      '<label class="ed-culto">🎤 Ministro<select id="escMinister" class="esc-input">' + personOpts(d.minister_id, 'Ministro') + '</select></label>' +
+      (isCulto ? '<div class="esc-kind-row">' + Object.keys(EVK).map(k => '<button type="button" data-evkind2="' + k + '"' + ((d.kind || 'culto') === k ? ' class="on"' : '') + '>' + EVK[k].ico + ' ' + (k === 'evento' ? 'Outros' : EVK[k].label) + '</button>').join('') + '</div>' : '') +
+      '<label class="ed-culto">' + ((d.kind || 'culto') === 'culto' ? 'Nome do culto' : 'Nome') + '<input id="escTitle" class="esc-input" value="' + escH((d.title === 'Culto' || d.title === 'Ensaio') && !d.id ? (d.kind === 'ensaio' ? 'Ensaio' : '') : d.title) + '" placeholder="' + ((d.kind || 'culto') === 'evento' ? 'Ex.: Casamento, Retiro, Gravação…' : 'Escolha abaixo ou digite') + '"></label>' +
+      '<div class="esc-dress-chips ed-culto cu-names' + ((d.kind || 'culto') !== 'culto' ? ' hide-nonculto' : '') + '">' + escCultoNames().map(x => '<button type="button" data-cuname="' + escH(x) + '"' + (x === d.title ? ' class="on"' : '') + '>' + escH(x) + '</button>').join('') + '</div>' +
+      '<label class="ed-culto' + ((d.kind || 'culto') !== 'culto' ? ' hide-nonculto' : '') + '">🎤 Ministro<select id="escMinister" class="esc-input">' + personOpts(d.minister_id, 'Ministro') + '</select></label>' +
       '<label class="ed-culto">🎵 Playlist do culto<select id="escPlaylist" class="esc-input">' + plOpts + '</select></label>' +
       (d.playlist ? '<div class="hint ed-culto">🎵 ' + d.playlist.songs.map(x => escH(x.title) + (x.key ? ' <b class="esc-key">' + escH(x.key) + '</b>' : '')).join(' · ') + '</div>' : '') +
       '<label class="ed-escala">👔 Dress code<input id="escDress" class="esc-input" value="' + escH(d.dress_code) + '" placeholder="Ex: preto e branco"></label>' +
@@ -10315,7 +10326,7 @@
     const grab = () => {
       d.date = document.getElementById('escDate').value || d.date;
       d.time = document.getElementById('escTime').value;
-      d.title = document.getElementById('escTitle').value.trim() || 'Culto';
+      d.title = document.getElementById('escTitle').value.trim() || EVK[d.kind || 'culto'].label;
       { const en = document.getElementById('escEvName'); if(en) d.title = en.value.trim() || EVK[d.kind || 'culto'].label; }
       d.minister_id = document.getElementById('escMinister').value;
       d.dress_code = document.getElementById('escDress').value.trim();
@@ -10361,6 +10372,7 @@
     document.getElementById('escAddRow').onclick = () => { grab(); d.rows.push({ id: null, function: 'Vocal', profile_id: '', status: 'pendente' }); renderEscala(); };
     body.querySelectorAll('.esc-row .esc-x').forEach(b => b.onclick = () => { grab(); d.rows.splice(Number(b.parentNode.dataset.i), 1); renderEscala(); });
     body.querySelectorAll('.esc-row .esc-fn-sel').forEach(s => s.onchange = () => { grab(); renderEscala(); });
+    body.querySelectorAll('[data-evkind2]').forEach(b => b.onclick = () => { grab(); const old = d.kind || 'culto'; d.kind = b.dataset.evkind2; if(!d.title || d.title === EVK[old].label) d.title = EVK[d.kind].label; renderEscala(); });
     body.querySelectorAll('[data-evkind]').forEach(b => b.onclick = () => {
       grab(); const old = d.kind || 'culto'; d.kind = b.dataset.evkind;
       if(!d.title || d.title === EVK[old].label) d.title = EVK[d.kind].label;
@@ -10430,7 +10442,7 @@
         esc.editing = null; esc.openEventId = evId;
         await escLoadAll();
         const ev = esc.events.find(x => x.id === evId);
-        if(ev) showImportFeedback('✓ ' + (esc.editMode === 'culto' ? 'Culto salvo.' : 'Escala salva. Para avisar a equipe, use Compartilhar em ⛪ Culto.'), true);
+        if(ev) showImportFeedback('✓ ' + (esc.editMode === 'culto' ? 'Culto salvo.' : 'Escala salva. Para avisar a equipe, use Compartilhar na 🗓️ Agenda.'), true);
         if(false) showConfirm('Escala salva ✅', 'A escala já está salva e a equipe já consegue ver no CEP Louvor. Quer avisar também no grupo do WhatsApp?', () => escShareEvent(evId), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp', cancelLabel: '✓ Só salvar', okNeutral: true });
       }catch(err){
         showAlert('Escala', 'Não consegui salvar: ' + (err.message || err));
@@ -13030,7 +13042,7 @@
       if(sug) h += '<div class="ev-pl-sug">💡 Usar a playlist <b>' + escH(sug.name) + '</b> (' + sug.songIds.length + ' músicas, mesma data)? <button type="button" class="btn-primary" data-pl-link="' + e.id + '" data-pl-id="' + sug.id + '">Usar</button></div>';
       h += '<div class="ev-pl-empty">Este culto ainda não tem repertório.</div><div class="ev-pl-acts"><button type="button" class="btn-primary" data-pl-create="' + e.id + '">＋ Criar playlist para este culto</button><button type="button" class="btn-secondary" data-pl-swap="' + e.id + '">📂 Escolher playlist existente</button></div>';
     } else {
-      h += '<div class="ev-pl-empty">Repertório ainda não definido' + (escCanSchedule() ? ' — vincule a playlist em ⛪ Culto.' : ' pelo líder.') + '</div>';
+      h += '<div class="ev-pl-empty">Repertório ainda não definido' + (escCanSchedule() ? ' — vincule a playlist na 🗓️ Agenda.' : ' pelo líder.') + '</div>';
     }
     if(can && esc.plSwap === e.id){
       const opts = sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '">' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + ' (' + p.songIds.length + ')</option>').join('');
@@ -13197,14 +13209,15 @@
   function renderEscCultos(body){
     const can = escCanSchedule();
     const y = isoFromDate(new Date(Date.now() - 86400000));
-    const evs = esc.events.filter(e => e.date >= y && (e.kind || 'culto') === 'culto').sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
-    let html = can ? '<button type="button" class="btn-primary cu-new" id="cuNew">＋ Novo culto</button>' : '';
-    if(!evs.length) html += '<div class="esc-empty">Nenhum culto marcado.' + (can ? ' Toque em "＋ Novo culto".' : '') + '</div>';
+    const evs = esc.events.filter(e => e.date >= y).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    let html = can ? '<div class="cu-new-wrap"><button type="button" class="btn-primary cu-new" id="cuNew">＋ Novo</button><div class="cu-new-menu" id="cuNewMenu" hidden>' +
+      '<button type="button" data-newkind="culto">⛪ Culto</button><button type="button" data-newkind="ensaio">🎸 Ensaio</button><button type="button" data-newkind="evento">🎤 Outros</button></div></div>' : '';
+    if(!evs.length) html += '<div class="esc-empty">Nenhum culto marcado.' + (can ? ' Toque em "＋ Novo".' : '') + '</div>';
     evs.forEach(e => {
       const dd = isoToDate(e.date), as = escEventAssignments(e.id), conf = as.filter(a => a.status === 'confirmado').length;
       html += '<div class="cu-card" data-cu="' + e.id + '">' +
         '<div class="cu-head"><div class="ev-date big"><div class="w">' + WEEKDAYS_PT[dd.getDay()].toUpperCase() + '</div><div class="d">' + String(dd.getDate()).padStart(2, '0') + '</div><div class="m">' + ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][dd.getMonth()] + '</div></div>' +
-        '<div class="cu-main"><div class="sec-tag sec-cu">⛪ Culto</div><div class="cu-title">' + escH(e.title || 'Culto') + '</div><div class="cu-sub">' + [e.time ? escH(e.time) : '', e.minister_id ? '🎤 ' + escH(escName(e.minister_id)) : '🎤 ministro a definir'].filter(Boolean).join(' · ') + '</div></div>' +
+        '<div class="cu-main"><div class="sec-tag sec-cu' + ((e.kind || 'culto') !== 'culto' ? ' kind-tag' : '') + '">' + EVK[e.kind || 'culto'].ico + ' ' + EVK[e.kind || 'culto'].label + '</div><div class="cu-title">' + escH(e.title || 'Culto') + '</div><div class="cu-sub">' + [e.time ? escH(e.time) : '', e.minister_id ? '🎤 ' + escH(escName(e.minister_id)) : ((e.kind || 'culto') === 'culto' ? '🎤 ministro a definir' : '')].filter(Boolean).join(' · ') + '</div></div>' +
         '<button type="button" class="btn-secondary cu-share" data-cu-share="' + e.id + '" title="Compartilhar no WhatsApp: culto, escala e músicas"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
         (can ? '<button type="button" class="tm-more" data-cu-edit="' + e.id + '" title="Editar culto">✎</button>' : '') + '</div>' +
         '<div class="ev-sec c-es">📅 Escala</div><div class="cu-esc">' +
@@ -13213,7 +13226,8 @@
         '</div>' + escPlBlockHtml(e) + '</div>';
     });
     body.innerHTML = html;
-    const nb = document.getElementById('cuNew'); if(nb) nb.onclick = () => escStartEdit(null, 'culto');
+    const nb = document.getElementById('cuNew'); if(nb) nb.onclick = () => { const m = document.getElementById('cuNewMenu'); m.hidden = !m.hidden; };
+    body.querySelectorAll('[data-newkind]').forEach(b => b.onclick = () => { escStartEdit(null, 'culto'); const k = b.dataset.newkind; esc.editing.kind = k; esc.editing.title = k === 'culto' ? 'Culto' : (k === 'ensaio' ? 'Ensaio' : ''); esc.editOrig = escEditKey(esc.editing); renderEscala(); });
     body.querySelectorAll('[data-cu-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEdit, 'culto'));
     body.querySelectorAll('[data-cu-esc]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEsc, 'escala'));
     body.querySelectorAll('[data-cu-share]').forEach(b => b.onclick = () => escShareEvent(b.dataset.cuShare));
