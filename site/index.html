@@ -2301,6 +2301,7 @@
     .side-backdrop{position:fixed; inset:0; z-index:2990; background:rgba(0,0,0,.5); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); opacity:0; transition:opacity .2s;}
     .side-backdrop.on{display:block; opacity:1;}
   }
+  .pick-when{margin:-4px 0 10px;}
 </style>
 </head>
 <body>
@@ -3073,7 +3074,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v285 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v286 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10041,7 +10042,7 @@
     let evs = esc.events.filter(e => e.date >= today).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
     if(mineOnly) evs = evs.filter(e => e.minister_id === esc.user.id || esc.assignments.some(a => a.event_id === e.id && a.profile_id === esc.user.id));
     // Escala sem ninguém = culto sem escala: fica só em ⛪ Culto (v261)
-    evs = evs.filter(e => esc.assignments.some(a => a.event_id === e.id));
+    evs = evs.filter(e => (e.kind || 'culto') !== 'culto' || esc.assignments.some(a => a.event_id === e.id));
     const MES = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
     const MES3 = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
     const dateBlock = (iso, big) => { const d = isoToDate(iso); return '<div class="ev-date' + (big ? ' big' : '') + '"><div class="w">' + WEEKDAYS_PT[d.getDay()].toUpperCase() + '</div><div class="d">' + String(d.getDate()).padStart(2, '0') + '</div>' + (big ? '<div class="m">' + MES3[d.getMonth()] + '</div>' : '') + '</div>'; };
@@ -10116,7 +10117,7 @@
     });
     if(escCanSchedule() && !mineOnly) html += '<button class="btn-primary esc-new ev-fab" id="escNewEvent" type="button">＋ Nova escala</button>';
     body.innerHTML = html;
-    const nb = document.getElementById('escNewEvent'); if(nb) nb.onclick = () => { const c = escCultosSemEscala()[0]; escStartEdit(c ? c.id : null); esc.editing.pickCulto = true; esc.editOrig = escEditKey(esc.editing); renderEscala(); };
+    const nb = document.getElementById('escNewEvent'); if(nb) nb.onclick = () => { escStartEdit(null); esc.editing.pickCulto = true; esc.editOrig = escEditKey(esc.editing); renderEscala(); };
     body.querySelectorAll('.esc-card-head').forEach(h => h.onclick = () => {
       const id = h.parentNode.dataset.ev; esc.openEventId = esc.openEventId === id ? null : id; renderEscala();
     });
@@ -10280,8 +10281,9 @@
     if(d.playlistId === undefined && d.playlist){ const m = playlists.find(p => p.name === d.playlist.name); d.playlistId = m ? m.id : ''; }
     const plOpts = '<option value="">— nenhuma —</option>' + sortPlaylistsForList(playlists.filter(p => !p.archived)).map(p => '<option value="' + p.id + '"' + (p.id === d.playlistId ? ' selected' : '') + '>' + escH(p.name) + (p.date ? ' · ' + fmtDateBR(p.date).slice(0, 5) : '') + '</option>').join('');
     const isCulto = esc.editMode === 'culto';
-    let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar culto' : 'Novo culto') : (d.id && !d.pickCulto ? 'Editar escala' : 'Nova escala')) + '</h3>' +
+    let html = '<div class="esc-editor ' + (isCulto ? 'mode-culto' : 'mode-escala') + (!isCulto && d.pickCulto && d.id ? ' pick-existing' : '') + '"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (isCulto ? (d.id ? 'Editar culto' : 'Novo culto') : (d.id && !d.pickCulto ? 'Editar escala' : 'Nova escala')) + '</h3>' +
       (!isCulto && d.pickCulto ? escPickCultoHtml(d) : '') +
+      (!isCulto && d.pickCulto && d.id ? '<div class="hint pick-when">📅 ' + escH(escDateLabel(d.date)) + (d.time ? ' às ' + escH(d.time) : '') + ' — para outra data, escolha <b>➕ Novo</b> acima.</div>' : '') +
       (!isCulto && !d.pickCulto ? '<div class="hint ed-escala">⛪ ' + escH(d.title || 'Culto') + (d.minister_id ? ' · 🎤 ' + escH(escName(d.minister_id)) : '') + ' — nome, ministro e playlist ficam em <b>Culto</b>.</div>' : '') +
       (isCulto && d.id ? '<div class="hint cu-linked">👥 Escala vinculada: ' + (d.rows.filter(r => r.profile_id).length ? d.rows.filter(r => r.profile_id).map(r => escH(escFirst(r.profile_id)) + ' <small>(' + escH(r.function) + ')</small>').join(', ') : 'ainda sem pessoas') + '</div>' : '') +
       '<div class="esc-grid"><label>Data<input type="date" id="escDate" class="esc-input" value="' + escH(d.date) + '"></label>' +
@@ -10399,6 +10401,7 @@
         }, { okLabel: 'Excluir escala' });
     document.getElementById('escSave').onclick = async () => {
       grab();
+      if(esc.editMode !== 'culto' && !d.rows.some(r => r.profile_id)){ showAlert('Escala', 'Coloque pelo menos uma pessoa em "Quem toca o quê" antes de salvar.'); return; }
       const btn = document.getElementById('escSave'); btn.disabled = true; btn.textContent = '⏳ Salvando…';
       try{
         const rec = { kind: d.kind || 'culto', date: d.date, time: d.time, title: d.title, minister_id: d.minister_id || null, playlist: d.playlist, dress_code: d.dress_code, notes: d.notes };
@@ -13599,9 +13602,9 @@
     const list = escCultosSemEscala();
     if(d.id && !list.some(e => e.id === d.id)){ const cur = esc.events.find(e => e.id === d.id); if(cur) list.unshift(cur); }
     const opt = e => '<option value="' + e.id + '"' + (e.id === d.id ? ' selected' : '') + '>' + EVK[e.kind || 'culto'].ico + ' ' + escH(fmtDateBR(e.date).slice(0, 5) + ' · ' + WEEKDAYS_PT[isoToDate(e.date).getDay()] + (e.time ? ' · ' + e.time : '') + ' · ' + (e.title || 'Culto')) + '</option>';
-    return '<label class="esc-pick-culto">⛪ <b>Para qual culto ou evento é esta escala?</b><select id="escPickCulto" class="esc-input">' + list.map(opt).join('') +
-      '<option value=""' + (!d.id ? ' selected' : '') + '>➕ Novo: outro culto, ensaio ou evento</option></select>' +
-      '<small>' + (list.length ? 'Aparecem os cultos e eventos que ainda não têm escala.' : 'Nenhum culto sem escala — escolha o tipo (culto, ensaio ou evento) e a data abaixo.') + '</small></label>';
+    return '<label class="esc-pick-culto">⛪ <b>Para qual culto ou evento é esta escala?</b><select id="escPickCulto" class="esc-input">' +
+      '<option value=""' + (!d.id ? ' selected' : '') + '>➕ Novo: culto, ensaio ou evento</option>' + (list.length ? '<optgroup label="Já marcados, ainda sem escala">' + list.map(opt).join('') + '</optgroup>' : '') + '</select>' +
+      '<small>' + (list.length ? 'Escolha um que já está marcado ou crie um novo (tipo, nome e data abaixo).' : 'Escolha o tipo (culto, ensaio ou evento), o nome e a data abaixo.') + '</small></label>';
   }
 
   // Menu no celular: fundo escuro atrás; tocar fora (ou arrastar) fecha (v285)
