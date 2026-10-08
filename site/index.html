@@ -2391,6 +2391,10 @@
   .tour-logo{width:56px; height:56px; border-radius:14px; display:block; margin:0 0 10px; box-shadow:0 6px 24px rgba(110,40,255,.45);}
   .tour-never{display:flex; align-items:center; gap:8px; margin-top:12px; font-size:13px; color:var(--text-dim); cursor:pointer; user-select:none;}
   .tour-never input{width:17px; height:17px; accent-color:var(--accent); margin:0;}
+
+  /* v294: Início enxuto (as músicas ficam em 🎼 Músicas) */
+  body.nav-inicio .home-columns{display:none !important;}
+  body.nav-inicio .home-cards{margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -3164,7 +3168,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v293 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v294 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4292,7 +4296,7 @@
     box.querySelectorAll('[data-hc-no]').forEach(b => b.onclick = () => escDeclineAsk(b.dataset.hcNo));
     box.querySelectorAll('[data-hc-ev]').forEach(b => b.onclick = () => { esc.tab = 'escalas'; openEscala(b.dataset.hcEv); });
     box.querySelectorAll('[data-hc-pl]').forEach(b => b.onclick = () => { const pl = playlists.find(x => x.id === b.dataset.hcPl); if(pl) guardIfDirty(() => goHomeToPlaylist(pl)); });
-    box.querySelectorAll('[data-hc-mode]').forEach(b => b.onclick = () => { homeMode = b.dataset.hcMode; homeArtist = null; lsSet('homeMode', homeMode); renderHomeView(); document.getElementById('homeModeSeg').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    box.querySelectorAll('[data-hc-mode]').forEach(b => b.onclick = () => { if(navSel === 'home') navSel = 'songs'; homeMode = b.dataset.hcMode; homeArtist = null; lsSet('homeMode', homeMode); renderHomeView(); document.getElementById('homeModeSeg').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }
   // ===== PÁGINA DE PLAYLISTS (área principal, ao escolher "Playlists") =====
   function plEffKey(pl, sg){
@@ -4374,6 +4378,7 @@
     document.body.classList.toggle('nav-songs', navSel === 'songs' && !!showingHome);
     document.body.classList.toggle('home-on', !!showingHome);
     document.body.classList.toggle('nav-home', navSel === 'home' || navSel === 'songs');
+    document.body.classList.toggle('nav-inicio', navSel === 'home' && !!showingHome);
     document.querySelectorAll('#mobileTabbar [data-tb]').forEach(b => b.classList.toggle('on', b.dataset.tb === (navSel === 'home' ? 'home' : navSel)));
     const pc = document.getElementById('navCountPl'); if(pc){ const n = playlists.filter(p => !p.archived).length; pc.textContent = n || ''; }
     const fc = document.getElementById('navCountFav'); if(fc){ const n = songs.filter(s => s.favorite).length; fc.textContent = n || ''; }
@@ -11684,6 +11689,7 @@
   const BACKUP_SNOOZE_DAYS = 3;
   function checkBackupReminder(){
     if(!songs.length) return;
+    if(escCanOnline() && lsGet('authOk')) return; // logado: repertório e dados pessoais já ficam na nuvem
     const now = Date.now();
     const snoozedUntil = Number(lsGet('backupSnoozeUntil') || 0);
     if(snoozedUntil && now < snoozedUntil) return;
@@ -12508,7 +12514,10 @@
     renderHomeView();
   }));
   const homeSongSearch = document.getElementById('homeSongSearch');
-  homeSongSearch.addEventListener('input', applyHomeSearch);
+  homeSongSearch.addEventListener('input', () => {
+    if(navSel === 'home' && homeSongSearch.value.trim()){ navSel = 'songs'; renderHomeView(); homeSongSearch.focus(); }
+    applyHomeSearch();
+  });
   document.getElementById('btnHomeNewSong').addEventListener('click', () => guardIfDirty(() => openSongModal(null)));
   homeSongSearch.addEventListener('keydown', (e) => {
     if(e.key === 'Escape'){ e.stopPropagation(); homeSongSearch.value = ''; applyHomeSearch(); }
@@ -13027,6 +13036,7 @@
         playlists.push({ id: ep.id, name: ep.name || 'Culto', songIds: ep.songIds.slice(), overrides: JSON.parse(JSON.stringify(ep.overrides || {})),
           baseOv: JSON.parse(JSON.stringify(ep.overrides || {})), refOv: JSON.parse(JSON.stringify(ep.overrides || {})),
           date: ep.date || ev.date, archived: false, minister: ep.minister || '', fromEvent: ev.id, syncedKey: key });
+        try{ const saved = JSON.parse(lsGet('udEvCopies') || '[]').find(c => c.id === ep.id); if(saved){ const np = playlists[playlists.length - 1]; np.overrides = mergeEventOverrides(saved.overrides || {}, saved.refOv || np.baseOv, ep.overrides || {}); if(saved.refOv) np.refOv = saved.refOv; } }catch(e){}
         changed = true;
       } else if(p.fromEvent && p.syncedKey !== key){
         p.name = ep.name || p.name; p.songIds = ep.songIds.slice(); p.overrides = mergeEventOverrides(p.overrides || {}, p.baseOv || p.overrides || {}, ep.overrides || {});
@@ -13468,7 +13478,8 @@
     });
     let gp = {}; try{ gp = JSON.parse(lsGet('prefs') || '{}'); }catch(e){}
     let seen = []; try{ seen = JSON.parse(lsGet('plChSeen') || '[]'); }catch(e){}
-    return { v: 1, playlists: playlists.filter(pl => !pl.fromEvent), songs: sm, prefs: gp, chSeen: seen };
+    const evCopies = playlists.filter(pl => pl.fromEvent).map(pl => ({ id: pl.id, overrides: pl.overrides || {}, refOv: pl.refOv || null }));
+    return { v: 1, playlists: playlists.filter(pl => !pl.fromEvent), songs: sm, prefs: gp, chSeen: seen, evCopies };
   }
   async function udPush(){
     if(!udOnline() || udBusy) return;
@@ -13484,6 +13495,10 @@
   function udApply(d, mode){
     // mode: 'replace' (nuvem manda), 'mergeRemote' (1ª vez no aparelho: junta, nuvem vence), 'mergeLocal' (junta, aparelho vence)
     if(Array.isArray(d.chSeen)){ try{ const cur = JSON.parse(lsGet('plChSeen') || '[]'); lsSet('plChSeen', JSON.stringify(Array.from(new Set(cur.concat(d.chSeen))).slice(-300))); }catch(e){} }
+    if(Array.isArray(d.evCopies)){
+      lsSet('udEvCopies', JSON.stringify(d.evCopies));
+      d.evCopies.forEach(c => { const pl = playlists.find(x => x.id === c.id && x.fromEvent); if(pl && (mode !== 'mergeLocal')){ pl.overrides = JSON.parse(JSON.stringify(c.overrides || {})); if(c.refOv) pl.refOv = JSON.parse(JSON.stringify(c.refOv)); } });
+    }
     const remotePl = Array.isArray(d.playlists) ? d.playlists : [];
     const evPl = playlists.filter(pl => pl.fromEvent);
     let mine = playlists.filter(pl => !pl.fromEvent);
@@ -13741,8 +13756,8 @@
     const pill = e => '<span class="ag-pill k-' + (e.kind || 'culto') + '" title="' + escH((e.time ? e.time + ' · ' : '') + (e.title || '')) + '">' + escH((e.time ? e.time + ' ' : '') + (e.title || EVK[e.kind || 'culto'].label)) + '</span>';
     if(v === 'mes'){
       const first = isoFromDate(new Date(cur.getFullYear(), cur.getMonth(), 1));
-      const start = agAddDays(first, -isoToDate(first).getDay());
-      h += '<div class="ag-month">' + AG_WD.map(w => '<div class="ag-wd">' + w + '</div>').join('');
+      const start = agAddDays(first, -((isoToDate(first).getDay() + 6) % 7));
+      h += '<div class="ag-month">' + [1, 2, 3, 4, 5, 6, 0].map(k => '<div class="ag-wd">' + AG_WD[k] + '</div>').join('');
       for(let i = 0; i < 42; i++){
         const iso = agAddDays(start, i), d = isoToDate(iso);
         if(i === 35 && d.getMonth() !== cur.getMonth()) break;
