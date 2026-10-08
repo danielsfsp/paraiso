@@ -3190,7 +3190,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v297 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v298 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7678,7 +7678,7 @@
     const wrap = document.getElementById('cifraBodyEditCols');
     if(!wrap) return;
     wrap.style.fontSize = fontSize + 'px';
-    if(wrap.classList.contains('adaptive-cols')){ refreshEditLineOverflow(wrap); return; }
+    if(wrap.classList.contains('adaptive-cols')){ rebalanceAdaptiveCols(wrap, true); refreshEditLineOverflow(wrap); return; }
     applyFullscreenEditColumns(wrap, { recalc: true });
     forceEditReflow(wrap);
   }
@@ -7688,8 +7688,8 @@
   // alguma outra coisa (rolar, redimensionar) forçar o recálculo. Força
   // esse recálculo na mão, alternando column-width por um instante — sem
   // isso, sobrava esse resto visual bugado.
-  function forceEditReflow(wrap){
-    if(wrap.classList.contains('adaptive-cols')){ refreshEditLineOverflow(wrap); return; }
+  function forceEditReflow(wrap, repack){
+    if(wrap.classList.contains('adaptive-cols')){ rebalanceAdaptiveCols(wrap, !!repack); refreshEditLineOverflow(wrap); return; }
     const cur = wrap.style.columnWidth;
     wrap.style.columnWidth = 'auto';
     void wrap.offsetHeight;
@@ -7904,7 +7904,7 @@
     pushEditCheckpoint();
     clearMultiRowSelection();
     const landing = deleteMultiRowSelectionRows(rootWrap, rows);
-    forceEditReflow(rootWrap);
+    forceEditReflow(rootWrap, true);
     if(landing) focusRowAt(landing, 0);
     return true;
   }
@@ -8134,7 +8134,7 @@
           const mergeAt = prev.textContent.length;
           setRowText(prev, prev.textContent + div.textContent);
           removeRowAndMaybeUnit(div);
-          forceEditReflow(rootWrap);
+          forceEditReflow(rootWrap, true);
           focusRowAt(prev, mergeAt);
         }
         // Primeira linha de tudo: não tem pra onde fundir, deixa quieto.
@@ -8156,7 +8156,7 @@
           const mergeAt = text.length;
           setRowText(div, text + next.textContent);
           removeRowAndMaybeUnit(next);
-          forceEditReflow(rootWrap);
+          forceEditReflow(rootWrap, true);
           focusRowAt(div, mergeAt);
         }
       }
@@ -13943,6 +13943,36 @@
     ov.querySelector('.go').onclick = () => { close(); escShareEvent(evId); };
     const ob = ov.querySelector('.pl');
     if(ob) ob.onclick = () => { close(); try{ if(escOverlay().classList.contains('open')) closeEscala(); }catch(_){} guardIfDirty(() => goHomeToPlaylist(pl)); };
+  }
+
+  // Edição em tela cheia (colunas iguais à leitura): uma coluna nunca passa
+  // da ALTURA escolhida — o que sobra desce para a coluna seguinte (v298).
+  // repack = true (mudou a ALTURA): reorganiza tudo de novo, puxando de volta.
+  window.__cepColH = () => computeColumnHeightPx();
+function rebalanceAdaptiveCols(wrap, repack){
+    if(!wrap || singleColumn) return;
+    const maxH = computeColumnHeightPx();
+    let cols = Array.from(wrap.querySelectorAll(':scope > .cifra-col'));
+    if(!cols.length) return;
+    const newCol = () => { const c = document.createElement('div'); c.className = 'cifra-col'; wrap.appendChild(c); return c; };
+    for(let i = 0; i < cols.length; i++){
+      const col = cols[i];
+      if(repack){
+        let next = cols[i + 1];
+        while(next){
+          const first = next.firstElementChild;
+          if(!first){ next = cols[cols.indexOf(next) + 1]; continue; }
+          col.appendChild(first);
+          if(col.scrollHeight > maxH && col.children.length > 1){ next.insertBefore(first, next.firstChild); break; }
+        }
+      }
+      while(col.children.length > 1 && col.scrollHeight > maxH){
+        let next = cols[i + 1];
+        if(!next){ next = newCol(); cols.push(next); }
+        next.insertBefore(col.lastElementChild, next.firstChild);
+      }
+    }
+    cols.forEach(c => { if(!c.children.length && wrap.querySelectorAll(':scope > .cifra-col').length > 1) c.remove(); });
   }
 
 })();
