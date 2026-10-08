@@ -2165,6 +2165,14 @@
   .decl-acts{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
   .decl-acts button{font:inherit; font-weight:700; font-size:14px; padding:9px 14px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;}
   .decl-acts .go{background:#E06B5B; border-color:#E06B5B; color:#fff;}
+
+  .plp-btn.chg{border-color:var(--accent); color:var(--accent);}
+  .pl-side-actions .pl-chg-btn{flex:1 1 100%; color:var(--accent); border-color:var(--accent-dim);}
+  .chg-list{margin:6px 0 4px; padding:0; list-style:none; max-height:40vh; overflow:auto;}
+  .chg-list li{font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--border-soft);}
+  .chg-list li:last-child{border-bottom:none;}
+  .chg-list li small{color:var(--text-dim);}
+  .decl-acts .go.ok{background:#4CAF6A; border-color:#4CAF6A;}
 </style>
 </head>
 <body>
@@ -2822,6 +2830,8 @@
         <li>Crie em <strong>Playlists → ＋ Nova playlist</strong>, ou marque músicas ☑ no Início e toque em <strong>＋ Criar playlist</strong>. Reordene com ▲ ▼.</li>
         <li><strong>Compartilhar:</strong> manda uma <em>cópia</em> (link, WhatsApp ou arquivo). <strong>🗄️ Arquivar</strong> tira da lista sem apagar; <strong>🗑️ Excluir</strong> apaga.</li>
         <li>A playlist do <strong>culto</strong> é escolhida em <strong>⛪ Culto</strong>. Quem está escalado recebe uma cópia dela automaticamente.</li>
+        <li>A cópia chega <strong>como foi montada</strong> (tom, cifra e formatação). Depois, o que você muda nela é <strong>só seu</strong>.</li>
+        <li>Quer que a equipe tenha suas mudanças? Abra a playlist e toque <strong>📣 Compartilhar alterações</strong>: cada um recebe um aviso dizendo <strong>quem</strong> alterou e <strong>o quê</strong>, e escolhe <strong>Aceitar</strong> ou <strong>Manter a minha</strong>.</li>
       </ul>
     </details>
 
@@ -2936,7 +2946,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v269 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v270 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4089,6 +4099,7 @@
       html += '<div class="plp-head"><div><div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
         '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
+        (sel.fromEvent && items.length ? '<button type="button" class="plp-btn chg" data-plp-chg title="Enviar suas alterações (tom, formatação, cifra) para a equipe do culto">📣 Compartilhar alterações</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-share title="Compartilhar playlist"' + (items.length ? '' : ' disabled') + '><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
         (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp><i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar playlist') + '</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button>' +
@@ -4108,6 +4119,7 @@
       const pb = q('[data-plp-play]'); if(pb) pb.onclick = () => guardIfDirty(() => goHomeToPlaylist(sel));
       const ad = q('[data-plp-add]'); if(ad) ad.onclick = () => openPickSongs(sel.id);
       const sh = q('[data-plp-share]'); if(sh) sh.onclick = () => openSharePlaylist(sel.id);
+      const chg = q('[data-plp-chg]'); if(chg) chg.onclick = () => plShareChanges(sel);
       const sp = q('[data-plp-sp]'); if(sp) sp.onclick = () => spSyncPlaylist(sel, sp);
       const ed = q('[data-plp-edit]'); if(ed) ed.onclick = () => openPlaylistModal(sel.id);
       try{ bindPlEscalaCard(box, sel); }catch(e){}
@@ -5395,6 +5407,14 @@
       shBtn.title = 'Compartilhar playlist';
       shBtn.addEventListener('click', () => openSharePlaylist(pl.id));
       sideActs.appendChild(shBtn);
+      if(pl.fromEvent){
+        const chBtn = document.createElement('button');
+        chBtn.type = 'button'; chBtn.className = 'add-music-btn pl-chg-btn';
+        chBtn.textContent = '📣 Compartilhar alterações';
+        chBtn.title = 'Enviar suas alterações (tom, formatação, cifra) para a equipe do culto';
+        chBtn.addEventListener('click', () => plShareChanges(pl));
+        sideActs.appendChild(chBtn);
+      }
     }
     if(plSideSp){ const sb = plSideSp.querySelector('.sp-pl-btn'); if(sb){ sb.innerHTML = '<i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (pl.spotifyId ? 'Atualizar' : 'Criar playlist'); } const op = plSideSp.querySelector('.sp-pl-open'); if(op){ op.textContent = '↗'; op.title = 'Abrir no Spotify'; } sideActs.appendChild(plSideSp); }
 
@@ -9789,6 +9809,7 @@
     esc.me = esc.profiles.find(p => p.id === esc.user.id) || null;
     esc.loading = false;
     try{ syncEventPlaylists(); }catch(e){ console.error(e); }
+    try{ plChCheck(); }catch(e){}
     try{ if(showingHome) renderHomeView(); else syncNavActive(); }catch(e){}
     renderEscala();
   }
@@ -12735,11 +12756,12 @@
       let p = playlists.find(x => x.id === ep.id);
       if(!p){
         playlists.push({ id: ep.id, name: ep.name || 'Culto', songIds: ep.songIds.slice(), overrides: JSON.parse(JSON.stringify(ep.overrides || {})),
-          baseOv: JSON.parse(JSON.stringify(ep.overrides || {})),
+          baseOv: JSON.parse(JSON.stringify(ep.overrides || {})), refOv: JSON.parse(JSON.stringify(ep.overrides || {})),
           date: ep.date || ev.date, archived: false, minister: ep.minister || '', fromEvent: ev.id, syncedKey: key });
         changed = true;
       } else if(p.fromEvent && p.syncedKey !== key){
         p.name = ep.name || p.name; p.songIds = ep.songIds.slice(); p.overrides = mergeEventOverrides(p.overrides || {}, p.baseOv || p.overrides || {}, ep.overrides || {});
+        p.refOv = mergeEventOverrides(p.refOv || p.baseOv || {}, p.baseOv || {}, ep.overrides || {});
         p.baseOv = JSON.parse(JSON.stringify(ep.overrides || {}));
         p.date = ep.date || ev.date; p.minister = ep.minister || ''; p.syncedKey = key; p.archived = false; changed = true;
       }
@@ -12925,7 +12947,7 @@
     const p = playlists.find(x => x.id === srcId); if(!p) return;
     if(openPlaylistId === p.id) openPlaylistId = snap.id;
     p.id = snap.id; p.srcId = srcId; p.fromEvent = evId; p.syncedKey = JSON.stringify(snap);
-    p.overrides = JSON.parse(JSON.stringify(snap.overrides || {})); p.baseOv = JSON.parse(JSON.stringify(snap.overrides || {}));
+    p.overrides = JSON.parse(JSON.stringify(snap.overrides || {})); p.baseOv = JSON.parse(JSON.stringify(snap.overrides || {})); p.refOv = JSON.parse(JSON.stringify(snap.overrides || {}));
     lsSet('playlists', JSON.stringify(playlists));
     try{ renderSidebar(); }catch(e){}
   }
@@ -13170,7 +13192,8 @@
       if(any) sm[sg.id] = o;
     });
     let gp = {}; try{ gp = JSON.parse(lsGet('prefs') || '{}'); }catch(e){}
-    return { v: 1, playlists: playlists.filter(pl => !pl.fromEvent), songs: sm, prefs: gp };
+    let seen = []; try{ seen = JSON.parse(lsGet('plChSeen') || '[]'); }catch(e){}
+    return { v: 1, playlists: playlists.filter(pl => !pl.fromEvent), songs: sm, prefs: gp, chSeen: seen };
   }
   async function udPush(){
     if(!udOnline() || udBusy) return;
@@ -13185,6 +13208,7 @@
   }
   function udApply(d, mode){
     // mode: 'replace' (nuvem manda), 'mergeRemote' (1ª vez no aparelho: junta, nuvem vence), 'mergeLocal' (junta, aparelho vence)
+    if(Array.isArray(d.chSeen)){ try{ const cur = JSON.parse(lsGet('plChSeen') || '[]'); lsSet('plChSeen', JSON.stringify(Array.from(new Set(cur.concat(d.chSeen))).slice(-300))); }catch(e){} }
     const remotePl = Array.isArray(d.playlists) ? d.playlists : [];
     const evPl = playlists.filter(pl => pl.fromEvent);
     let mine = playlists.filter(pl => !pl.fromEvent);
@@ -13248,6 +13272,118 @@
     if(document.visibilityState === 'visible' && Date.now() - udLastPull > 60000){ udLastPull = Date.now(); udPull(); }
     if(document.visibilityState === 'hidden' && lsGet('udDirty') === '1' && udOnline()){ clearTimeout(udTimer); udPush(); }
   });
+
+  // ================= COMPARTILHAR ALTERAÇÕES DA PLAYLIST DO CULTO (v270) =================
+  // Cada um mexe na sua cópia à vontade. Quem quiser, envia as alterações
+  // para a equipe; cada pessoa vê quem alterou e escolhe se aceita.
+  var PLCH_F = ['shift', 'displayPrefs', 'displayPrefsFs', 'body', 'bodyFs', 'meta'];
+  var plChBusy = false;
+  function plChJ(v){ return JSON.stringify(v === undefined ? null : v); }
+  function plMyChanges(pl){
+    const ref = pl.refOv || pl.baseOv || {}, mine = pl.overrides || {};
+    const out = {};
+    (pl.songIds || []).forEach(id => {
+      const m = mine[id] || {}, r = ref[id] || {};
+      PLCH_F.forEach(f => { if(plChJ(m[f]) !== plChJ(r[f])){ (out[id] = out[id] || {})[f] = m[f] === undefined ? null : JSON.parse(JSON.stringify(m[f])); } });
+    });
+    return out;
+  }
+  function plChSongTitle(id, pl){
+    const sg = songs.find(x => x.id === id);
+    const meta = (pl && pl.overrides && pl.overrides[id] && pl.overrides[id].meta) || {};
+    return meta.title || (sg && sg.title) || 'Música';
+  }
+  function plChDescribe(ch, pl){
+    return Object.keys(ch).map(id => {
+      const c = ch[id], what = [];
+      if('shift' in c || (c.meta && pl && ((pl.overrides[id] || {}).meta || {}).key !== (c.meta || {}).key)){
+        const sg = songs.find(x => x.id === id) || {};
+        const meta = Object.assign({}, sg, (pl && pl.overrides[id] && pl.overrides[id].meta) || {}, c.meta || {});
+        const sh = typeof c.shift === 'number' ? c.shift : ((pl && pl.overrides[id] && pl.overrides[id].shift) || 0);
+        const k = meta.key ? (sh ? (transposeChord(meta.key, sh) || meta.key) : meta.key) : '';
+        what.push('tom' + (k ? ' ' + k : ''));
+      }
+      if('displayPrefs' in c || 'displayPrefsFs' in c) what.push('formatação');
+      if('body' in c || 'bodyFs' in c) what.push('cifra');
+      if(c.meta && !what.some(w => w.startsWith('tom'))) what.push('informações');
+      return { title: plChSongTitle(id, pl), what: what.join(', ') || 'ajustes' };
+    });
+  }
+  function plChModal(html, okLabel, cancelLabel, onOk, onCancel, okGreen){
+    const ov = document.createElement('div'); ov.className = 'decl-ov';
+    ov.innerHTML = '<div class="decl-box" role="dialog" aria-modal="true">' + html +
+      '<div class="decl-acts"><button type="button" class="cancel">' + cancelLabel + '</button><button type="button" class="go' + (okGreen ? ' ok' : '') + '">' + okLabel + '</button></div></div>';
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.querySelector('.cancel').onclick = () => { close(); if(onCancel) onCancel(); };
+    ov.querySelector('.go').onclick = () => { close(); onOk(); };
+    return ov;
+  }
+  function plShareChanges(pl){
+    if(!pl || !pl.fromEvent) return;
+    if(!libOnline()){ showAlert('Compartilhar alterações', 'Entre com sua conta (e com internet) para enviar alterações para a equipe.'); return; }
+    const ch = plMyChanges(pl);
+    if(!Object.keys(ch).length){ showAlert('Compartilhar alterações', 'Você ainda não fez alterações nesta playlist. Mude o tom, a formatação ou a cifra de alguma música dela e depois toque aqui.'); return; }
+    const list = plChDescribe(ch, pl);
+    plChModal('<h3>📣 Compartilhar alterações</h3><p>A equipe do culto vai receber um aviso e cada um escolhe se aceita:</p><ul class="chg-list">' +
+      list.map(x => '<li><b>' + escapeHtml(x.title) + '</b> <small>— ' + escapeHtml(x.what) + '</small></li>').join('') + '</ul>',
+      'Enviar para a equipe', 'Cancelar', async () => {
+        const summary = list.map(x => x.title + ': ' + x.what).join('\n');
+        const r = await esc.sb.from('playlist_changes').insert({ event_id: pl.fromEvent, playlist_id: pl.id, author_id: esc.user.id, author_name: (esc.me && esc.me.name) || '', summary, data: { songs: ch } });
+        if(r.error){ showAlert('Compartilhar alterações', 'Não consegui enviar: ' + r.error.message); return; }
+        pl.refOv = JSON.parse(JSON.stringify(pl.overrides || {}));
+        savePlaylists();
+        showImportFeedback('📣 Alterações enviadas para a equipe do culto.', true);
+      }, null, true);
+  }
+  async function plChCheck(){
+    if(plChBusy || !libOnline() || document.querySelector('.decl-ov')) return;
+    const mine = playlists.filter(p => p.fromEvent);
+    if(!mine.length) return;
+    plChBusy = true;
+    try{
+      const r = await esc.sb.from('playlist_changes').select('*').in('playlist_id', mine.map(p => p.id)).order('created_at');
+      if(r.error) throw r.error;
+      let seen = []; try{ seen = JSON.parse(lsGet('plChSeen') || '[]'); }catch(e){}
+      const pend = (r.data || []).filter(c => c.author_id !== esc.user.id && !seen.includes(c.id));
+      if(pend.length) plChAsk(pend, 0);
+    }catch(e){ console.warn('plChCheck', e); }
+    plChBusy = false;
+  }
+  function plChMarkSeen(id){
+    let seen = []; try{ seen = JSON.parse(lsGet('plChSeen') || '[]'); }catch(e){}
+    if(!seen.includes(id)) seen.push(id);
+    lsSet('plChSeen', JSON.stringify(seen.slice(-300)));
+    if(typeof udTouch === 'function') udTouch();
+  }
+  function plChAsk(list, i){
+    const c = list[i]; if(!c) return;
+    const pl = playlists.find(p => p.id === c.playlist_id);
+    const next = () => plChAsk(list, i + 1);
+    if(!pl){ plChMarkSeen(c.id); next(); return; }
+    const ch = (c.data && c.data.songs) || {};
+    const desc = plChDescribe(ch, pl);
+    const d = new Date(c.created_at);
+    const when = isNaN(d) ? '' : ' em ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' às ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    plChModal('<h3>🎵 Alterações na playlist</h3><p><b>' + escapeHtml(c.author_name || 'Alguém da equipe') + '</b> alterou a playlist <b>' + escapeHtml(pl.name || 'do culto') + '</b>' + when + ':</p>' +
+      '<ul class="chg-list">' + desc.map(x => '<li><b>' + escapeHtml(x.title) + '</b> <small>— ' + escapeHtml(x.what) + '</small></li>').join('') + '</ul>' +
+      '<p>Aceita essas alterações na sua playlist?</p>',
+      'Aceitar alterações', 'Manter a minha', () => {
+        pl.overrides = pl.overrides || {}; pl.refOv = pl.refOv || JSON.parse(JSON.stringify(pl.baseOv || {}));
+        Object.keys(ch).forEach(id => {
+          [pl.overrides, pl.refOv].forEach(tgt => {
+            const o = tgt[id] = tgt[id] || {};
+            Object.keys(ch[id]).forEach(f => { if(ch[id][f] === null) delete o[f]; else o[f] = JSON.parse(JSON.stringify(ch[id][f])); });
+          });
+        });
+        savePlaylists();
+        plChMarkSeen(c.id);
+        try{ renderSidebar(); renderViewer(); if(showingHome) renderHomeView(); if(typeof renderPlaylistsPage === 'function' && activeView === 'playlists') renderPlaylistsPage(); }catch(e){}
+        showImportFeedback('✓ Alterações de ' + ((c.author_name || '').split(' ')[0] || 'equipe') + ' aplicadas na sua playlist.', true);
+        next();
+      }, () => { plChMarkSeen(c.id); next(); }, true);
+  }
+  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') setTimeout(() => { try{ plChCheck(); }catch(e){} }, 1500); });
 
 })();
 </script>
