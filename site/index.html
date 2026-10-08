@@ -2936,7 +2936,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v268 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">Paraíso v269 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10060,7 +10060,17 @@
       () => { esc.editing = null; action(); }, { okLabel: 'Descartar alterações', cancelLabel: 'Continuar editando' });
   }
   function escPlaylistSnapshot(pl){
-    const ov = {}; (pl.songIds || []).forEach(id => { if(pl.overrides && pl.overrides[id]) ov[id] = pl.overrides[id]; });
+    const ov = {}; (pl.songIds || []).forEach(id => {
+      const o = Object.assign({}, (pl.overrides && pl.overrides[id]) || {});
+      const sg = songs.find(x => x.id === id);
+      if(sg){
+        if(!o.displayPrefs && sg.prefs) o.displayPrefs = sg.prefs;
+        if(!o.displayPrefsFs && sg.prefsFs) o.displayPrefsFs = sg.prefsFs;
+        if(typeof o.bodyFs !== 'string' && typeof sg.bodyFs === 'string') o.bodyFs = sg.bodyFs;
+        if(typeof o.body !== 'string' && sg.localEdited && typeof sg.body === 'string') o.body = sg.body;
+      }
+      if(Object.keys(o).length) ov[id] = o;
+    });
     return {
       id: pl.fromEvent ? pl.id : ('evpl-' + Date.now() + '-' + Math.floor(Math.random() * 1e6)), srcId: pl.fromEvent ? (pl.srcId || '') : pl.id,
       songIds: (pl.songIds || []).slice(), overrides: JSON.parse(JSON.stringify(ov)), date: pl.date || '', minister: pl.minister || '',
@@ -12680,6 +12690,28 @@
     const evs = esc.events.filter(e => e.playlist && (e.playlist.id ? (e.playlist.id === pl.id || (pl.fromEvent ? false : e.playlist.srcId === pl.id)) : e.playlist.name === pl.name));
     return evs.find(e => e.date >= y) || evs[evs.length - 1] || null;
   }
+  // Junta a cópia da pessoa com a nova versão do culto, campo a campo:
+  // o que o Culto mudou chega para todos; o que a pessoa mudou na cópia dela
+  // (formatação, tom, cifra) continua só dela.
+  function mergeEventOverrides(mine, base, incoming){
+    const F = ['shift', 'displayPrefs', 'displayPrefsFs', 'body', 'bodyFs', 'meta'];
+    const J = v => JSON.stringify(v === undefined ? null : v);
+    const out = {};
+    const ids = new Set([].concat(Object.keys(incoming), Object.keys(mine)));
+    ids.forEach(id => {
+      const inc = incoming[id] || {}, m = mine[id] || {}, b = base[id] || {};
+      const o = JSON.parse(JSON.stringify(inc));
+      F.forEach(f => {
+        if(J(inc[f]) !== J(b[f])) return;          // o Culto mudou: vale a do Culto
+        if(J(m[f]) !== J(b[f])){                    // a pessoa mudou: fica a dela
+          if(m[f] === undefined) delete o[f]; else o[f] = JSON.parse(JSON.stringify(m[f]));
+        }
+      });
+      Object.keys(m).forEach(k => { if(!F.includes(k) && o[k] === undefined) o[k] = m[k]; });
+      if(Object.keys(o).length) out[id] = o;
+    });
+    return out;
+  }
   function syncEventPlaylists(){
     if(!esc.user) return;
     const y = isoFromDate(new Date(Date.now() - 86400000));
@@ -12703,10 +12735,12 @@
       let p = playlists.find(x => x.id === ep.id);
       if(!p){
         playlists.push({ id: ep.id, name: ep.name || 'Culto', songIds: ep.songIds.slice(), overrides: JSON.parse(JSON.stringify(ep.overrides || {})),
+          baseOv: JSON.parse(JSON.stringify(ep.overrides || {})),
           date: ep.date || ev.date, archived: false, minister: ep.minister || '', fromEvent: ev.id, syncedKey: key });
         changed = true;
       } else if(p.fromEvent && p.syncedKey !== key){
-        p.name = ep.name || p.name; p.songIds = ep.songIds.slice(); p.overrides = JSON.parse(JSON.stringify(ep.overrides || {}));
+        p.name = ep.name || p.name; p.songIds = ep.songIds.slice(); p.overrides = mergeEventOverrides(p.overrides || {}, p.baseOv || p.overrides || {}, ep.overrides || {});
+        p.baseOv = JSON.parse(JSON.stringify(ep.overrides || {}));
         p.date = ep.date || ev.date; p.minister = ep.minister || ''; p.syncedKey = key; p.archived = false; changed = true;
       }
     });
@@ -12891,6 +12925,7 @@
     const p = playlists.find(x => x.id === srcId); if(!p) return;
     if(openPlaylistId === p.id) openPlaylistId = snap.id;
     p.id = snap.id; p.srcId = srcId; p.fromEvent = evId; p.syncedKey = JSON.stringify(snap);
+    p.overrides = JSON.parse(JSON.stringify(snap.overrides || {})); p.baseOv = JSON.parse(JSON.stringify(snap.overrides || {}));
     lsSet('playlists', JSON.stringify(playlists));
     try{ renderSidebar(); }catch(e){}
   }
