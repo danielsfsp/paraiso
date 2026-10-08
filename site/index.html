@@ -3143,7 +3143,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v290 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v291 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -13713,7 +13713,7 @@
     if(v !== 'lista'){
       let title;
       if(v === 'mes') title = AG_MESES[cur.getMonth()] + ' ' + cur.getFullYear();
-      else { const ws = agAddDays(esc.agCursor, -cur.getDay()); const we = agAddDays(ws, 6); title = fmtDateBR(ws).slice(0, 5) + ' – ' + fmtDateBR(we).slice(0, 5); }
+      else { const ws = agAddDays(esc.agCursor, -((cur.getDay() + 6) % 7)); const we = agAddDays(ws, 6); title = fmtDateBR(ws).slice(0, 5) + ' – ' + fmtDateBR(we).slice(0, 5); }
       h += '<div class="ag-nav"><button type="button" data-agnav="-1" aria-label="Anterior">‹</button><span class="ag-title">' + title + '</span><button type="button" data-agnav="1" aria-label="Próximo">›</button><button type="button" data-agnav="0">Hoje</button></div>';
     }
     h += '</div><div class="ag-legend"><span class="k-culto"><i></i>Culto</span><span class="k-ensaio"><i></i>Ensaio</span><span class="k-evento"><i></i>Outros</span></div>';
@@ -13730,11 +13730,11 @@
       }
       h += '</div>';
     } else if(v === 'semana'){
-      const ws = agAddDays(esc.agCursor, -cur.getDay());
+      const ws = agAddDays(esc.agCursor, -((cur.getDay() + 6) % 7));
       h += '<div class="ag-week">';
       for(let i = 0; i < 7; i++){
         const iso = agAddDays(ws, i), d = isoToDate(iso), evs = agEventsOn(iso);
-        h += '<div class="ag-wcol' + (iso === today ? ' today' : '') + (iso === esc.agSel ? ' sel' : '') + '" data-agday="' + iso + '"><div class="ag-whead">' + AG_WD[i] + '<b>' + d.getDate() + '</b></div>' +
+        h += '<div class="ag-wcol' + (iso === today ? ' today' : '') + (iso === esc.agSel ? ' sel' : '') + '" data-agday="' + iso + '"><div class="ag-whead">' + AG_WD[d.getDay()] + '<b>' + d.getDate() + '</b></div>' +
           evs.map(e => '<div class="ag-wev k-' + (e.kind || 'culto') + '" data-agev="' + e.id + '"><b>' + escH(e.title || EVK[e.kind || 'culto'].label) + '</b><small>' + EVK[e.kind || 'culto'].ico + ' ' + (e.time ? escH(e.time) : '') + '</small></div>').join('') + '</div>';
       }
       h += '</div>';
