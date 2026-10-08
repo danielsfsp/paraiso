@@ -2287,6 +2287,13 @@
   .esc-pick-culto select{margin-top:6px;}
   .esc-pick-culto small{display:block; color:var(--text-dim); margin-top:6px;}
   .esc-editor.mode-escala.pick-existing .esc-grid{display:none;}
+
+  /* v284: escala de ensaio / evento */
+  .esc-kind-row{display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 8px;}
+  .esc-kind-row button{font:inherit; font-size:13.5px; font-weight:700; padding:8px 14px; border-radius:99px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;}
+  .esc-kind-row button.on{border-color:var(--accent); background:var(--accent-soft); color:var(--accent);}
+  .ev-tags{display:flex; gap:6px; flex-wrap:wrap;}
+  .kind-tag{--c:#FF9F43;}
 </style>
 </head>
 <body>
@@ -3059,7 +3066,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v283 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v284 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4164,7 +4171,7 @@
         pill = '<span class="hc-pill ' + st + '">' + (st === 'ok' ? '✓ Confirmado' : st === 'no' ? '✕ Não posso' : 'Responder') + '</span>';
       }
       const plMatch = plForEvent(ev);
-      html += '<div class="hc-card hc-hero"><div class="hc-eyebrow">Próximo culto · ' + when + '</div>' +
+      html += '<div class="hc-card hc-hero"><div class="hc-eyebrow">' + ({ ensaio: 'Próximo ensaio', evento: 'Próximo evento' }[ev.kind] || 'Próximo culto') + ' · ' + when + '</div>' +
         '<div class="hc-row"><div class="hc-date"><div class="w">' + WEEKDAYS_PT[dd.getDay()].toUpperCase() + '</div><div class="d">' + String(dd.getDate()).padStart(2, '0') + '</div><div class="m">' + ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][dd.getMonth()] + '</div></div>' +
         '<div class="hc-main"><div class="hc-title">' + escapeHtml(ev.title || 'Culto') + '</div><div class="hc-sub">' + [ev.time ? escapeHtml(ev.time) : '', minister ? '🎤 ' + escapeHtml(minister) : '', mine.length ? 'você: ' + mine.map(a => escFnIcon(a.function) + ' ' + escapeHtml(a.function)).join(', ') : ''].filter(Boolean).join(' · ') + '</div></div>' + pill + '</div>' +
         '<div class="hc-row hc-team"><div class="hc-stack">' + as.slice(0, 8).map(a => homeAvatar(escProfile(a.profile_id), a.status)).join('') + '</div>' +
@@ -4273,7 +4280,7 @@
     const pc = document.getElementById('navCountPl'); if(pc){ const n = playlists.filter(p => !p.archived).length; pc.textContent = n || ''; }
     const fc = document.getElementById('navCountFav'); if(fc){ const n = songs.filter(s => s.favorite).length; fc.textContent = n || ''; }
     const cc = document.getElementById('navCountCulto');
-    if(cc){ let n = 0; try{ if(esc.user){ const t = todayIso(); n = (esc.events || []).filter(e => e.date >= t).length; } }catch(e){} cc.textContent = n || ''; cc.title = n ? n + (n === 1 ? ' culto agendado' : ' cultos agendados') : ''; }
+    if(cc){ let n = 0; try{ if(esc.user){ const t = todayIso(); n = (esc.events || []).filter(e => e.date >= t && (e.kind || 'culto') === 'culto').length; } }catch(e){} cc.textContent = n || ''; cc.title = n ? n + (n === 1 ? ' culto agendado' : ' cultos agendados') : ''; }
     const ec = document.getElementById('navCountEsc');
     if(ec){
       let n = 0;
@@ -10005,7 +10012,7 @@
     document.body.classList.toggle('esc-page-on', escOverlay().classList.contains('open')); markEscNav();
     const isTeam = esc.tab === 'equipe', isCultos = esc.tab === 'cultos';
     { const ov = escOverlay(); ov.classList.remove('acc-es', 'acc-eq', 'acc-cu'); if(!isProfile) ov.classList.add(isTeam ? 'acc-eq' : isCultos ? 'acc-cu' : 'acc-es'); }
-    document.getElementById('escalaTitle').innerHTML = isProfile ? '👤 Meu perfil' : isTeam ? secHead('eq', '👥', 'Equipe', 'Pessoas, funções e equipes') : isCultos ? secHead('cu', '⛪', 'Culto', 'Cada culto: data, ministro, playlist e escala') : secHead('es', '📅', 'Escala', 'Quem toca o quê em cada culto');
+    document.getElementById('escalaTitle').innerHTML = isProfile ? '👤 Meu perfil' : isTeam ? secHead('eq', '👥', 'Equipe', 'Pessoas, funções e equipes') : isCultos ? secHead('cu', '⛪', 'Culto', 'Cada culto: data, ministro, playlist e escala') : secHead('es', '📅', 'Escala', 'Quem toca o quê em cada culto, ensaio ou evento');
     tabsEl.style.display = (isProfile || isTeam || isCultos) ? 'none' : '';
     tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === esc.tab));
     if(esc.editing){ renderEscEditor(body); return; }
@@ -10054,12 +10061,12 @@
       if(!hero && d.getMonth() !== lastMonth){ html += '<div class="ev-month">' + MES[d.getMonth()] + '</div>'; }
       if(!hero) lastMonth = d.getMonth();
       const minister = e.minister_id ? escName(e.minister_id) : '';
-      const sub = [e.time ? escH(e.time) : '', minister ? '🎤 ' + escH(hero ? minister : minister.split(' ')[0]) : '🎤 a definir'].filter(Boolean).join(' · ');
+      const sub = [e.time ? escH(e.time) : '', minister ? '🎤 ' + escH(hero ? minister : minister.split(' ')[0]) : ((e.kind || 'culto') === 'culto' ? '🎤 a definir' : '')].filter(Boolean).join(' · ');
       const stack = '<div class="hc-stack">' + as.slice(0, hero ? 8 : 5).map(a => homeAvatar(escProfile(a.profile_id), a.status)).join('') + '</div>';
       html += '<div class="esc-card ev-card' + (hero ? ' ev-hero' : '') + (open ? ' open' : '') + '" data-ev="' + e.id + '">';
-      html += '<div class="esc-card-head"><div class="sec-tag sec-es">📅 Escala</div>';
+      html += '<div class="esc-card-head"><div class="ev-tags"><span class="sec-tag sec-es">📅 Escala</span>' + ((e.kind || 'culto') !== 'culto' ? '<span class="sec-tag kind-tag">' + EVK[e.kind].ico + ' ' + EVK[e.kind].label + '</span>' : '') + '</div>';
       if(hero) html += '<div class="ev-eyebrow">' + (mineOnly ? 'Sua próxima escala' : 'Próxima escala') + ' · ' + whenTxt(e.date) + '</div>';
-      html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + '</div><div class="ev-sub">' + sub + '</div>' + escPlBadge(e) +
+      html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + '</div><div class="ev-sub">' + sub + '</div>' + ((e.kind || 'culto') === 'culto' ? escPlBadge(e) : '') +
         (!hero && as.length ? '<div class="ev-mini">' + stack + '</div>' : '') + '</div>' + pillFor(e, mine) + '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></div>';
       if(hero){
         const pct = as.length ? Math.round(conf * 100 / as.length) : 0;
@@ -10093,7 +10100,7 @@
           (unav ? ' · <em class="esc-warn">⚠ marcou que não pode</em>' : '') + (a.status === 'recusado' && a.reason ? ' · “' + escH(a.reason) + '”' : '') + '</div></div>' + st + nudge + '</div>';
       });
       html += '</div>';
-      html += escPlBlockHtml(e, true);
+      if((e.kind || 'culto') === 'culto') html += escPlBlockHtml(e, true);
       if(e.dress_code) html += '<div class="ev-sec">Dress code</div><div class="ev-chips"><span>👔 ' + escH(e.dress_code) + '</span></div>';
       if(e.notes) html += '<div class="ev-sec">Observações</div><div class="esc-notes">' + escH(e.notes) + '</div>';
       html += '<div class="esc-actions ev-actions">';
@@ -10190,10 +10197,10 @@
     esc.editMode = mode || 'escala';
     const e = id ? esc.events.find(x => x.id === id) : null;
     esc.editing = e ? {
-      id: e.id, date: e.date, time: e.time || '', title: e.title || 'Culto', minister_id: e.minister_id || '',
+      id: e.id, kind: e.kind || 'culto', date: e.date, time: e.time || '', title: e.title || 'Culto', minister_id: e.minister_id || '',
       playlist: e.playlist || null, dress_code: e.dress_code || '', notes: e.notes || '',
       rows: escEventAssignments(e.id).map(a => ({ id: a.id, function: a.function, profile_id: a.profile_id, status: a.status, reason: a.reason }))
-    } : { id: null, date: todayIso(), time: '19:00', title: 'Culto', minister_id: '', playlist: null, dress_code: '', notes: '', rows: [] };
+    } : { id: null, kind: 'culto', date: todayIso(), time: '19:00', title: 'Culto', minister_id: '', playlist: null, dress_code: '', notes: '', rows: [] };
     esc.editOrig = escEditKey(esc.editing);
     renderEscala();
   }
@@ -10272,6 +10279,8 @@
       (isCulto && d.id ? '<div class="hint cu-linked">👥 Escala vinculada: ' + (d.rows.filter(r => r.profile_id).length ? d.rows.filter(r => r.profile_id).map(r => escH(escFirst(r.profile_id)) + ' <small>(' + escH(r.function) + ')</small>').join(', ') : 'ainda sem pessoas') + '</div>' : '') +
       '<div class="esc-grid"><label>Data<input type="date" id="escDate" class="esc-input" value="' + escH(d.date) + '"></label>' +
       '<label>Horário<input type="time" id="escTime" class="esc-input" value="' + escH(d.time) + '"></label></div>' +
+      ((!isCulto && ((d.kind && d.kind !== 'culto') || (d.pickCulto && !d.id))) ? '<div class="ed-escala esc-kind-row">' + Object.keys(EVK).map(k => '<button type="button" data-evkind="' + k + '"' + ((d.kind || 'culto') === k ? ' class="on"' : '') + '>' + EVK[k].ico + ' ' + EVK[k].label + '</button>').join('') + '</div>' +
+        '<label class="ed-escala">Nome<input id="escEvName" class="esc-input" value="' + escH(d.title || EVK[d.kind || 'culto'].label) + '" placeholder="Ex.: Ensaio geral, Casamento…"></label>' : '') +
       '<label class="ed-culto">Nome do culto<input id="escTitle" class="esc-input" value="' + escH(d.title === 'Culto' && !d.id ? '' : d.title) + '" placeholder="Escolha abaixo ou digite"></label>' +
       '<div class="esc-dress-chips ed-culto cu-names">' + escCultoNames().map(x => '<button type="button" data-cuname="' + escH(x) + '"' + (x === d.title ? ' class="on"' : '') + '>' + escH(x) + '</button>').join('') + '</div>' +
       '<label class="ed-culto">🎤 Ministro<select id="escMinister" class="esc-input">' + personOpts(d.minister_id, 'Ministro') + '</select></label>' +
@@ -10298,6 +10307,7 @@
       d.date = document.getElementById('escDate').value || d.date;
       d.time = document.getElementById('escTime').value;
       d.title = document.getElementById('escTitle').value.trim() || 'Culto';
+      { const en = document.getElementById('escEvName'); if(en) d.title = en.value.trim() || EVK[d.kind || 'culto'].label; }
       d.minister_id = document.getElementById('escMinister').value;
       d.dress_code = document.getElementById('escDress').value.trim();
       d.notes = document.getElementById('escNotes').value.trim();
@@ -10342,6 +10352,11 @@
     document.getElementById('escAddRow').onclick = () => { grab(); d.rows.push({ id: null, function: 'Vocal', profile_id: '', status: 'pendente' }); renderEscala(); };
     body.querySelectorAll('.esc-row .esc-x').forEach(b => b.onclick = () => { grab(); d.rows.splice(Number(b.parentNode.dataset.i), 1); renderEscala(); });
     body.querySelectorAll('.esc-row .esc-fn-sel').forEach(s => s.onchange = () => { grab(); renderEscala(); });
+    body.querySelectorAll('[data-evkind]').forEach(b => b.onclick = () => {
+      grab(); const old = d.kind || 'culto'; d.kind = b.dataset.evkind;
+      if(!d.title || d.title === EVK[old].label) d.title = EVK[d.kind].label;
+      renderEscala();
+    });
     const pc = document.getElementById('escPickCulto');
     if(pc) pc.onchange = () => {
       grab();
@@ -10349,7 +10364,7 @@
       const v = pc.value;
       escStartEdit(v || null);
       esc.editing.pickCulto = true;
-      if(!v){ esc.editing.date = d.date; esc.editing.time = d.time; }
+      if(!v){ esc.editing.date = d.date; esc.editing.time = d.time; esc.editing.kind = d.kind || 'culto'; esc.editing.title = d.title; }
       keepRows.forEach(r => { if(!esc.editing.rows.some(x => x.profile_id === r.profile_id && x.function === r.function)) esc.editing.rows.push(r); });
       esc.editOrig = escEditKey(esc.editing);
       renderEscala();
@@ -10379,7 +10394,7 @@
       grab();
       const btn = document.getElementById('escSave'); btn.disabled = true; btn.textContent = '⏳ Salvando…';
       try{
-        const rec = { date: d.date, time: d.time, title: d.title, minister_id: d.minister_id || null, playlist: d.playlist, dress_code: d.dress_code, notes: d.notes };
+        const rec = { kind: d.kind || 'culto', date: d.date, time: d.time, title: d.title, minister_id: d.minister_id || null, playlist: d.playlist, dress_code: d.dress_code, notes: d.notes };
         let evId = d.id;
         if(evId){
           const r = await esc.sb.from('events').update(rec).eq('id', evId); if(r.error) throw r.error;
@@ -13172,7 +13187,7 @@
   function renderEscCultos(body){
     const can = escCanSchedule();
     const y = isoFromDate(new Date(Date.now() - 86400000));
-    const evs = esc.events.filter(e => e.date >= y).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    const evs = esc.events.filter(e => e.date >= y && (e.kind || 'culto') === 'culto').sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
     let html = can ? '<button type="button" class="btn-primary cu-new" id="cuNew">＋ Novo culto</button>' : '';
     if(!evs.length) html += '<div class="esc-empty">Nenhum culto marcado.' + (can ? ' Toque em "＋ Novo culto".' : '') + '</div>';
     evs.forEach(e => {
@@ -13566,6 +13581,8 @@
   })();
 
   // Nova escala: para qual culto? (v283)
+
+  var EVK = { culto: { ico: '⛪', label: 'Culto' }, ensaio: { ico: '🎸', label: 'Ensaio' }, evento: { ico: '🎤', label: 'Evento' } };
   function escCultosSemEscala(){
     const t = todayIso();
     return (esc.events || []).filter(e => e.date >= t && !esc.assignments.some(a => a.event_id === e.id))
@@ -13574,10 +13591,10 @@
   function escPickCultoHtml(d){
     const list = escCultosSemEscala();
     if(d.id && !list.some(e => e.id === d.id)){ const cur = esc.events.find(e => e.id === d.id); if(cur) list.unshift(cur); }
-    const opt = e => '<option value="' + e.id + '"' + (e.id === d.id ? ' selected' : '') + '>' + escH(fmtDateBR(e.date).slice(0, 5) + ' · ' + WEEKDAYS_PT[isoToDate(e.date).getDay()] + (e.time ? ' · ' + e.time : '') + ' · ' + (e.title || 'Culto')) + '</option>';
-    return '<label class="esc-pick-culto">⛪ <b>Para qual culto é esta escala?</b><select id="escPickCulto" class="esc-input">' + list.map(opt).join('') +
-      '<option value=""' + (!d.id ? ' selected' : '') + '>➕ Outro dia (cria um culto novo)</option></select>' +
-      '<small>' + (list.length ? 'Aparecem os cultos que ainda não têm escala.' : 'Nenhum culto sem escala — escolha a data abaixo e um culto novo é criado junto.') + '</small></label>';
+    const opt = e => '<option value="' + e.id + '"' + (e.id === d.id ? ' selected' : '') + '>' + EVK[e.kind || 'culto'].ico + ' ' + escH(fmtDateBR(e.date).slice(0, 5) + ' · ' + WEEKDAYS_PT[isoToDate(e.date).getDay()] + (e.time ? ' · ' + e.time : '') + ' · ' + (e.title || 'Culto')) + '</option>';
+    return '<label class="esc-pick-culto">⛪ <b>Para qual culto ou evento é esta escala?</b><select id="escPickCulto" class="esc-input">' + list.map(opt).join('') +
+      '<option value=""' + (!d.id ? ' selected' : '') + '>➕ Novo: outro culto, ensaio ou evento</option></select>' +
+      '<small>' + (list.length ? 'Aparecem os cultos e eventos que ainda não têm escala.' : 'Nenhum culto sem escala — escolha o tipo (culto, ensaio ou evento) e a data abaixo.') + '</small></label>';
   }
 
 })();
