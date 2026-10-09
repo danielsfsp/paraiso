@@ -3290,7 +3290,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v317 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v318 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -11077,7 +11077,11 @@
   document.addEventListener('keydown', (e) => {
     if(e.key !== 'Escape' || !escOverlay().classList.contains('open')) return;
     if(document.getElementById('confirmModalOverlay').classList.contains('open')) return;
-    escGuard(closeEscala);
+    if(document.querySelector('.decl-ov')) return;
+    // v318: ESC na edição só sai da edição (fica na Agenda/Escala); fora da
+    // edição, volta para a tela que chamou (mesmo caminho do ✕).
+    if(esc.editing){ escGuard(() => { esc.editing = null; renderEscala(); }); return; }
+    document.getElementById('btnCloseEscala').click();
   });
   // Link de escala (#escala=<id>) e volta do login
   (async function escInit(){
