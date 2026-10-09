@@ -3290,7 +3290,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v318 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v319 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4010,7 +4010,7 @@
   function toggleTheme(){ applyTheme(theme === 'light' ? 'dark' : 'light'); }
 
   async function saveSongs(){ lsSet('songs', JSON.stringify(songs)); if(typeof libAfterSave === 'function') libAfterSave(); if(typeof udTouch === 'function') udTouch(); }
-  async function savePlaylists(){ lsSet('playlists', JSON.stringify(playlists)); if(typeof udTouch === 'function') udTouch(); }
+  async function savePlaylists(){ lsSet('playlists', JSON.stringify(playlists)); if(typeof udTouch === 'function') udTouch(); try{ cultoCopyPushSoon(); }catch(e){} }
   async function savePrefs(){ lsSet('prefs', JSON.stringify({ fontSize, chordColor, librarySortBy, lyricColor, cifraBgColor })); if(typeof udTouch === 'function') udTouch(); }
 
   async function loadAll(){
@@ -14512,14 +14512,37 @@ function rebalanceAdaptiveCols(wrap, repack){
       if(v) o.mom = v; else delete o.mom;
       if(!Object.keys(o).length) delete pl.overrides[sid];
       savePlaylists(); renderPlaylistsPage();
-      // Playlist do culto + líder/ministro: vale para toda a equipe
-      try{
-        if(pl.fromEvent && typeof esc !== 'undefined' && esc.sb && escCanSchedule()){
-          const e = esc.events.find(x => x.id === pl.fromEvent);
-          if(e && e.playlist) escPlUpdate(e.id, ep => { const oo = ep.overrides[sid] = ep.overrides[sid] || {}; if(v) oo.mom = v; else delete oo.mom; if(!Object.keys(oo).length) delete ep.overrides[sid]; });
-        }
-      }catch(err){}
+      // (playlist do culto + líder/ministro: vai para o culto via cultoCopyPush)
     });
+  }
+
+  // ================= PLAYLIST DO CULTO EDITADA NA TELA PLAYLISTS (v319) =================
+  // Líder/ministro: incluir, tirar, reordenar ou marcar o momento das músicas
+  // na playlist do culto (tela Playlists) vale para o culto — toda a equipe
+  // recebe. Para os demais, a cópia continua pessoal.
+  let cultoPushT = null;
+  function cultoCopyPushSoon(){ clearTimeout(cultoPushT); cultoPushT = setTimeout(cultoCopyPush, 700); }
+  async function cultoCopyPush(){
+    if(typeof esc === 'undefined' || !esc.sb || !esc.user || !escCanSchedule()) return;
+    for(const p of playlists.filter(x => x.fromEvent && !x.archived)){
+      const e = (esc.events || []).find(x => x.id === p.fromEvent); if(!e || !e.playlist || e.playlist.id !== p.id) continue;
+      const ids = (p.songIds || []).filter(id => songs.some(s => s.id === id));
+      const evIds = e.playlist.songIds || [];
+      const mom = id => (p.overrides && p.overrides[id] && p.overrides[id].mom) || '';
+      const evMom = id => (e.playlist.overrides && e.playlist.overrides[id] && e.playlist.overrides[id].mom) || '';
+      const same = ids.join('|') === evIds.join('|') && ids.every(id => mom(id) === evMom(id));
+      if(same) continue;
+      await escPlUpdate(e.id, ep => {
+        ep.songIds = ids.slice();
+        Object.keys(ep.overrides).forEach(id => { if(!ids.includes(id)) delete ep.overrides[id]; });
+        ids.forEach(id => {
+          const m = mom(id);
+          if(m){ ep.overrides[id] = ep.overrides[id] || {}; ep.overrides[id].mom = m; }
+          else if(ep.overrides[id]){ delete ep.overrides[id].mom; if(!Object.keys(ep.overrides[id]).length) delete ep.overrides[id]; }
+          if(typeof (p.overrides && p.overrides[id] && p.overrides[id].shift) === 'number' && !(ep.overrides[id] && typeof ep.overrides[id].shift === 'number') && !evIds.includes(id)){ ep.overrides[id] = ep.overrides[id] || {}; ep.overrides[id].shift = p.overrides[id].shift; }
+        });
+      });
+    }
   }
 
 })();
