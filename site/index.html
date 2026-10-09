@@ -2421,6 +2421,12 @@
   .shr-acts button{flex:1 1 auto; font:inherit; font-weight:800; font-size:14px; padding:10px 12px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;}
   .shr-acts .go{background:#25D366; border-color:#25D366; color:#062b14;}
   .shr-acts .pl{color:var(--sec-pl); border-color:color-mix(in srgb, var(--sec-pl) 50%, transparent);}
+  /* v303: no celular, ◀ ▶ só aparecem quando a música é aberta de dentro de uma playlist */
+  @media (max-width: 820px){
+    body.pl-nav .viewer-header #navArrows{display:flex !important; order:-3; margin:0 0 0 8px; gap:8px;}
+    body.pl-nav #navArrows .step-btn{min-width:46px; height:40px; font-size:16px; padding:0 12px; border-radius:10px;}
+    body.pl-nav #navArrows .step-btn:disabled{opacity:.3;}
+  }
 </style>
 </head>
 <body>
@@ -3194,7 +3200,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v302 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v303 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -5817,6 +5823,7 @@
     const navArrows = document.getElementById('navArrows');
     const fsPrev = document.getElementById('btnFsPrev');
     const fsNext = document.getElementById('btnFsNext');
+    document.body.classList.toggle('pl-nav', !!(navCtx && navPlaylistId));
     if(navCtx){
       navArrows.style.display = 'flex';
       const atFirst = navCtx.idx === 0;
