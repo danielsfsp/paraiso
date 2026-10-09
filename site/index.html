@@ -2016,6 +2016,7 @@
   .ev-song .evp-ctl{display:inline-flex; gap:3px; margin-left:6px;}
   .ev-song .evp-ctl button:disabled{opacity:.3; cursor:default;}
   .evp-add{margin-top:8px;}
+  .ev-song .t.evp-go{cursor:pointer;} .ev-song .t.evp-go:hover{color:var(--accent);} .ev-song .t.evp-go:active{opacity:.7;}
   .evp-addbtn{margin-top:8px; width:100%; justify-content:center; border-style:dashed !important;}
   .evp-addbtn.on{border-style:solid !important; opacity:.85;}
   .evp-add input{width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px; box-sizing:border-box;}
@@ -3193,7 +3194,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v300 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v301 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10263,7 +10264,8 @@
       }, { okLabel: 'Excluir escala' });
     });
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
-    body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
+    body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); openPlaylistPage(pl); } });
+    bindEvpOpenSong(body);
     body.querySelectorAll('.ev-mine.answered').forEach(m => m.onclick = (ev) => { if(ev.target.closest('button')) return; m.classList.remove('answered'); });
     body.querySelectorAll('[data-remind]').forEach(b => b.onclick = () => escRemind(b.dataset.remind));
     body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.edit));
@@ -13280,7 +13282,7 @@
     const ep = e.playlist; const list = ep.songs || [];
     return '<div class="ev-songs">' + list.map((sg, i) => {
       const id = sg.id || (ep.songIds || [])[i];
-      return '<div class="ev-song' + (can && id ? ' ed' : '') + '"><span class="n">' + (i + 1) + '</span><span class="t">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' +
+      return '<div class="ev-song' + (can && id ? ' ed' : '') + '"><span class="n">' + (i + 1) + '</span><span class="t' + (id && songs.some(x => x.id === id) ? ' evp-go" role="button" tabindex="0" data-evp-go="' + id + '" data-ev="' + e.id + '" title="Abrir esta música' : '') + '">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' +
         (can && id ? '<span class="evp-key"><button type="button" data-evp-tom="-1" data-ev="' + e.id + '" data-sid="' + id + '">−</button><b>' + escH(sg.key || '–') + '</b><button type="button" data-evp-tom="1" data-ev="' + e.id + '" data-sid="' + id + '">+</button></span>' +
           '<span class="evp-ctl"><button type="button" data-evp-mv="-1" data-ev="' + e.id + '" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-evp-mv="1" data-ev="' + e.id + '" data-i="' + i + '"' + (i === list.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-evp-rm data-ev="' + e.id + '" data-sid="' + id + '">✕</button></span>'
           : (sg.key ? '<span class="k">' + escH(sg.key) + '</span>' : '')) + '</div>';
@@ -13361,7 +13363,8 @@
     body.querySelectorAll('[data-cu-esc]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEsc, 'escala'));
     body.querySelectorAll('[data-cu-share]').forEach(b => b.onclick = () => escShareAsk(b.dataset.cuShare));
     body.querySelectorAll('[data-cu-see]').forEach(b => b.onclick = () => { esc.tab = 'escalas'; esc.openEventId = b.dataset.cuSee; renderEscala(); });
-    body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); guardIfDirty(() => goHomeToPlaylist(pl)); } });
+    body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); openPlaylistPage(pl); } });
+    bindEvpOpenSong(body);
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
   }
 
@@ -13985,6 +13988,25 @@ function rebalanceAdaptiveCols(wrap, repack){
       }
     }
     cols.forEach(c => { if(!c.children.length && wrap.querySelectorAll(':scope > .cifra-col').length > 1) c.remove(); });
+  }
+
+  // v301: "▶ Abrir" do culto mostra a lista de músicas da playlist (tela
+  // Playlists) para escolher qual abrir; tocar no nome da música no culto
+  // abre direto aquela música.
+  function openPlaylistPage(pl){
+    guardIfDirty(() => {
+      showHomeView(); activeView = 'playlists'; navSel = 'playlists'; openPlaylistId = pl.id;
+      renderSidebar(); renderHomeView();
+      try{ sidebar.classList.remove('open'); }catch(e){}
+      setTimeout(() => { const d = document.querySelector('.plp-detail'); if(d && window.innerWidth < 900) d.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60);
+    });
+  }
+  function bindEvpOpenSong(body){
+    body.querySelectorAll('[data-evp-go]').forEach(el => {
+      const go = (ev) => { ev.stopPropagation(); const e = esc.events.find(x => x.id === el.dataset.ev); const pl = e ? plForEvent(e) : null; const sid = el.dataset.evpGo;
+        closeEscala(); guardIfDirty(() => { showingHome = false; activeView = 'playlists'; if(pl && pl.songIds.includes(sid)){ openPlaylistId = pl.id; selectSong(sid, pl.id); } else selectSong(sid); }); };
+      el.onclick = go; el.onkeydown = ev => { if(ev.key === 'Enter') go(ev); };
+    });
   }
 
 })();
