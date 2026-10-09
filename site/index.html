@@ -2434,6 +2434,14 @@
   .ag-arch-row .cu-title{font-weight:700;} .ag-arch-row .cu-sub{font-size:12px; color:var(--text-dim);}
   .cu-arch{font-size:13px;} .cu-fin{font-size:13px;}
   .ag-fin{color:#5BBF7A;}
+  /* v306: Participante — acesso simples */
+  .tm-role.part{background:rgba(46,219,127,.14); color:#2EDB7F;}
+  body.role-part #navSongs, body.role-part .side-nav-item[data-view], body.role-part #btnCultos, body.role-part #btnEquipe,
+  body.role-part #mobileTabbar [data-tb="songs"], body.role-part #mobileTabbar [data-tb="playlists"], body.role-part #mobileTabbar [data-tb="culto"], body.role-part #mobileTabbar [data-tb="equipe"],
+  body.role-part #btnStats, body.role-part #btnNotes, body.role-part .sidebar-section, body.role-part #sideSectionTitle,
+  body.role-part .home-searchbar, body.role-part .home-columns, body.role-part #homeSongCounter,
+  body.role-part #plpNew, body.role-part [data-plp-add], body.role-part [data-plp-chg], body.role-part [data-plp-sp], body.role-part [data-plp-edit], body.role-part [data-plp-arch], body.role-part [data-plp-del], body.role-part .plp-ctl, body.role-part .plp-arch-toggle,
+  body.role-part #btnFullscreenEdit, body.role-part #btnEdit, body.role-part #btnAddToPlaylist, body.role-part #btnDelete, body.role-part #btnLibRevert, body.role-part .pl-chg-btn, body.role-part .add-music-btn{display:none !important;}
 </style>
 </head>
 <body>
@@ -3207,7 +3215,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v305 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v306 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10075,7 +10083,7 @@
     if(del) del.onclick = () => showConfirm('Apagar pré-cadastro', 'Apagar o pré-cadastro de ' + x.name + '?', async () => { await esc.sb.from('pre_profiles').delete().eq('id', id); await escLoadAll(); }, { okLabel: 'Apagar' });
   }
   function escIsAdmin(p){ return !!(p && p.email && (esc.admins || []).includes(String(p.email).toLowerCase())); }
-  function escRoleName(p){ return !p ? '' : escIsAdmin(p) ? 'Administrador' : p.is_leader ? 'Líder' : p.is_minister ? 'Ministro' : ''; }
+  function escRoleName(p){ return !p ? '' : escIsAdmin(p) ? 'Administrador' : p.is_leader ? 'Líder' : p.is_minister ? 'Ministro' : p.is_participant ? 'Participante' : ''; }
 
   async function escLoadAll(){
     const sb = esc.sb; if(!sb || !esc.user) return;
@@ -10100,6 +10108,7 @@
       if(!as.error) esc.assignments = (as.data || []).map(a => (!a.profile_id && a.pre_id) ? Object.assign({}, a, { profile_id: 'pre:' + a.pre_id }) : a);
     }
     esc.me = esc.profiles.find(p => p.id === esc.user.id) || null;
+    try{ applyRoleMode(); }catch(e){}
     esc.loading = false;
     try{ syncEventPlaylists(); }catch(e){ console.error(e); }
     try{ plChCheck(); }catch(e){}
@@ -10598,7 +10607,7 @@
     const open = leader ? escPreOpen() : [];
     const av = p => p && p.photo_url ? '<img class="tm-av" src="' + escH(p.photo_url) + '" alt="" referrerpolicy="no-referrer">' : homeAvatar(p, null).replace('class="hc-av"', 'class="hc-av tm-av"');
     const fnChips = fns => (fns && fns.length) ? fns.map(f => '<span class="tm-fn">' + escFnIcon(f) + ' ' + escH(f) + '</span>').join('') : '<span class="tm-fn none">sem funções</span>';
-    const roleBadge = p => escIsAdmin(p) ? '<span class="tm-role admin">Administrador</span>' : (p.is_leader ? '<span class="tm-role">Líder</span>' : '') + (p.is_minister ? '<span class="tm-role min">Ministro</span>' : '');
+    const roleBadge = p => escIsAdmin(p) ? '<span class="tm-role admin">Administrador</span>' : (p.is_leader ? '<span class="tm-role">Líder</span>' : '') + (p.is_minister ? '<span class="tm-role min">Ministro</span>' : '') + (p.is_participant && !p.is_leader && !p.is_minister ? '<span class="tm-role part">Participante</span>' : '');
     let html = '';
     // Resumo + ações
     html += '<div class="tm-top"><div class="tm-stats"><div><b>' + approvedList.filter(p => p.active !== false).length + '</b><span>pessoas</span></div>' +
@@ -10634,6 +10643,7 @@
           '<div class="tm-perm-sec">Permissões</div>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_leader" data-pid="' + p.id + '"' + (p.is_leader ? ' checked' : '') + '><i></i>Líder <small>aprova pessoas, monta escalas e edita o repertório</small></label>' +
           '<label class="tm-switch"><input type="checkbox" data-role="is_minister" data-pid="' + p.id + '"' + (p.is_minister ? ' checked' : '') + '><i></i>Ministro <small>pode montar escalas</small></label>' +
+          '<label class="tm-switch"><input type="checkbox" data-role="is_participant" data-pid="' + p.id + '"' + (p.is_participant ? ' checked' : '') + '><i></i>Participante <small>acesso simples (ex.: back vocal): vê só as escalas dele e a playlist do culto, sem editar nada</small></label>' +
           '<label class="tm-switch"><input type="checkbox" data-role="active" data-pid="' + p.id + '"' + (p.active !== false ? ' checked' : '') + '><i></i>Ativo <small>desligar tira o acesso ao app</small></label>' +
           '<div class="tm-perm-save"><button type="button" class="tm-btn no tm-del-ico" data-del-member="' + p.id + '" title="Excluir do ministério" aria-label="Excluir do ministério">🗑</button><span class="sp"></span><button type="button" class="tm-btn" data-perm-cancel="' + p.id + '">Cancelar</button><button type="button" class="tm-btn pri" data-perm-save="' + p.id + '">💾 Salvar</button></div></div>' : '') +
         '</div>';
@@ -14070,6 +14080,20 @@ function rebalanceAdaptiveCols(wrap, repack){
       showConfirm('Finalizar?', 'Marcar "' + (e.title || EVK[e.kind || 'culto'].label) + '" (' + fmtDateBR(e.date) + ') como realizado? Ele e a escala saem da Agenda, da Escala e do Início e ficam em "🗄️ Arquivados e finalizados", no fim da Agenda (dá para desfazer).', () => agSetArchived(e.id, true, true), { okLabel: '✅ Finalizar', okNeutral: true }); });
     body.querySelectorAll('[data-cu-unarch]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); agSetArchived(b.dataset.cuUnarch, false); });
     body.querySelectorAll('[data-ag-archtoggle]').forEach(b => b.onclick = () => { esc.showArch = !esc.showArch; renderEscala(); });
+  }
+
+  // ================= PARTICIPANTE (v306) =================
+  // Acesso simples (ex.: back vocal): só Início (próximo culto), Escala e a
+  // playlist do culto em que está escalado — tudo só para ler. Sem Músicas,
+  // Playlists, Agenda, Equipe, Estatísticas nem edição.
+  function isParticipant(){ return !!(typeof esc !== 'undefined' && esc.me && esc.me.is_participant && !esc.me.is_leader && !esc.me.is_minister && !escIsAdmin(esc.me)); }
+  function applyRoleMode(){
+    const on = isParticipant(), was = document.body.classList.contains('role-part');
+    document.body.classList.toggle('role-part', on);
+    if(on && !was){
+      try{ closeEscala(); }catch(e){}
+      try{ if(!showingHome || (navSel && navSel !== 'home' && navSel !== 'playlists')) showHomeView(); }catch(e){}
+    }
   }
 
 })();
