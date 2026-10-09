@@ -2490,6 +2490,7 @@
   .nt-list li small{color:var(--text-dim);} .nt-list a.done{opacity:.6;}
   .evp-notify{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(255,95,200,.10); border:1px solid rgba(255,95,200,.35); font-size:13px;}
   .evp-notify span{flex:1;} .evp-notify .btn-primary{padding:6px 12px; font-size:13px; margin:0;}
+  .evp-edit-hint{color:var(--text-dim) !important;}
   .evp-notify-x{background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px;}
   /* v314: arrastar música na playlist */
   .plp-drag{flex-shrink:0; width:22px; margin:-6px -6px -6px -6px; padding:10px 0; text-align:center; color:var(--text-dim); font-size:15px; letter-spacing:-3px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; opacity:.7;}
@@ -3292,7 +3293,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v321 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v322 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -13327,12 +13328,13 @@
       const pl = plForEvent(e), n = escPlCount(e);
       h += '<div class="ev-pl-head"><div class="ev-pl-ico">🎵</div><div class="ev-pl-txt"><b>' + escH(e.playlist.name || 'Playlist') + '</b><small>' + n + (n === 1 ? ' música' : ' músicas') + '</small></div>' +
         (pl ? '<button type="button" class="btn-primary ev-pl-open" data-openpl="' + pl.id + '">▶ Abrir</button>' : '') + '</div>';
-      if(e.playlist.songs && e.playlist.songs.length) h += escPlSongRowsHtml(e, can);
+      if(e.playlist.songs && e.playlist.songs.length) h += escPlSongRowsHtml(e, false); // v322: só leitura — alterações na tela Playlists
       else h += '<div class="ev-pl-empty">Nenhuma música ainda.</div>';
       // v300: incluir música no repertório do culto (mesmo já montado / no meio do culto)
       if(escCanSchedule() && esc.plChanged && esc.plChanged[e.id] && escNotifyPeople(e).length) h += '<div class="evp-notify"><span>✏️ Playlist alterada.</span><button type="button" class="btn-primary" data-evp-notify="' + e.id + '">📣 Avisar a equipe</button><button type="button" class="evp-notify-x" data-evp-notify-x="' + e.id + '" title="Não avisar">✕</button></div>';
-      if(escCanSchedule()) h += '<button type="button" class="btn-secondary evp-addbtn' + (esc.plAdd === e.id ? ' on' : '') + '" data-evp-addopen="' + e.id + '">' + (esc.plAdd === e.id ? '✕ Fechar busca' : '＋ Adicionar música') + '</button>' + escPlAddHtml(e);
-      if(can || (escCanSchedule() && esc.plAdd === e.id)) h +=
+      if(escCanSchedule() && pl) h += '<div class="evp-note evp-edit-hint">✏️ Para incluir, tirar, reordenar, mudar tom ou marcar o momento, toque em <b>▶ Abrir</b> e altere na playlist.</div>';
+      if(false) h += '<button type="button" class="btn-secondary evp-addbtn' + (esc.plAdd === e.id ? ' on' : '') + '" data-evp-addopen="' + e.id + '">' + (esc.plAdd === e.id ? '✕ Fechar busca' : '＋ Adicionar música') + '</button>' + escPlAddHtml(e);
+      if(false) h +=
         '<div class="evp-note">✓ Mudanças feitas aqui valem para toda a equipe escalada.</div>';
     } else if(can){
       const sug = escPlSuggest(e);
@@ -14520,7 +14522,7 @@ function rebalanceAdaptiveCols(wrap, repack){
   }
 
   // ================= PLAYLIST DO CULTO EDITADA NA TELA PLAYLISTS (v319) =================
-  // Líder/ministro: incluir, tirar, reordenar ou marcar o momento das músicas
+  // Líder/ministro: incluir, tirar, reordenar, mudar o tom ou marcar o momento das músicas
   // na playlist do culto (tela Playlists) vale para o culto — toda a equipe
   // recebe. Para os demais, a cópia continua pessoal.
   let cultoPushT = null;
@@ -14533,7 +14535,9 @@ function rebalanceAdaptiveCols(wrap, repack){
       const evIds = e.playlist.songIds || [];
       const mom = id => (p.overrides && p.overrides[id] && p.overrides[id].mom) || '';
       const evMom = id => (e.playlist.overrides && e.playlist.overrides[id] && e.playlist.overrides[id].mom) || '';
-      const same = ids.join('|') === evIds.join('|') && ids.every(id => mom(id) === evMom(id));
+      const sh = id => { const v = p.overrides && p.overrides[id] && p.overrides[id].shift; return typeof v === 'number' ? v : 0; };
+      const evSh = id => { const v = e.playlist.overrides && e.playlist.overrides[id] && e.playlist.overrides[id].shift; return typeof v === 'number' ? v : 0; };
+      const same = ids.join('|') === evIds.join('|') && ids.every(id => mom(id) === evMom(id) && sh(id) === evSh(id));
       if(same) continue;
       await escPlUpdate(e.id, ep => {
         ep.songIds = ids.slice();
@@ -14542,7 +14546,8 @@ function rebalanceAdaptiveCols(wrap, repack){
           const m = mom(id);
           if(m){ ep.overrides[id] = ep.overrides[id] || {}; ep.overrides[id].mom = m; }
           else if(ep.overrides[id]){ delete ep.overrides[id].mom; if(!Object.keys(ep.overrides[id]).length) delete ep.overrides[id]; }
-          if(typeof (p.overrides && p.overrides[id] && p.overrides[id].shift) === 'number' && !(ep.overrides[id] && typeof ep.overrides[id].shift === 'number') && !evIds.includes(id)){ ep.overrides[id] = ep.overrides[id] || {}; ep.overrides[id].shift = p.overrides[id].shift; }
+          if(sh(id)){ ep.overrides[id] = ep.overrides[id] || {}; ep.overrides[id].shift = sh(id); }
+          else if(ep.overrides[id]){ delete ep.overrides[id].shift; if(!Object.keys(ep.overrides[id]).length) delete ep.overrides[id]; }
         });
       });
     }
