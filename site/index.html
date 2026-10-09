@@ -2513,7 +2513,7 @@
   .mom-chip.on{border:1px solid rgba(61,165,255,.55); background:rgba(61,165,255,.14); color:#6CB8FF;}
   .mom-chip:disabled{cursor:default;}
   .plp-song .t .mom-chip{display:inline-block; align-self:flex-start; margin:0 0 3px; padding:1px 8px; font-size:10.5px;}
-  .plp-ctl .mom-add{font-size:13px;}
+  .plp-ctl .mom-add{font-size:13px;} .plp-ctl .mom-add.has{border-color:rgba(61,165,255,.55); background:rgba(61,165,255,.14);}
   .mom-pick button.on{border-color:#6CB8FF !important; color:#6CB8FF !important; background:rgba(61,165,255,.14) !important;}
   .ev-song .mom-chip{margin:0 4px 0 0;}
 </style>
@@ -3290,7 +3290,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v319 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v320 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4937,6 +4937,7 @@
     const pl = playlists.find(p => p.id === playlistId);
     if(!pl || pl.songIds.includes(songId)) return;
     pl.songIds.push(songId);
+    if(pl.overrides && pl.overrides[songId]){ delete pl.overrides[songId].mom; if(!Object.keys(pl.overrides[songId]).length) delete pl.overrides[songId]; } // v320: música nova entra sem momento antigo
     const song = songs.find(s => s.id === songId);
     if(song) snapshotSongIntoPlaylist(pl, song);
     savePlaylists();
@@ -13485,7 +13486,7 @@
         const list = t ? songs.filter(sg => !have.has(sg.id) && ((sg.title || '') + ' ' + (sg.artist || '')).toLowerCase().includes(t)).slice(0, 8) : [];
         res.innerHTML = list.map(sg => '<button type="button" data-evp-addsong="' + sg.id + '"><b>' + escH(sg.title) + '</b><small>' + escH(sg.artist || '') + '</small><span class="k">' + escH(sg.key || '') + '</span></button>').join('') || (t ? '<div class="evp-none">Nenhuma música encontrada.</div>' : '');
         res.querySelectorAll('[data-evp-addsong]').forEach(bb => bb.onclick = ev => { ev.stopPropagation(); const sid = bb.dataset.evpAddsong; esc.plAddQ = '';
-          escPlUpdate(q.dataset.evpQ, ep => { if(!ep.songIds.includes(sid)) ep.songIds.push(sid); }).then(() => { const q2 = document.querySelector('[data-evp-q]'); if(q2) q2.focus(); }); });
+          escPlUpdate(q.dataset.evpQ, ep => { if(!ep.songIds.includes(sid)){ ep.songIds.push(sid); if(ep.overrides[sid]){ delete ep.overrides[sid].mom; if(!Object.keys(ep.overrides[sid]).length) delete ep.overrides[sid]; } } }).then(() => { const q2 = document.querySelector('[data-evp-q]'); if(q2) q2.focus(); }); });
       };
       q.oninput = run; q.onclick = ev => ev.stopPropagation(); run();
     }
@@ -14486,7 +14487,7 @@ function rebalanceAdaptiveCols(wrap, repack){
     const ro = typeof isParticipant === 'function' && isParticipant();
     if(!m && ro) return '';
     if(setOnly && !m) return '';
-    if(setOnly === false){ if(m || ro) return ''; return '<button type="button" class="mom-add" data-mom="' + sid + '" title="Marcar o momento do culto (Abertura, Oferta, Ceia…)">🏷</button>'; }
+    if(setOnly === false){ if(ro) return ''; return '<button type="button" class="mom-add' + (m ? ' has' : '') + '" data-mom="' + sid + '" title="' + (m ? 'Trocar ou tirar o momento (' + escapeHtml(m) + ')' : 'Marcar o momento do culto (Abertura, Oferta, Ceia…)') + '">🏷</button>'; }
     return '<button type="button" class="mom-chip' + (m ? ' on' : '') + '"' + (ro ? ' disabled' : ' data-mom="' + sid + '"') + ' title="Momento do culto (Abertura, Oferta…)">' + escapeHtml(m || '＋ momento') + '</button>';
   }
   function momPick(cur, done){
