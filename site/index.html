@@ -3293,7 +3293,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v322 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v323 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10298,7 +10298,7 @@
   }
 
   function renderEscEvents(body, mineOnly){
-    const today = todayIso();
+    const today = isoFromDate(new Date(Date.now() - 86400000)); // v323: igual à Agenda — inclui ontem (até finalizar/arquivar)
     let evs = esc.events.filter(e => e.date >= today).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
     if(mineOnly) evs = evs.filter(e => e.minister_id === esc.user.id || esc.assignments.some(a => a.event_id === e.id && a.profile_id === esc.user.id));
     // Escala sem ninguém = culto sem escala: fica só em ⛪ Culto (v261)
