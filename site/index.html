@@ -2512,7 +2512,9 @@
   .mom-chip{flex-shrink:0; font:inherit; font-size:11px; font-weight:800; padding:3px 9px; border-radius:99px; border:1px dashed var(--border); background:transparent; color:var(--text-dim); cursor:pointer; white-space:nowrap; margin-right:2px;}
   .mom-chip.on{border:1px solid rgba(61,165,255,.55); background:rgba(61,165,255,.14); color:#6CB8FF;}
   .mom-chip:disabled{cursor:default;}
-  .plp-song .t .mom-chip{display:inline-block; align-self:flex-start; margin:0 0 3px; padding:1px 8px; font-size:10.5px;}
+  .plp-song .t1{display:flex; flex-wrap:wrap; align-items:center; column-gap:6px; row-gap:2px; min-width:0;}
+  .plp-song .t1 b{flex:0 1 auto; max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .plp-song .t .mom-chip{flex-shrink:0; margin:0; padding:1px 8px; font-size:10.5px;}
   .plp-ctl .mom-add{font-size:13px;} .plp-ctl .mom-add.has{border-color:rgba(61,165,255,.55); background:rgba(61,165,255,.14);}
   .mom-pick button.on{border-color:#6CB8FF !important; color:#6CB8FF !important; background:rgba(61,165,255,.14) !important;}
   .ev-song .mom-chip{margin:0 4px 0 0;}
@@ -3290,7 +3292,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v320 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v321 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4466,8 +4468,8 @@
         '<button type="button" class="plp-btn" data-plp-arch title="' + (sel.archived ? 'Desarquivar' : 'Arquivar (sai da lista, mas continua nas estatísticas)') + '">' + (sel.archived ? '↩️ Desarquivar' : '🗄️ Arquivar') + '</button>' +
         '<button type="button" class="plp-btn danger" data-plp-del title="Excluir playlist">🗑️ Excluir</button></div></div>';
       if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
-      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="plp-drag" data-drag title="Arraste para mudar a ordem" aria-label="Arrastar">⋮⋮</span><span class="n">' + (i + 1) + '</span><span class="t">' + momChipHtml(sel, sg.id, true) + '<b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
-        '<span class="plp-ctl">' + momChipHtml(sel, sg.id, false) + '<button type="button" data-mv="-1" data-ri="' + ri + '" title="Subir"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-mv="1" data-ri="' + ri + '" title="Descer"' + (i === items.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-rm="' + sg.id + '" title="Tirar da playlist">✕</button></span></div>'; }).join('') + '</div>';
+      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="plp-drag" data-drag title="Arraste para mudar a ordem" aria-label="Arrastar">⋮⋮</span><span class="n">' + (i + 1) + '</span><span class="t"><span class="t1"><b>' + escapeHtml(displayTitle(sg)) + '</b>' + momChipHtml(sel, sg.id, true) + '</span><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
+        '<span class="plp-ctl">' + momChipHtml(sel, sg.id, false) + '<button type="button" data-rm="' + sg.id + '" title="Tirar da playlist">✕</button></span></div>'; }).join('') + '</div>';
     } else html += '<div class="home-empty-note">Crie uma playlist para montar o repertório do culto.</div>';
     html += '</div></div>';
     box.innerHTML = html;
