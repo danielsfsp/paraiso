@@ -2457,6 +2457,12 @@
   .esc-avulso-list{display:flex; flex-wrap:wrap; gap:6px;}
   .esc-avulso-list button{display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding:7px 10px; border-radius:10px; border:1px solid var(--border-soft); background:var(--surface); color:var(--text); cursor:pointer;}
   .esc-avulso-list button b{font-size:13px;} .esc-avulso-list button small{font-size:11px; color:var(--text-dim);}
+  /* v309: tela cheia — sai o 🥁 (BPM), entra a velocidade da rolagem (− 0.8× +) */
+  .fs-speed-ctl{display:none;}
+  .main-panel.fullscreen-mode #btnFsMetro{display:none !important;}
+  .main-panel.fullscreen-mode:not(.fullscreen-editing) .fs-speed-ctl{display:inline-flex; align-items:center; gap:2px; border:1px solid var(--border); border-radius:10px; padding:0 2px;}
+  .fs-speed-ctl .fullscreen-exit-fixed{border:none !important; background:none !important; min-width:30px; padding:0 6px !important; font-size:18px; color:var(--accent);}
+  .fs-speed-ctl #fsSpeedVal{min-width:34px; text-align:center; font-size:13px; font-weight:700; color:var(--text);}
 </style>
 </head>
 <body>
@@ -2543,6 +2549,7 @@
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsPrev" type="button">◀</button>
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsNext" type="button">▶</button>
       <button class="fullscreen-exit-fixed fs-scroll-btn" id="btnFsScroll" type="button" title="Rolagem automática (Espaço)">▶</button>
+      <span class="fs-speed-ctl" id="fsSpeedCtl" title="Velocidade da rolagem"><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedDown" aria-label="Rolagem mais devagar">−</button><span id="fsSpeedVal">0.8×</span><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedUp" aria-label="Rolagem mais rápida">+</button></span>
       <button class="fullscreen-exit-fixed metro-chip metro-fs-btn" id="btnFsMetro" type="button" title="Metrônomo (atalho: M liga/desliga)">🥁 <span class="metro-chip-bpm" id="metroFsBpm"></span></button>
       <button class="fullscreen-exit-fixed" id="btnFullscreenEdit" type="button" title="Editar letra e cifra direto na tela"><span>✎</span><span class="fs-txt"> Editar</span></button>
       <button class="fullscreen-exit-fixed" id="btnFullscreenEditCancel" type="button" style="display:none;">Cancelar</button>
@@ -3230,7 +3237,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v308 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v309 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -12544,11 +12551,14 @@
     scrollSpeed = Math.max(1, Math.min(10, Math.round(v)));
     document.getElementById('speedSlider').value = scrollSpeed;
     document.getElementById('speedMiniVal').textContent = (scrollSpeed / 5).toFixed(1) + '×';
+    { const fv = document.getElementById('fsSpeedVal'); if(fv) fv.textContent = (scrollSpeed / 5).toFixed(1) + '×'; }
     lsSet('scrollSpeed', String(scrollSpeed));
   }
   document.getElementById('speedSlider').addEventListener('input', (e) => setScrollSpeed(Number(e.target.value)));
   document.getElementById('btnSpeedDown').addEventListener('click', () => setScrollSpeed(scrollSpeed - 1));
   document.getElementById('btnSpeedUp').addEventListener('click', () => setScrollSpeed(scrollSpeed + 1));
+  document.getElementById('btnFsSpeedDown').addEventListener('click', () => setScrollSpeed(scrollSpeed - 1));
+  document.getElementById('btnFsSpeedUp').addEventListener('click', () => setScrollSpeed(scrollSpeed + 1));
   setScrollSpeed(Number(lsGet('scrollSpeed')) || 4);
   // ↩ Voltar (celular): sai da música. Se veio de uma playlist, volta para
   // ela (lista aberta); senão, volta para a tela inicial.
