@@ -3257,7 +3257,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v311 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v312 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -5041,9 +5041,25 @@
   }
   function b64urlEncode(str){ const bytes = new TextEncoder().encode(str); let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function b64urlDecode(str){ const bin = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const bytes = Uint8Array.from(bin, c => c.charCodeAt(0)); return new TextDecoder().decode(bytes); }
+  function plShareLinkData(pl){ return { v: 1, n: pl.name, d: pl.date || '', s: plShareData(pl).map(x => [x.t, x.a, x.sh]) }; }
+  // v312: link curto (#p=abc123) — a playlist fica guardada no banco e o
+  // link no WhatsApp fica pequeno. Sem internet/login, usa o link longo.
+  const plShort = {};
   function plShareLink(pl){
-    const data = { v: 1, n: pl.name, d: pl.date || '', s: plShareData(pl).map(x => [x.t, x.a, x.sh]) };
-    return appShareUrl() + '#pl=' + b64urlEncode(JSON.stringify(data));
+    const data = plShareLinkData(pl), k = JSON.stringify(data);
+    if(plShort[k]) return appShareUrl() + '#p=' + plShort[k];
+    return appShareUrl() + '#pl=' + b64urlEncode(k);
+  }
+  async function plPrepareShortLink(pl){
+    try{
+      const data = plShareLinkData(pl), k = JSON.stringify(data);
+      if(plShort[k]) return;
+      if(typeof esc === 'undefined' || !esc.sb || !esc.user) return;
+      const abc = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      const id = Array.from(crypto.getRandomValues(new Uint8Array(7)), b => abc[b % abc.length]).join('');
+      const r = await esc.sb.from('share_links').insert({ id, data, created_by: esc.user.id });
+      if(!r.error) plShort[k] = id;
+    }catch(e){}
   }
   function plShareText(pl){
     const items = plShareData(pl);
@@ -5057,6 +5073,7 @@
     const pl = playlists.find(p => p.id === id); if(!pl) return;
     if(!pl.songIds.length){ showImportFeedback('Adicione músicas à playlist antes de compartilhar.', false); return; }
     sharePlId = id;
+    plPrepareShortLink(pl);
     document.getElementById('sharePlName').textContent = pl.name;
     const n = plShareData(pl).length;
     document.getElementById('sharePlMeta').textContent = (pl.date ? fmtDateBR(pl.date) + ' · ' : '') + n + (n === 1 ? ' música' : ' músicas');
@@ -5068,10 +5085,12 @@
   document.getElementById('sharePlOverlay').addEventListener('click', (e) => { if(e.target.id === 'sharePlOverlay') closeSharePlaylist(); });
   document.getElementById('btnSharePlWa').addEventListener('click', () => {
     const pl = playlists.find(p => p.id === sharePlId); if(!pl) return;
-    window.open('https://wa.me/?text=' + encodeURIComponent(plShareText(pl)), '_blank', 'noopener');
+    const w = window.open('', '_blank');
+    plPrepareShortLink(pl).then(() => { const u = 'https://wa.me/?text=' + encodeURIComponent(plShareText(pl)); if(w) w.location.href = u; else window.open(u, '_blank', 'noopener'); });
   });
   document.getElementById('btnSharePlLink').addEventListener('click', async () => {
     const pl = playlists.find(p => p.id === sharePlId); if(!pl) return;
+    await plPrepareShortLink(pl);
     const link = plShareLink(pl);
     try{ await navigator.clipboard.writeText(link); showImportFeedback('🔗 Link da playlist copiado.', true); }
     catch(e){ window.prompt('Copie o link da playlist:', link); }
@@ -5082,12 +5101,16 @@
   });
   document.getElementById('btnSharePlFile').addEventListener('click', () => { closeSharePlaylist(); if(sharePlId) sharePlaylist(sharePlId); });
   // Recebendo um link de playlist (#pl=...)
-  function handlePlaylistHash(){
-    const m = (location.hash || '').match(/^#pl=([A-Za-z0-9_-]+)/);
-    if(!m) return;
+  async function handlePlaylistHash(){
+    const ms = (location.hash || '').match(/^#p=([A-Za-z0-9]{6,16})$/);
+    const m = ms ? null : (location.hash || '').match(/^#pl=([A-Za-z0-9_-]+)/);
+    if(!m && !ms) return;
     let data = null;
-    try{ data = JSON.parse(b64urlDecode(m[1])); }catch(e){ data = null; }
-    history.replaceState(null, '', location.pathname + location.search);
+    history.replaceState(history.state, '', location.pathname + location.search);
+    if(ms){
+      try{ const sb = (typeof esc !== 'undefined' && esc.sb) ? esc.sb : await escClient(); const r = await sb.from('share_links').select('data').eq('id', ms[1]).maybeSingle(); data = r && r.data ? r.data.data : null; }catch(e){ data = null; }
+      if(!data){ showAlert('Playlist recebida', 'Não consegui abrir essa playlist. Verifique a internet e tente o link de novo.'); return; }
+    } else { try{ data = JSON.parse(b64urlDecode(m[1])); }catch(e){ data = null; } }
     if(!data || !Array.isArray(data.s)) return;
     const norm = x => foldForSearch(String(x || '')).replace(/\s+/g, ' ').trim();
     const found = [], missing = [];
