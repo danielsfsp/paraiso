@@ -2427,6 +2427,13 @@
     body.pl-nav #navArrows .step-btn{min-width:46px; height:40px; font-size:16px; padding:0 12px; border-radius:10px;}
     body.pl-nav #navArrows .step-btn:disabled{opacity:.3;}
   }
+  /* v305: arquivados da Agenda */
+  .ag-arch{margin-top:18px;}
+  .ag-arch-row{display:flex; align-items:center; gap:10px; padding:10px 12px; margin-top:8px; border:1px solid var(--border-soft); border-radius:12px; background:var(--surface); opacity:.85;}
+  .ag-arch-row .cu-main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .ag-arch-row .cu-title{font-weight:700;} .ag-arch-row .cu-sub{font-size:12px; color:var(--text-dim);}
+  .cu-arch{font-size:13px;} .cu-fin{font-size:13px;}
+  .ag-fin{color:#5BBF7A;}
 </style>
 </head>
 <body>
@@ -3159,7 +3166,7 @@
       <summary>⛪ Culto</summary>
       <ul>
         <li><strong>＋ Novo culto:</strong> nome (toque numa opção pronta ou digite), data, horário, ministro e a playlist. Dá para <strong>vincular uma escala já montada</strong>.</li>
-        <li>Em cada culto: <strong>👥 Montar/Editar escala</strong>, a <strong>🎵 Playlist do culto</strong> (<strong>＋ Adicionar música</strong> — dá para incluir mesmo com o culto em andamento —, tom − / +, ▲ ▼, ✕ — vale para toda a equipe) e <strong>🔁 Trocar playlist</strong> (com Salvar/Cancelar).</li>
+        <li>Em cada culto: <strong>👥 Montar/Editar escala</strong>, <strong>✅ Finalizar</strong> (depois que o culto acontece) ou <strong>🗄️ Arquivar</strong> — saem da Agenda/Escala/Início e ficam em “Arquivados e finalizados”, no fim da Agenda, de onde dá para desarquivar —, a <strong>🎵 Playlist do culto</strong> (<strong>＋ Adicionar música</strong> — dá para incluir mesmo com o culto em andamento —, tom − / +, ▲ ▼, ✕ — vale para toda a equipe) e <strong>🔁 Trocar playlist</strong> (com Salvar/Cancelar).</li>
         <li><strong>Compartilhar</strong> manda no WhatsApp o culto, quem toca o quê e as músicas com artista e tom. É o único lugar de compartilhar.</li>
         <li><strong>✎ → Apagar culto</strong> apaga o culto e a escala dele.</li>
       </ul>
@@ -3200,7 +3207,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v304 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v305 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10083,7 +10090,7 @@
     ]);
     const err = pr.error || tm.error || ev.error || un.error;
     if(err){ esc.loading = false; if(!esc.quiet) showAlert('Escala', 'Erro ao carregar: ' + err.message); renderEscala(); return; }
-    esc.profiles = pr.data || []; esc.teams = tm.data || []; esc.events = ev.data || []; esc.unav = un.data || [];
+    esc.profiles = pr.data || []; esc.teams = tm.data || []; esc.events = (ev.data || []).filter(e => !e.archived); esc.arch = (ev.data || []).filter(e => e.archived); esc.unav = un.data || [];
     await escLoadAdmins();
     await escLoadPre();
     const ids = esc.events.map(e => e.id);
@@ -13068,6 +13075,8 @@
     playlists = playlists.filter(p => {
       if(!p.fromEvent) return true;
       const ev = esc.events.find(e => e.id === p.fromEvent);
+      if(!ev && (esc.arch || []).some(e => e.id === p.fromEvent)){ if(!p.archived){ p.archived = true; p.evArch = true; changed = true; } return true; } // culto arquivado: a playlist dele vai junto para Arquivadas
+      if(ev && p.evArch){ p.archived = false; delete p.evArch; changed = true; }
       if(!ev) return p.date && p.date < y; // escala apagada: some (as antigas ficam como histórico)
       return !!(ev.playlist && ev.playlist.id === p.id);
     });
@@ -13360,18 +13369,20 @@
         '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></button>' +
         (can ? '<button type="button" class="cu-trash" data-cu-del="' + e.id + '" title="Apagar" aria-label="Apagar">🗑</button>' : '') +
         (open ? '<div class="cu-body"><div class="cu-acts">' + '<button type="button" class="btn-secondary cu-share" data-cu-share="' + e.id + '" title="Compartilhar no WhatsApp: culto, escala e músicas"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
-        (can ? '<button type="button" class="tm-more" data-cu-edit="' + e.id + '" title="Editar culto">✎</button>' : '') + '</div>' +
+        (can && e.date <= todayIso() ? '<button type="button" class="btn-primary cu-fin" data-cu-fin="' + e.id + '" title="Marcar como realizado — sai da Agenda e vai para Arquivados">✅ Finalizar</button>' : '') + (can ? '<button type="button" class="btn-secondary cu-arch" data-cu-arch="' + e.id + '" title="Arquivar: sai da Agenda, da Escala e do Início (dá para desarquivar)">🗄️ Arquivar</button><button type="button" class="tm-more" data-cu-edit="' + e.id + '" title="Editar culto">✎</button>' : '') + '</div>' +
         '<div class="ev-sec c-es">📅 Escala</div><div class="cu-esc">' +
           (as.length ? '<div class="hc-stack">' + as.slice(0, 10).map(a => homeAvatar(escProfile(a.profile_id), a.status)).join('') + '</div><span>' + as.length + (as.length === 1 ? ' pessoa' : ' pessoas') + ' · ' + conf + ' confirmada' + (conf === 1 ? '' : 's') + '</span>' : '<span class="cu-none">Escala ainda não montada</span>') +
           '<span class="cu-sp"></span>' + (can ? '<button type="button" class="btn-secondary" data-cu-esc="' + e.id + '">' + (as.length ? '✎ Editar escala' : '👥 Montar escala') + '</button>' : '<button type="button" class="btn-secondary" data-cu-see="' + e.id + '">Ver escala</button>') +
         '</div>' + escPlBlockHtml(e) + '</div>' : '') + '</div>';
       return html; };
     html += agCalendarHtml(cardHtml, evs, can);
+    html += agArchHtml(can);
     body.innerHTML = html;
     try{ bindAgCalendar(body); }catch(err){ console.error(err); }
     const nb = document.getElementById('cuNew'); if(nb) nb.onclick = () => { const m = document.getElementById('cuNewMenu'); m.hidden = !m.hidden; };
     body.querySelectorAll('[data-newkind]').forEach(b => b.onclick = () => { escStartEdit(null, 'culto'); if(esc.agView !== 'lista' && esc.agSel && esc.agSel >= todayIso()) esc.editing.date = esc.agSel; const k = b.dataset.newkind; esc.editing.kind = k; esc.editing.title = k === 'culto' ? 'Culto' : (k === 'ensaio' ? 'Ensaio' : ''); esc.editOrig = escEditKey(esc.editing); renderEscala(); });
     body.querySelectorAll('[data-cu-del]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); agDeleteAsk(b.dataset.cuDel); });
+    bindAgArch(body);
     body.querySelectorAll('[data-cu-toggle]').forEach(b => b.onclick = () => { esc.openCu = esc.openCu === b.dataset.cuToggle ? null : b.dataset.cuToggle; renderEscala(); });
     body.querySelectorAll('[data-cu-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEdit, 'culto'));
     body.querySelectorAll('[data-cu-esc]').forEach(b => b.onclick = () => escStartEdit(b.dataset.cuEsc, 'escala'));
@@ -14021,6 +14032,44 @@ function rebalanceAdaptiveCols(wrap, repack){
         closeEscala(); guardIfDirty(() => { showingHome = false; activeView = 'playlists'; if(pl && pl.songIds.includes(sid)){ openPlaylistId = pl.id; selectSong(sid, pl.id); } else selectSong(sid); }); };
       el.onclick = go; el.onkeydown = ev => { if(ev.key === 'Enter') go(ev); };
     });
+  }
+
+  // ================= ARQUIVAR CULTO / ESCALA (v305) =================
+  // Arquivar um culto (ou ensaio/evento) tira ele — junto com a escala dele —
+  // da Agenda, da Escala, do Início e dos contadores, para todos. Fica em
+  // "🗄️ Arquivados" no fim da Agenda, de onde dá para desarquivar.
+  function agArchHtml(can){
+    const arch = (esc.arch || []).slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+    if(!arch.length) return '';
+    let h = '<div class="ag-arch"><button type="button" class="plp-arch-toggle" data-ag-archtoggle>🗄️ Arquivados e finalizados (' + arch.length + ') ' + (esc.showArch ? '▴' : '▾') + '</button>';
+    if(esc.showArch) h += arch.map(e => { const k = e.kind || 'culto', dd = isoToDate(e.date), n = escEventAssignments(e.id).length;
+      return '<div class="ag-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + '</span><span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '') + EVK[k].label + ' · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + (n ? ' · escala com ' + n + (n === 1 ? ' pessoa' : ' pessoas') : '') + '</span></span>' +
+        (can ? '<button type="button" class="btn-secondary" data-cu-unarch="' + e.id + '">↩️ Desarquivar</button>' : '') + '</div>'; }).join('');
+    return h + '</div>';
+  }
+  async function agSetArchived(id, on, finished){
+    const from = on ? esc.events : (esc.arch || []);
+    const e = from.find(x => x.id === id); if(!e) return;
+    const upd = { archived: on }; if(finished) upd.finished = true; if(!on) upd.finished = false;
+    const r = await esc.sb.from('events').update(upd).eq('id', id);
+    if(r.error){ showAlert('Agenda', 'Não consegui ' + (on ? 'arquivar' : 'desarquivar') + ': ' + r.error.message + (/archived/.test(r.error.message) ? '' : '')); return; }
+    e.archived = on; if(finished) e.finished = true; if(!on) e.finished = false;
+    esc.arch = esc.arch || [];
+    if(on){ esc.events = esc.events.filter(x => x.id !== id); esc.arch.push(e); if(esc.openCu === id) esc.openCu = null; }
+    else { esc.arch = esc.arch.filter(x => x.id !== id); esc.events.push(e); esc.events.sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || ''))); }
+    try{ syncEventPlaylists(); }catch(err){}
+    renderEscala();
+    try{ if(showingHome) renderHomeView(); else syncNavActive(); }catch(err){}
+    showImportFeedback(on ? (finished ? '✅ Finalizado — está em "Arquivados e finalizados", no fim da Agenda.' : '🗄️ Arquivado — está em "Arquivados e finalizados", no fim da Agenda.') : '↩️ Desarquivado — voltou para a Agenda.', true);
+  }
+  function bindAgArch(body){
+    body.querySelectorAll('[data-cu-arch]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const e = esc.events.find(x => x.id === b.dataset.cuArch); if(!e) return;
+      const k = EVK[e.kind || 'culto'].label.toLowerCase();
+      showConfirm('Arquivar ' + k + '?', '"' + (e.title || EVK[e.kind || 'culto'].label) + '" (' + fmtDateBR(e.date) + ') e a escala dele saem da Agenda, da Escala e do Início para toda a equipe. Nada é apagado — dá para desarquivar em "🗄️ Arquivados", no fim da Agenda.', () => agSetArchived(e.id, true), { okLabel: '🗄️ Arquivar', okNeutral: true }); });
+    body.querySelectorAll('[data-cu-fin]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const e = esc.events.find(x => x.id === b.dataset.cuFin); if(!e) return;
+      showConfirm('Finalizar?', 'Marcar "' + (e.title || EVK[e.kind || 'culto'].label) + '" (' + fmtDateBR(e.date) + ') como realizado? Ele e a escala saem da Agenda, da Escala e do Início e ficam em "🗄️ Arquivados e finalizados", no fim da Agenda (dá para desfazer).', () => agSetArchived(e.id, true, true), { okLabel: '✅ Finalizar', okNeutral: true }); });
+    body.querySelectorAll('[data-cu-unarch]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); agSetArchived(b.dataset.cuUnarch, false); });
+    body.querySelectorAll('[data-ag-archtoggle]').forEach(b => b.onclick = () => { esc.showArch = !esc.showArch; renderEscala(); });
   }
 
 })();
