@@ -2508,6 +2508,14 @@
   .ag-arch-tags{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 4px; font-size:12px; color:var(--text-dim);}
   .ag-arch-tags button{font:inherit; font-size:12px; font-weight:700; padding:4px 10px; border-radius:99px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer;}
   .ag-arch-tags button.on{border-color:#FFAE1F; color:#FFAE1F; background:rgba(255,174,31,.12);}
+  /* v317: momento da música */
+  .mom-chip{flex-shrink:0; font:inherit; font-size:11px; font-weight:800; padding:3px 9px; border-radius:99px; border:1px dashed var(--border); background:transparent; color:var(--text-dim); cursor:pointer; white-space:nowrap; margin-right:2px;}
+  .mom-chip.on{border:1px solid rgba(61,165,255,.55); background:rgba(61,165,255,.14); color:#6CB8FF;}
+  .mom-chip:disabled{cursor:default;}
+  .plp-song .t .mom-chip{display:inline-block; align-self:flex-start; margin:0 0 3px; padding:1px 8px; font-size:10.5px;}
+  .plp-ctl .mom-add{font-size:13px;}
+  .mom-pick button.on{border-color:#6CB8FF !important; color:#6CB8FF !important; background:rgba(61,165,255,.14) !important;}
+  .ev-song .mom-chip{margin:0 4px 0 0;}
 </style>
 </head>
 <body>
@@ -3282,7 +3290,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v316 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v317 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4458,8 +4466,8 @@
         '<button type="button" class="plp-btn" data-plp-arch title="' + (sel.archived ? 'Desarquivar' : 'Arquivar (sai da lista, mas continua nas estatísticas)') + '">' + (sel.archived ? '↩️ Desarquivar' : '🗄️ Arquivar') + '</button>' +
         '<button type="button" class="plp-btn danger" data-plp-del title="Excluir playlist">🗑️ Excluir</button></div></div>';
       if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
-      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="plp-drag" data-drag title="Arraste para mudar a ordem" aria-label="Arrastar">⋮⋮</span><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
-        '<span class="plp-ctl"><button type="button" data-mv="-1" data-ri="' + ri + '" title="Subir"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-mv="1" data-ri="' + ri + '" title="Descer"' + (i === items.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-rm="' + sg.id + '" title="Tirar da playlist">✕</button></span></div>'; }).join('') + '</div>';
+      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="plp-drag" data-drag title="Arraste para mudar a ordem" aria-label="Arrastar">⋮⋮</span><span class="n">' + (i + 1) + '</span><span class="t">' + momChipHtml(sel, sg.id, true) + '<b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
+        '<span class="plp-ctl">' + momChipHtml(sel, sg.id, false) + '<button type="button" data-mv="-1" data-ri="' + ri + '" title="Subir"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-mv="1" data-ri="' + ri + '" title="Descer"' + (i === items.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-rm="' + sg.id + '" title="Tirar da playlist">✕</button></span></div>'; }).join('') + '</div>';
     } else html += '<div class="home-empty-note">Crie uma playlist para montar o repertório do culto.</div>';
     html += '</div></div>';
     box.innerHTML = html;
@@ -4478,6 +4486,7 @@
       const ar = q('[data-plp-arch]'); if(ar) ar.onclick = () => { setPlaylistArchived(sel, !sel.archived); renderPlaylistsPage(); };
       const dl = q('[data-plp-del]'); if(dl) dl.onclick = () => showConfirm('Excluir playlist', 'Deseja excluir a playlist "' + sel.name + '"? As músicas continuam salvas na biblioteca.' + plDeleteEscNote(sel) + (sel.date ? ' Ela deixa de contar nas estatísticas — para guardar o histórico, prefira arquivar (🗄️).' : ''), () => { performDeletePlaylist(sel.id); if(openPlaylistId === sel.id) openPlaylistId = null; renderPlaylistsPage(); }, { okLabel: '🗑️ Excluir' });
       plBindDrag(box.querySelector('.plp-songs'), sel);
+      box.querySelectorAll('[data-mom]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); momAsk(sel, b.dataset.mom); });
       box.querySelectorAll('.plp-ctl [data-mv]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); movePlaylistSong(sel.id, +b.dataset.ri, +b.dataset.mv); renderPlaylistsPage(); });
       box.querySelectorAll('.plp-ctl [data-rm]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const sg = songs.find(x => x.id === b.dataset.rm); showConfirm('Tirar da playlist', 'Tirar "' + (sg ? sg.title : '') + '" da playlist "' + sel.name + '"? A música continua no repertório.', () => { removeSongFromPlaylist(sel.id, b.dataset.rm); renderSidebar(); renderPlaylistsPage(); }, { okLabel: 'Tirar' }); });
       box.querySelectorAll('[data-plp-song]').forEach(b => b.onclick = () => guardIfDirty(() => { showingHome = false; activeView = 'playlists'; openPlaylistId = sel.id; selectSong(b.dataset.plpSong, sel.id); }));
@@ -5062,7 +5071,7 @@
       const sh = getShiftInPlaylist(pl, sg) || 0;
       const ov = (pl.overrides && pl.overrides[sg.id] && pl.overrides[sg.id].meta) || {};
       const key = (ov.key || sg.key || '');
-      return { t: ov.title || sg.title, a: ov.artist || sg.artist || '', sh, key: key ? (transposeChord(key, sh) || key) : '' };
+      return { t: ov.title || sg.title, a: ov.artist || sg.artist || '', sh, key: key ? (transposeChord(key, sh) || key) : '', mom: (pl.overrides && pl.overrides[sg.id] && pl.overrides[sg.id].mom) || '' };
     });
   }
   function b64urlEncode(str){ const bytes = new TextEncoder().encode(str); let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
@@ -5091,7 +5100,7 @@
     const items = plShareData(pl);
     let t = '*🎵 ' + pl.name + '*\n';
     if(pl.date) t += '📅 ' + WEEKDAYS_PT[isoToDate(pl.date).getDay()] + ', ' + fmtDateBR(pl.date) + '\n';
-    t += '\n' + items.map((x, i) => (i + 1) + '. ' + x.t + (x.a ? ' — ' + x.a : '') + (x.key ? ' (' + x.key + ')' : '')).join('\n');
+    t += '\n' + items.map((x, i) => (i + 1) + '. ' + (x.mom ? '[' + x.mom + '] ' : '') + x.t + (x.a ? ' — ' + x.a : '') + (x.key ? ' (' + x.key + ')' : '')).join('\n');
     t += '\n\nAbrir no CEP Louvor: ' + plShareLink(pl);
     return t;
   }
@@ -10416,7 +10425,7 @@
     as.forEach(a => { t += escFnIcon(a.function) + ' ' + a.function + ': ' + escName(a.profile_id) + ' ' + escStatusIcon(a.status) + '\n'; });
     const pls = e.playlist ? (((e.playlist.songIds || []).length ? evPlSongs(e.playlist.songIds, e.playlist.overrides || {}) : null) || e.playlist.songs || []) : [];
     if(pls.length){
-      t += '\n*🎵 Repertório' + (e.playlist.name ? ' — ' + e.playlist.name : '') + '*\n' + pls.map((s, i) => (i + 1) + '. ' + s.title + (s.artist ? ' — ' + s.artist : '') + (s.key ? ' (Tom ' + s.key + ')' : '')).join('\n') + '\n';
+      t += '\n*🎵 Repertório' + (e.playlist.name ? ' — ' + e.playlist.name : '') + '*\n' + pls.map((s, i) => (i + 1) + '. ' + (s.mom ? '[' + s.mom + '] ' : '') + s.title + (s.artist ? ' — ' + s.artist : '') + (s.key ? ' (Tom ' + s.key + ')' : '')).join('\n') + '\n';
     } else {
       t += '\n🎵 Repertório: ainda não definido\n';
     }
@@ -10503,7 +10512,7 @@
         const ov = (overrides && overrides[id]) || {};
         const meta = Object.assign({}, s, ov.meta || {});
         const shift = typeof ov.shift === 'number' ? ov.shift : 0;
-        return { id, title: meta.title, artist: meta.artist || '', key: shift ? (transposeChord(meta.key, shift) || meta.key) : (meta.key || '') };
+        return { id, title: meta.title, artist: meta.artist || '', key: shift ? (transposeChord(meta.key, shift) || meta.key) : (meta.key || ''), mom: ov.mom || '' };
       }).filter(Boolean);
   }
   function escPlaylistSnapshotOLD(pl){
@@ -13442,7 +13451,7 @@
     const ep = e.playlist; const list = ep.songs || [];
     return '<div class="ev-songs">' + list.map((sg, i) => {
       const id = sg.id || (ep.songIds || [])[i];
-      return '<div class="ev-song' + (can && id ? ' ed' : '') + '"><span class="n">' + (i + 1) + '</span><span class="t' + (id && songs.some(x => x.id === id) ? ' evp-go" role="button" tabindex="0" data-evp-go="' + id + '" data-ev="' + e.id + '" title="Abrir esta música' : '') + '">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' +
+      return '<div class="ev-song' + (can && id ? ' ed' : '') + '"><span class="n">' + (i + 1) + '</span>' + (sg.mom || (can && id) ? '<button type="button" class="mom-chip' + (sg.mom ? ' on' : '') + '"' + (can && id ? ' data-evmom="' + id + '" data-ev="' + e.id + '"' : ' disabled') + '>' + escH(sg.mom || '＋ momento') + '</button>' : '') + '<span class="t' + (id && songs.some(x => x.id === id) ? ' evp-go" role="button" tabindex="0" data-evp-go="' + id + '" data-ev="' + e.id + '" title="Abrir esta música' : '') + '">' + escH(sg.title) + (sg.artist ? '<small>' + escH(sg.artist) + '</small>' : '') + '</span>' +
         (can && id ? '<span class="evp-key"><button type="button" data-evp-tom="-1" data-ev="' + e.id + '" data-sid="' + id + '">−</button><b>' + escH(sg.key || '–') + '</b><button type="button" data-evp-tom="1" data-ev="' + e.id + '" data-sid="' + id + '">+</button></span>' +
           '<span class="evp-ctl"><button type="button" data-evp-mv="-1" data-ev="' + e.id + '" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-evp-mv="1" data-ev="' + e.id + '" data-i="' + i + '"' + (i === list.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-evp-rm data-ev="' + e.id + '" data-sid="' + id + '">✕</button></span>'
           : (sg.key ? '<span class="k">' + escH(sg.key) + '</span>' : '')) + '</div>';
@@ -13454,6 +13463,8 @@
     return '<div class="evp-add"><input type="search" placeholder="Buscar música para incluir…" data-evp-q="' + e.id + '" value="' + escH(esc.plAddQ || '') + '"><div class="evp-res" id="evpRes"></div></div>';
   }
   function bindEscPlEdit(body){
+    body.querySelectorAll('[data-evmom]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const e = esc.events.find(x => x.id === b.dataset.ev); const sid = b.dataset.evmom; const cur = (e && e.playlist && e.playlist.overrides && e.playlist.overrides[sid] && e.playlist.overrides[sid].mom) || '';
+      momPick(cur, v => escPlUpdate(b.dataset.ev, ep => { const o = ep.overrides[sid] = ep.overrides[sid] || {}; if(v) o.mom = v; else delete o.mom; if(!Object.keys(o).length) delete ep.overrides[sid]; })); });
     body.querySelectorAll('[data-evp-tom]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const d = +b.dataset.evpTom, sid = b.dataset.sid;
       escPlUpdate(b.dataset.ev, ep => { const o = ep.overrides[sid] = ep.overrides[sid] || {}; o.shift = (((typeof o.shift === 'number' ? o.shift : 0) + d) % 12 + 12) % 12; if(o.shift > 6) o.shift -= 12; if(!o.shift) delete o.shift; }); });
     body.querySelectorAll('[data-evp-mv]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const i = +b.dataset.i, d = +b.dataset.evpMv;
@@ -14454,6 +14465,57 @@ function rebalanceAdaptiveCols(wrap, repack){
   function cuTagsChips(e){
     const t = e && e.tags; if(!t || !t.length) return '';
     return ' <span class="cu-tags">' + t.map(x => '<i>' + escH(x) + '</i>').join('') + '</span>';
+  }
+
+  // ================= MOMENTO DA MÚSICA NA PLAYLIST (v317) =================
+  // Abertura, Oferta, Encerramento, Batismo, Ceia… — marcado em cada música da
+  // playlist (overrides[id].mom). Na playlist do culto, líder/ministro marca
+  // para todos; nas playlists pessoais, vale só para você.
+  const MOM_BASE = ['Abertura', 'Oferta', 'Encerramento', 'Batismo', 'Ceia'];
+  function momKnown(){
+    const out = MOM_BASE.slice();
+    playlists.forEach(p => Object.values(p.overrides || {}).forEach(o => { if(o && o.mom && !out.includes(o.mom)) out.push(o.mom); }));
+    return out;
+  }
+  function momChipHtml(pl, sid, setOnly){
+    const m = pl && pl.overrides && pl.overrides[sid] && pl.overrides[sid].mom;
+    const ro = typeof isParticipant === 'function' && isParticipant();
+    if(!m && ro) return '';
+    if(setOnly && !m) return '';
+    if(setOnly === false){ if(m || ro) return ''; return '<button type="button" class="mom-add" data-mom="' + sid + '" title="Marcar o momento do culto (Abertura, Oferta, Ceia…)">🏷</button>'; }
+    return '<button type="button" class="mom-chip' + (m ? ' on' : '') + '"' + (ro ? ' disabled' : ' data-mom="' + sid + '"') + ' title="Momento do culto (Abertura, Oferta…)">' + escapeHtml(m || '＋ momento') + '</button>';
+  }
+  function momPick(cur, done){
+    const ov = document.createElement('div'); ov.className = 'decl-ov';
+    ov.innerHTML = '<div class="decl-box" role="dialog" aria-modal="true" style="max-width:380px"><h3>🏷️ Momento da música</h3><p>Em que parte do culto ela entra?</p>' +
+      '<div class="esc-dress-chips mom-pick">' + momKnown().map(m => '<button type="button" data-m="' + escapeHtml(m) + '"' + (m === cur ? ' class="on"' : '') + '>' + (m === cur ? '✓ ' : '') + escapeHtml(m) + '</button>').join('') + '</div>' +
+      '<div class="cu-tag-new" style="margin-top:10px"><input class="esc-input" id="momNew" maxlength="24" placeholder="Outro (ex.: Louvor, Adoração)"><button type="button" class="btn-primary" id="momAdd">＋ Incluir</button></div>' +
+      '<div class="decl-acts">' + (cur ? '<button type="button" id="momClear">Tirar momento</button>' : '') + '<button type="button" id="momClose">Fechar</button></div></div>';
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    const pick = v => { close(); done(v); };
+    ov.addEventListener('click', ev => { if(ev.target === ov) close(); });
+    ov.querySelector('#momClose').onclick = close;
+    const clr = ov.querySelector('#momClear'); if(clr) clr.onclick = () => pick('');
+    ov.querySelectorAll('[data-m]').forEach(b => b.onclick = () => pick(b.dataset.m === cur ? '' : b.dataset.m));
+    const inp = ov.querySelector('#momNew'), add = () => { const v = inp.value.trim().replace(/\s+/g, ' '); if(v) pick(v.charAt(0).toUpperCase() + v.slice(1)); };
+    ov.querySelector('#momAdd').onclick = add; inp.onkeydown = ev => { if(ev.key === 'Enter'){ ev.preventDefault(); add(); } };
+  }
+  function momAsk(pl, sid){
+    const cur = (pl.overrides && pl.overrides[sid] && pl.overrides[sid].mom) || '';
+    momPick(cur, v => {
+      pl.overrides = pl.overrides || {}; const o = pl.overrides[sid] = pl.overrides[sid] || {};
+      if(v) o.mom = v; else delete o.mom;
+      if(!Object.keys(o).length) delete pl.overrides[sid];
+      savePlaylists(); renderPlaylistsPage();
+      // Playlist do culto + líder/ministro: vale para toda a equipe
+      try{
+        if(pl.fromEvent && typeof esc !== 'undefined' && esc.sb && escCanSchedule()){
+          const e = esc.events.find(x => x.id === pl.fromEvent);
+          if(e && e.playlist) escPlUpdate(e.id, ep => { const oo = ep.overrides[sid] = ep.overrides[sid] || {}; if(v) oo.mom = v; else delete oo.mom; if(!Object.keys(oo).length) delete ep.overrides[sid]; });
+        }
+      }catch(err){}
+    });
   }
 
 })();
