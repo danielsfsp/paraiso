@@ -2519,6 +2519,18 @@
   .plp-ctl .mom-add{font-size:13px;} .plp-ctl .mom-add.has{border-color:rgba(61,165,255,.55); background:rgba(61,165,255,.14);}
   .mom-pick button.on{border-color:#6CB8FF !important; color:#6CB8FF !important; background:rgba(61,165,255,.14) !important;}
   .ev-song .mom-chip{margin:0 4px 0 0;}
+  /* v324: escalas arquivadas + frequência */
+  .esc-arch-row{align-items:flex-start;}
+  .esc-arch-people{display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;}
+  .esc-arch-people i{font-style:normal; font-size:11.5px; padding:2px 8px; border-radius:99px; background:var(--surface-2); border:1px solid var(--border-soft);}
+  .esc-arch-people i small{color:var(--text-dim);} .esc-arch-people i.st-recusado{opacity:.5; text-decoration:line-through;}
+  .esc-freq-list{display:flex; flex-direction:column; gap:6px; margin-top:8px;}
+  .esc-freq-row{display:grid; grid-template-columns:minmax(90px, 30%) 1fr auto; align-items:center; column-gap:10px; row-gap:2px; padding:8px 10px; border:1px solid var(--border-soft); border-radius:10px; background:var(--surface);}
+  .esc-freq-row .nm{font-weight:700; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;} .esc-freq-row .nm small{font-weight:400; color:var(--text-dim);}
+  .esc-freq-row .bar{height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden;} .esc-freq-row .bar i{display:block; height:100%; background:var(--accent); border-radius:99px;}
+  .esc-freq-row b{font-size:13px; color:var(--accent);}
+  .esc-freq-row .det{grid-column:1 / -1; font-size:11.5px; color:var(--text-dim);}
+  .esc-freq-row.zero{opacity:.6;}
 </style>
 </head>
 <body>
@@ -3293,7 +3305,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v323 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v324 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10205,7 +10217,7 @@
     esc.profiles = pr.data || []; esc.teams = tm.data || []; esc.events = (ev.data || []).filter(e => !e.archived); esc.arch = (ev.data || []).filter(e => e.archived); esc.unav = un.data || [];
     await escLoadAdmins();
     await escLoadPre();
-    const ids = esc.events.map(e => e.id);
+    const ids = esc.events.concat(esc.arch || []).map(e => e.id);
     esc.assignments = [];
     if(ids.length){
       const as = await sb.from('assignments').select('*').in('event_id', ids);
@@ -10375,6 +10387,7 @@
       if(escCanSchedule()) html += '<button type="button" class="btn-secondary" data-remind="' + e.id + '">🔔 Cobrar pendentes</button><button type="button" class="btn-secondary" data-edit="' + e.id + '">✎ Editar</button><button type="button" class="btn-secondary ev-del" data-del-ev="' + e.id + '">🗑 Excluir</button>';
       html += '</div></div></div>';
     });
+    html += escArchListHtml(mineOnly) + (escCanSchedule() && !mineOnly ? escFreqHtml() : '');
     if(escCanSchedule() && !mineOnly) html += '<button class="btn-primary esc-new ev-fab" id="escNewEvent" type="button">＋ Nova escala</button>';
     body.innerHTML = html;
     const nb = document.getElementById('escNewEvent'); if(nb) nb.onclick = () => { escStartEdit(null); esc.editing.pickCulto = true; esc.editOrig = escEditKey(esc.editing); renderEscala(); };
@@ -10400,6 +10413,7 @@
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
     body.querySelectorAll('[data-openpl]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const pl = playlists.find(x => x.id === b.dataset.openpl); if(pl){ closeEscala(); openPlaylistPage(pl); } });
     bindEvpOpenSong(body);
+    bindEscExtra(body);
     body.querySelectorAll('.ev-mine.answered').forEach(m => m.onclick = (ev) => { if(ev.target.closest('button')) return; m.classList.remove('answered'); });
     body.querySelectorAll('[data-remind]').forEach(b => b.onclick = () => escRemind(b.dataset.remind));
     body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => escStartEdit(b.dataset.edit));
@@ -14551,6 +14565,70 @@ function rebalanceAdaptiveCols(wrap, repack){
         });
       });
     }
+  }
+
+  // ================= ESCALA: ARQUIVADAS + QUEM MAIS FOI ESCALADO (v324) =================
+  function escArchListHtml(mineOnly){
+    let arch = (esc.arch || []).filter(e => escEventAssignments(e.id).length);
+    if(mineOnly) arch = arch.filter(e => e.minister_id === esc.user.id || escEventAssignments(e.id).some(a => a.profile_id === esc.user.id));
+    if(!arch.length) return '';
+    arch.sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+    let h = '<div class="ag-arch esc-arch"><button type="button" class="plp-arch-toggle" data-esc-archtoggle>🗄️ Escalas arquivadas e finalizadas (' + arch.length + ') ' + (esc.showEscArch ? '▴' : '▾') + '</button>';
+    if(esc.showEscArch) h += arch.map(e => {
+      const k = e.kind || 'culto', dd = isoToDate(e.date), as = escEventAssignments(e.id);
+      return '<div class="ag-arch-row esc-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + (typeof cuTagsChips === 'function' ? cuTagsChips(e) : '') + '</span>' +
+        '<span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '🗄️ Arquivado · ') + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + '</span>' +
+        '<span class="esc-arch-people">' + as.map(a => '<i class="st-' + escH(a.status) + '">' + escFnIcon(a.function) + ' ' + escH(escFirst(a.profile_id)) + ' <small>' + escH(a.function) + '</small></i>').join('') + '</span></span></div>';
+    }).join('');
+    return h + '</div>';
+  }
+  function escFreqHtml(){
+    const per = esc.freqDays || 90;
+    let h = '<div class="ag-arch esc-freq"><button type="button" class="plp-arch-toggle" data-esc-freqtoggle>📊 Quem mais foi escalado ' + (esc.showFreq ? '▴' : '▾') + '</button>';
+    if(!esc.showFreq) return h + '</div>';
+    h += '<div class="ag-arch-tags"><span>Período:</span>' + [[30, '30 dias'], [90, '3 meses'], [180, '6 meses'], [365, '1 ano']].map(([d, l]) => '<button type="button" data-freqdays="' + d + '"' + (per === d ? ' class="on"' : '') + '>' + l + '</button>').join('') + '</div>';
+    const f = esc.freq;
+    if(!f || f.days !== per){ h += '<div class="esc-empty">Calculando…</div>'; return h + '</div>'; }
+    if(f.error){ h += '<div class="esc-empty">Não consegui calcular: ' + escH(f.error) + '</div>'; return h + '</div>'; }
+    const rows = f.rows, max = Math.max(1, ...rows.map(r => r.n));
+    h += '<div class="hint">Conta as escalas de ' + escH(fmtDateBR(f.from)) + ' até hoje (confirmadas e pendentes; recusas ficam de fora). ' + f.events + (f.events === 1 ? ' culto/evento' : ' cultos/eventos') + ' no período.</div>';
+    h += '<div class="esc-freq-list">' + rows.map(r => '<div class="esc-freq-row' + (r.n ? '' : ' zero') + '"><span class="nm">' + escH(r.name) + (r.pre ? ' <small>pré-cadastro</small>' : '') + '</span>' +
+      '<span class="bar"><i style="width:' + Math.round(100 * r.n / max) + '%"></i></span><b>' + r.n + '×</b>' +
+      '<small class="det">' + (r.n ? (r.fns.map(([fn, c]) => escFnIcon(fn) + ' ' + escH(fn) + (c > 1 ? ' ' + c : '')).join(' · ') + (r.last ? ' · última: ' + escH(fmtDateBR(r.last).slice(0, 5)) : '')) : 'não foi escalado no período') + '</small></div>').join('') + '</div>';
+    return h + '</div>';
+  }
+  async function escFreqLoad(){
+    const days = esc.freqDays || 90;
+    const from = isoFromDate(new Date(Date.now() - days * 86400000)), to = todayIso();
+    try{
+      const ev = await esc.sb.from('events').select('id,date').gte('date', from).lte('date', to);
+      if(ev.error) throw ev.error;
+      const evs = ev.data || [], dateOf = {}; evs.forEach(e => dateOf[e.id] = e.date);
+      let as = [];
+      const ids = evs.map(e => e.id);
+      for(let i = 0; i < ids.length; i += 150){
+        const r = await esc.sb.from('assignments').select('event_id,profile_id,pre_id,function,status').in('event_id', ids.slice(i, i + 150));
+        if(r.error) throw r.error; as = as.concat(r.data || []);
+      }
+      const m = {};
+      as.forEach(a => {
+        if(a.status === 'recusado') return;
+        const pid = a.profile_id || (a.pre_id ? 'pre:' + a.pre_id : null); if(!pid) return;
+        const x = m[pid] = m[pid] || { n: 0, fns: {}, last: '' };
+        x.n++; x.fns[a.function] = (x.fns[a.function] || 0) + 1; if(dateOf[a.event_id] > x.last) x.last = dateOf[a.event_id];
+      });
+      const people = (esc.profiles || []).filter(p => p.approved && p.active !== false).map(p => p.id).concat((esc.pre || []).filter(p => !p.linked_profile).map(p => 'pre:' + p.id));
+      Object.keys(m).forEach(pid => { if(!people.includes(pid)) people.push(pid); });
+      const rows = people.map(pid => { const x = m[pid] || { n: 0, fns: {}, last: '' }; return { pid, name: escName(pid), pre: pid.startsWith('pre:'), n: x.n, last: x.last, fns: Object.entries(x.fns).sort((a, b) => b[1] - a[1]) }; })
+        .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'pt-BR'));
+      esc.freq = { days, from, rows, events: evs.length };
+    }catch(err){ esc.freq = { days, error: err.message || String(err) }; }
+    renderEscala();
+  }
+  function bindEscExtra(body){
+    body.querySelectorAll('[data-esc-archtoggle]').forEach(b => b.onclick = () => { esc.showEscArch = !esc.showEscArch; renderEscala(); });
+    body.querySelectorAll('[data-esc-freqtoggle]').forEach(b => b.onclick = () => { esc.showFreq = !esc.showFreq; renderEscala(); if(esc.showFreq && (!esc.freq || esc.freq.days !== (esc.freqDays || 90))) escFreqLoad(); });
+    body.querySelectorAll('[data-freqdays]').forEach(b => b.onclick = () => { esc.freqDays = +b.dataset.freqdays; esc.freq = null; renderEscala(); escFreqLoad(); });
   }
 
 })();
