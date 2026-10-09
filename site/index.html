@@ -2016,6 +2016,8 @@
   .ev-song .evp-ctl{display:inline-flex; gap:3px; margin-left:6px;}
   .ev-song .evp-ctl button:disabled{opacity:.3; cursor:default;}
   .evp-add{margin-top:8px;}
+  .evp-addbtn{margin-top:8px; width:100%; justify-content:center; border-style:dashed !important;}
+  .evp-addbtn.on{border-style:solid !important; opacity:.85;}
   .evp-add input{width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px; box-sizing:border-box;}
   .evp-res{display:flex; flex-direction:column; gap:4px; margin-top:6px;}
   .evp-res button{display:flex; align-items:center; gap:8px; text-align:left; padding:7px 10px; border-radius:8px; border:1px solid var(--border-soft); background:var(--surface); color:var(--text); cursor:pointer;}
@@ -3150,7 +3152,7 @@
       <summary>⛪ Culto</summary>
       <ul>
         <li><strong>＋ Novo culto:</strong> nome (toque numa opção pronta ou digite), data, horário, ministro e a playlist. Dá para <strong>vincular uma escala já montada</strong>.</li>
-        <li>Em cada culto: <strong>👥 Montar/Editar escala</strong>, a <strong>🎵 Playlist do culto</strong> (tom − / +, ▲ ▼, ✕ — vale para toda a equipe) e <strong>🔁 Trocar playlist</strong> (com Salvar/Cancelar).</li>
+        <li>Em cada culto: <strong>👥 Montar/Editar escala</strong>, a <strong>🎵 Playlist do culto</strong> (<strong>＋ Adicionar música</strong> — dá para incluir mesmo com o culto em andamento —, tom − / +, ▲ ▼, ✕ — vale para toda a equipe) e <strong>🔁 Trocar playlist</strong> (com Salvar/Cancelar).</li>
         <li><strong>Compartilhar</strong> manda no WhatsApp o culto, quem toca o quê e as músicas com artista e tom. É o único lugar de compartilhar.</li>
         <li><strong>✎ → Apagar culto</strong> apaga o culto e a escala dele.</li>
       </ul>
@@ -3191,7 +3193,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v299 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v300 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -13154,7 +13156,9 @@
         (pl ? '<button type="button" class="btn-primary ev-pl-open" data-openpl="' + pl.id + '">▶ Abrir</button>' : '') + '</div>';
       if(e.playlist.songs && e.playlist.songs.length) h += escPlSongRowsHtml(e, can);
       else h += '<div class="ev-pl-empty">Nenhuma música ainda.</div>';
-      if(can) h +=
+      // v300: incluir música no repertório do culto (mesmo já montado / no meio do culto)
+      if(escCanSchedule()) h += '<button type="button" class="btn-secondary evp-addbtn' + (esc.plAdd === e.id ? ' on' : '') + '" data-evp-addopen="' + e.id + '">' + (esc.plAdd === e.id ? '✕ Fechar busca' : '＋ Adicionar música') + '</button>' + escPlAddHtml(e);
+      if(can || (escCanSchedule() && esc.plAdd === e.id)) h +=
         '<div class="evp-note">✓ Mudanças feitas aqui valem para toda a equipe escalada.</div>';
     } else if(can){
       const sug = escPlSuggest(e);
