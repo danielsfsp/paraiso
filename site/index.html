@@ -2498,6 +2498,14 @@
   .plp-songs.is-dragging .plp-drag{cursor:grabbing;}
   .plp-song.dragging{background:var(--surface-3, rgba(255,255,255,.08)) !important; box-shadow:0 6px 18px rgba(0,0,0,.45); position:relative; z-index:2; outline:1px solid var(--accent);}
   body.role-part .plp-drag{display:none !important;}
+  /* v315: marcações do culto */
+  .cu-tags{display:inline-flex; flex-wrap:wrap; gap:4px; vertical-align:middle; margin-left:4px;}
+  .cu-tags i{font-style:normal; font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:99px; background:rgba(255,174,31,.14); color:#FFAE1F; border:1px solid rgba(255,174,31,.35);}
+  .cu-tags-pick button.on{background:rgba(255,174,31,.18) !important; border-color:#FFAE1F !important; color:#FFAE1F !important;}
+  .cu-tag-new{display:flex; gap:6px; margin-top:6px;} .cu-tag-new .esc-input{flex:1; margin:0;}
+  .ag-arch-tags{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 4px; font-size:12px; color:var(--text-dim);}
+  .ag-arch-tags button{font:inherit; font-size:12px; font-weight:700; padding:4px 10px; border-radius:99px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer;}
+  .ag-arch-tags button.on{border-color:#FFAE1F; color:#FFAE1F; background:rgba(255,174,31,.12);}
 </style>
 </head>
 <body>
@@ -3272,7 +3280,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v314 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v315 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10447,14 +10455,14 @@
     const e = id ? esc.events.find(x => x.id === id) : null;
     esc.editing = e ? {
       id: e.id, kind: e.kind || 'culto', date: e.date, time: e.time || '', title: e.title || 'Culto', minister_id: e.minister_id || '',
-      playlist: e.playlist || null, dress_code: e.dress_code || '', notes: e.notes || '',
+      playlist: e.playlist || null, dress_code: e.dress_code || '', notes: e.notes || '', tags: Array.isArray(e.tags) ? e.tags.slice() : [],
       rows: escEventAssignments(e.id).map(a => ({ id: a.id, function: a.function, profile_id: a.profile_id, status: a.status, reason: a.reason }))
-    } : { id: null, kind: 'culto', date: todayIso(), time: '19:00', title: 'Culto', minister_id: '', playlist: null, dress_code: '', notes: '', rows: [] };
+    } : { id: null, kind: 'culto', date: todayIso(), time: '19:00', title: 'Culto', minister_id: '', playlist: null, dress_code: '', notes: '', tags: [], rows: [] };
     esc.editOrig = escEditKey(esc.editing);
     renderEscala();
   }
   function escEditKey(d){
-    return JSON.stringify([d.date, d.time, d.title, d.minister_id || '', d.playlist ? d.playlist.name + '|' + d.playlist.songs.length : '', d.dress_code, d.notes,
+    return JSON.stringify([d.date, d.time, d.title, (d.tags || []).join(','), d.minister_id || '', d.playlist ? d.playlist.name + '|' + d.playlist.songs.length : '', d.dress_code, d.notes,
       (d.rows || []).filter(r => r.profile_id).map(r => r.function + ':' + r.profile_id)]);
   }
   function escEditorDirty(){
@@ -10534,6 +10542,7 @@
       (isCulto ? '<div class="esc-kind-row">' + Object.keys(EVK).map(k => '<button type="button" data-evkind2="' + k + '"' + ((d.kind || 'culto') === k ? ' class="on"' : '') + '>' + EVK[k].ico + ' ' + (k === 'evento' ? 'Outros' : EVK[k].label) + '</button>').join('') + '</div>' : '') +
       '<label class="ed-culto">' + ((d.kind || 'culto') === 'culto' ? 'Nome do culto' : 'Nome') + '<input id="escTitle" class="esc-input" value="' + escH((d.title === 'Culto' || d.title === 'Ensaio') && !d.id ? (d.kind === 'ensaio' ? 'Ensaio' : '') : d.title) + '" placeholder="' + ((d.kind || 'culto') === 'evento' ? 'Ex.: Casamento, Retiro, Gravação…' : 'Escolha abaixo ou digite') + '"></label>' +
       '<div class="esc-dress-chips ed-culto cu-names' + ((d.kind || 'culto') !== 'culto' ? ' hide-nonculto' : '') + '">' + escCultoNames().map(x => '<button type="button" data-cuname="' + escH(x) + '"' + (x === d.title ? ' class="on"' : '') + '>' + escH(x) + '</button>').join('') + '</div>' +
+      cuTagsEditorHtml(d) +
       '<label class="ed-culto' + ((d.kind || 'culto') !== 'culto' ? ' hide-nonculto' : '') + '">🎤 Ministro<select id="escMinister" class="esc-input">' + personOpts(d.minister_id, 'Ministro') + '</select></label>' +
       '<label class="ed-culto">🎵 Playlist do culto<select id="escPlaylist" class="esc-input">' + plOpts + '</select></label>' +
       (d.playlist ? '<div class="hint ed-culto">🎵 ' + d.playlist.songs.map(x => escH(x.title) + (x.key ? ' <b class="esc-key">' + escH(x.key) + '</b>' : '')).join(' · ') + '</div>' : '') +
@@ -10605,6 +10614,8 @@
       if(keep.playlist){ n.playlist = keep.playlist; n.playlistId = keep.playlistId; }
       renderEscala();
     };
+    body.querySelectorAll('[data-cutag]').forEach(b => b.onclick = () => { grab(); const t = b.dataset.cutag; d.tags = d.tags || []; d.tags = d.tags.includes(t) ? d.tags.filter(x => x !== t) : d.tags.concat(t); renderEscala(); });
+    { const ti = document.getElementById('cuTagNew'); if(ti){ const add = () => { const v = ti.value.trim().replace(/\s+/g, ' ').slice(0, 30); if(!v) return; grab(); d.tags = d.tags || []; if(!d.tags.some(x => x.toLowerCase() === v.toLowerCase())) d.tags.push(v); renderEscala(); const t2 = document.getElementById('cuTagNew'); if(t2) t2.focus(); }; ti.onkeydown = ev => { if(ev.key === 'Enter'){ ev.preventDefault(); add(); } }; const ab = document.getElementById('cuTagAdd'); if(ab) ab.onclick = add; } }
     body.querySelectorAll('[data-cuname]').forEach(b => b.onclick = () => { document.getElementById('escTitle').value = b.dataset.cuname; body.querySelectorAll('[data-cuname]').forEach(x => x.classList.toggle('on', x === b)); });
     body.querySelectorAll('[data-dress]').forEach(b => b.onclick = () => { document.getElementById('escDress').value = b.dataset.dress; });
     const cl = document.getElementById('escCopyLast');
@@ -10667,7 +10678,7 @@
       if(esc.editMode !== 'culto' && !d.rows.some(r => r.profile_id)){ showAlert('Escala', 'Coloque pelo menos uma pessoa em "Quem toca o quê" antes de salvar.'); return; }
       const btn = document.getElementById('escSave'); btn.disabled = true; btn.textContent = '⏳ Salvando…';
       try{
-        const rec = { kind: d.kind || 'culto', date: d.date, time: d.time, title: d.title, minister_id: d.minister_id || null, playlist: d.playlist, dress_code: d.dress_code, notes: d.notes };
+        const rec = { kind: d.kind || 'culto', date: d.date, time: d.time, title: d.title, minister_id: d.minister_id || null, playlist: d.playlist, dress_code: d.dress_code, notes: d.notes, tags: d.tags || [] };
         let evId = d.id;
         if(evId){
           const r = await esc.sb.from('events').update(rec).eq('id', evId); if(r.error) throw r.error;
@@ -13488,7 +13499,7 @@
       const k = e.kind || 'culto', open = esc.openCu === e.id;
       html += '<div class="cu-card cu-compact k-' + k + (open ? ' open' : '') + '" data-cu="' + e.id + '">' +
         '<button type="button" class="cu-row" data-cu-toggle="' + e.id + '"><span class="cu-ico">' + EVK[k].ico + '</span>' +
-        '<span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + '</span><span class="cu-sub"><b class="cu-kind' + (k !== 'culto' ? ' other' : '') + '">' + EVK[k].label + '</b> · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date).slice(0, 5)) + (e.time ? ' · ' + escH(e.time) : '') + '</span></span>' +
+        '<span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + '</span><span class="cu-sub"><b class="cu-kind' + (k !== 'culto' ? ' other' : '') + '">' + EVK[k].label + '</b> · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date).slice(0, 5)) + (e.time ? ' · ' + escH(e.time) : '') + '</span></span>' +
         '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></button>' +
         (can ? '<button type="button" class="cu-trash" data-cu-del="' + e.id + '" title="Apagar" aria-label="Apagar">🗑</button>' : '') +
         (open ? '<div class="cu-body"><div class="cu-acts">' + '<button type="button" class="btn-secondary cu-share" data-cu-share="' + e.id + '" title="Compartilhar no WhatsApp: culto, escala e músicas"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
@@ -14164,11 +14175,16 @@ function rebalanceAdaptiveCols(wrap, repack){
   // da Agenda, da Escala, do Início e dos contadores, para todos. Fica em
   // "🗄️ Arquivados" no fim da Agenda, de onde dá para desarquivar.
   function agArchHtml(can){
-    const arch = (esc.arch || []).slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
-    if(!arch.length) return '';
-    let h = '<div class="ag-arch"><button type="button" class="plp-arch-toggle" data-ag-archtoggle>🗄️ Arquivados e finalizados (' + arch.length + ') ' + (esc.showArch ? '▴' : '▾') + '</button>';
+    const archAll = (esc.arch || []).slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+    if(!archAll.length) return '';
+    const tagSet = []; archAll.forEach(e => (e.tags || []).forEach(t => { if(!tagSet.includes(t)) tagSet.push(t); }));
+    if(esc.archTag && esc.archTag !== '__none' && !tagSet.includes(esc.archTag)) esc.archTag = null;
+    const arch = !esc.archTag ? archAll : esc.archTag === '__none' ? archAll.filter(e => !(e.tags || []).length) : archAll.filter(e => (e.tags || []).includes(esc.archTag));
+    let h = '<div class="ag-arch"><button type="button" class="plp-arch-toggle" data-ag-archtoggle>🗄️ Arquivados e finalizados (' + archAll.length + ') ' + (esc.showArch ? '▴' : '▾') + '</button>';
+    if(esc.showArch && tagSet.length) h += '<div class="ag-arch-tags"><span>🏷️ Filtrar:</span>' + [[null, 'Todos (' + archAll.length + ')']].concat(tagSet.sort((a, b) => a.localeCompare(b, 'pt-BR')).map(t => [t, t + ' (' + archAll.filter(e => (e.tags || []).includes(t)).length + ')'])).concat(archAll.some(e => !(e.tags || []).length) ? [['__none', 'Sem marcação']] : []).map(([v, l]) => '<button type="button" data-archtag="' + escH(v || '') + '"' + ((esc.archTag || null) === v ? ' class="on"' : '') + '>' + escH(l) + '</button>').join('') + '</div>';
+    if(esc.showArch && !arch.length) h += '<div class="esc-empty">Nada com essa marcação.</div>';
     if(esc.showArch) h += arch.map(e => { const k = e.kind || 'culto', dd = isoToDate(e.date), n = escEventAssignments(e.id).length;
-      return '<div class="ag-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + '</span><span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '') + EVK[k].label + ' · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + (n ? ' · escala com ' + n + (n === 1 ? ' pessoa' : ' pessoas') : '') + '</span></span>' +
+      return '<div class="ag-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + '</span><span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '') + EVK[k].label + ' · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + (n ? ' · escala com ' + n + (n === 1 ? ' pessoa' : ' pessoas') : '') + '</span></span>' +
         (can ? '<button type="button" class="btn-secondary" data-cu-unarch="' + e.id + '">↩️ Desarquivar</button>' : '') + '</div>'; }).join('');
     return h + '</div>';
   }
@@ -14194,6 +14210,7 @@ function rebalanceAdaptiveCols(wrap, repack){
     body.querySelectorAll('[data-cu-fin]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const e = esc.events.find(x => x.id === b.dataset.cuFin); if(!e) return;
       showConfirm('Finalizar?', 'Marcar "' + (e.title || EVK[e.kind || 'culto'].label) + '" (' + fmtDateBR(e.date) + ') como realizado? Ele e a escala saem da Agenda, da Escala e do Início e ficam em "🗄️ Arquivados e finalizados", no fim da Agenda (dá para desfazer).', () => agSetArchived(e.id, true, true), { okLabel: '✅ Finalizar', okNeutral: true }); });
     body.querySelectorAll('[data-cu-unarch]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); agSetArchived(b.dataset.cuUnarch, false); });
+    body.querySelectorAll('[data-archtag]').forEach(b => b.onclick = () => { esc.archTag = b.dataset.archtag || null; renderEscala(); });
     body.querySelectorAll('[data-ag-archtoggle]').forEach(b => b.onclick = () => { esc.showArch = !esc.showArch; renderEscala(); });
   }
 
@@ -14413,6 +14430,26 @@ function rebalanceAdaptiveCols(wrap, repack){
         window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onUp);
       });
     });
+  }
+
+  // ================= MARCAÇÕES DO CULTO (v315) =================
+  // Ex.: Oração, Primícias, Ceia — para separar depois (filtro nos Arquivados).
+  const CU_TAGS_BASE = ['Oração', 'Primícias', 'Ceia', 'Celebração', 'Família', 'Jovens', 'Missões', 'Batismo'];
+  function cuTagsKnown(){
+    const out = CU_TAGS_BASE.slice();
+    [].concat(esc.events || [], esc.arch || []).forEach(e => (e.tags || []).forEach(t => { if(!out.some(x => x.toLowerCase() === t.toLowerCase())) out.push(t); }));
+    return out;
+  }
+  function cuTagsEditorHtml(d){
+    const cur = d.tags || [];
+    const all = cuTagsKnown(); cur.forEach(t => { if(!all.includes(t)) all.push(t); });
+    return '<div class="ed-culto cu-tags-ed"><div class="esc-sub">🏷️ Marcações <small>(para separar depois — escolha quantas quiser)</small></div><div class="esc-dress-chips cu-tags-pick">' +
+      all.map(t => '<button type="button" data-cutag="' + escH(t) + '"' + (cur.includes(t) ? ' class="on"' : '') + '>' + (cur.includes(t) ? '✓ ' : '') + escH(t) + '</button>').join('') + '</div>' +
+      '<div class="cu-tag-new"><input id="cuTagNew" class="esc-input" maxlength="30" placeholder="Nova marcação (ex.: Santa Ceia, Vigília)"><button type="button" class="btn-secondary" id="cuTagAdd">＋</button></div></div>';
+  }
+  function cuTagsChips(e){
+    const t = e && e.tags; if(!t || !t.length) return '';
+    return ' <span class="cu-tags">' + t.map(x => '<i>' + escH(x) + '</i>').join('') + '</span>';
   }
 
 })();
