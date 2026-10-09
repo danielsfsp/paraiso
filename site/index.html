@@ -2434,6 +2434,7 @@
   .ag-arch-row .cu-title{font-weight:700;} .ag-arch-row .cu-sub{font-size:12px; color:var(--text-dim);}
   .cu-arch{font-size:13px;} .cu-fin{font-size:13px;}
   .ag-fin{color:#5BBF7A;}
+  .cu-past{font-size:10.5px; font-weight:800; padding:1px 7px; border-radius:99px; background:rgba(255,107,61,.14); color:#FF8A5C; border:1px solid rgba(255,107,61,.35); vertical-align:middle; white-space:nowrap;}
   /* v306: Participante — acesso simples */
   .tm-role.part{background:rgba(46,219,127,.14); color:#2EDB7F;}
   body.role-part #navSongs, body.role-part .side-nav-item[data-view], body.role-part #btnCultos, body.role-part #btnEquipe,
@@ -3305,7 +3306,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v324 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v325 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10310,8 +10311,8 @@
   }
 
   function renderEscEvents(body, mineOnly){
-    const today = isoFromDate(new Date(Date.now() - 86400000)); // v323: igual à Agenda — inclui ontem (até finalizar/arquivar)
-    let evs = esc.events.filter(e => e.date >= today).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    // v325: mostra tudo que não foi finalizado/arquivado (inclusive cultos que já passaram)
+    let evs = esc.events.slice().sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
     if(mineOnly) evs = evs.filter(e => e.minister_id === esc.user.id || esc.assignments.some(a => a.event_id === e.id && a.profile_id === esc.user.id));
     // Escala sem ninguém = culto sem escala: fica só em ⛪ Culto (v261)
     evs = evs.filter(e => (e.kind || 'culto') !== 'culto' || esc.assignments.some(a => a.event_id === e.id));
@@ -10346,7 +10347,7 @@
       html += '<div class="esc-card ev-card' + (hero ? ' ev-hero' : '') + (open ? ' open' : '') + '" data-ev="' + e.id + '">';
       html += '<div class="esc-card-head"><div class="ev-tags"><span class="sec-tag sec-es">📅 Escala</span>' + ((e.kind || 'culto') !== 'culto' ? '<span class="sec-tag kind-tag">' + EVK[e.kind].ico + ' ' + EVK[e.kind].label + '</span>' : '') + '</div>';
       if(hero) html += '<div class="ev-eyebrow">' + (mineOnly ? 'Sua próxima escala' : 'Próxima escala') + ' · ' + whenTxt(e.date) + '</div>';
-      html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + '</div><div class="ev-sub">' + sub + '</div>' + ((e.kind || 'culto') === 'culto' ? escPlBadge(e) : '') +
+      html += '<div class="ev-row">' + dateBlock(e.date, hero) + '<div class="ev-main"><div class="ev-title">' + escH(e.title || 'Culto') + (e.date < todayIso() ? ' <span class="cu-past">⏳ já passou</span>' : '') + '</div><div class="ev-sub">' + sub + '</div>' + ((e.kind || 'culto') === 'culto' ? escPlBadge(e) : '') +
         (!hero && as.length ? '<div class="ev-mini">' + stack + '</div>' : '') + '</div>' + pillFor(e, mine) + '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></div>';
       if(hero){
         const pct = as.length ? Math.round(conf * 100 / as.length) : 0;
@@ -13527,8 +13528,7 @@
   // ligada a ele (1 culto = 1 escala).
   function renderEscCultos(body){
     const can = escCanSchedule();
-    const y = isoFromDate(new Date(Date.now() - 86400000));
-    const evs = esc.events.filter(e => e.date >= y).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    const evs = esc.events.slice().sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
     let html = can ? '<div class="cu-new-wrap"><button type="button" class="btn-primary cu-new" id="cuNew">＋ Novo</button><div class="cu-new-menu" id="cuNewMenu" hidden>' +
       '<button type="button" data-newkind="culto">⛪ Culto</button><button type="button" data-newkind="ensaio">🎸 Ensaio</button><button type="button" data-newkind="evento">🎤 Outros</button></div></div>' : '';
     const cardHtml = e => { let html = '';
@@ -13536,7 +13536,7 @@
       const k = e.kind || 'culto', open = esc.openCu === e.id;
       html += '<div class="cu-card cu-compact k-' + k + (open ? ' open' : '') + '" data-cu="' + e.id + '">' +
         '<button type="button" class="cu-row" data-cu-toggle="' + e.id + '"><span class="cu-ico">' + EVK[k].ico + '</span>' +
-        '<span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + '</span><span class="cu-sub"><b class="cu-kind' + (k !== 'culto' ? ' other' : '') + '">' + EVK[k].label + '</b> · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date).slice(0, 5)) + (e.time ? ' · ' + escH(e.time) : '') + '</span></span>' +
+        '<span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + (e.date < todayIso() ? ' <span class="cu-past">⏳ já passou — finalize ou arquive</span>' : '') + '</span><span class="cu-sub"><b class="cu-kind' + (k !== 'culto' ? ' other' : '') + '">' + EVK[k].label + '</b> · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date).slice(0, 5)) + (e.time ? ' · ' + escH(e.time) : '') + '</span></span>' +
         '<span class="ev-chev">' + (open ? '▴' : '▾') + '</span></button>' +
         (can ? '<button type="button" class="cu-trash" data-cu-del="' + e.id + '" title="Apagar" aria-label="Apagar">🗑</button>' : '') +
         (open ? '<div class="cu-body"><div class="cu-acts">' + '<button type="button" class="btn-secondary cu-share" data-cu-share="' + e.id + '" title="Compartilhar no WhatsApp: culto, escala e músicas"><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
