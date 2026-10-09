@@ -2483,6 +2483,14 @@
     .main-panel.fullscreen-mode .fullscreen-controls-fixed .fullscreen-exit-fixed{padding:6px 6px;}
     .main-panel.fullscreen-mode .fs-speed-ctl .fullscreen-exit-fixed{min-width:24px; padding:0 4px !important;}
   }
+  /* v313: avisar a equipe */
+  .nt-sub{font-size:12px; color:var(--text-dim); margin:12px 0 6px;}
+  .nt-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; max-height:40vh; overflow:auto;}
+  .nt-list li{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 8px; border:1px solid var(--border-soft); border-radius:10px;}
+  .nt-list li small{color:var(--text-dim);} .nt-list a.done{opacity:.6;}
+  .evp-notify{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(255,95,200,.10); border:1px solid rgba(255,95,200,.35); font-size:13px;}
+  .evp-notify span{flex:1;} .evp-notify .btn-primary{padding:6px 12px; font-size:13px; margin:0;}
+  .evp-notify-x{background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px;}
 </style>
 </head>
 <body>
@@ -3257,7 +3265,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v312 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v313 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10349,11 +10357,13 @@
     body.querySelectorAll('[data-wa]').forEach(b => b.onclick = () => escShareEvent(b.dataset.wa));
     body.querySelectorAll('[data-del-ev]').forEach(b => b.onclick = () => {
       const ev = esc.events.find(x => x.id === b.dataset.delEv); if(!ev) return;
-      showConfirm('Excluir escala', 'Tirar todas as pessoas da escala do culto "' + (ev.title || 'Culto') + '" de ' + escDateLabel(ev.date) + '? O culto e a playlist continuam na 🗓️ Agenda (para apagar o culto, use a Aulto).', async () => {
+      showConfirm('Excluir escala', 'Tirar todas as pessoas da escala do culto "' + (ev.title || 'Culto') + '" de ' + escDateLabel(ev.date) + '? O culto e a playlist continuam na 🗓️ Agenda (para apagar o culto, use a Agenda).', async () => {
+        const avisar = escNotifyPeople(ev);
         const err = await escClearEscala(ev.id);
         if(err){ showAlert('Escala', 'Não consegui excluir: ' + err.message); return; }
         esc.openEventId = null; await escLoadAll();
-        showImportFeedback('🗑 Escala excluída — o culto continua em ⛪ Culto.', true);
+        showImportFeedback('🗑 Escala excluída — o culto continua na 🗓️ Agenda.', true);
+        escNotifyAsk('escala', ev, avisar);
       }, { okLabel: 'Excluir escala' });
     });
     try{ bindEscPlBlock(body); bindEscPlEdit(body); }catch(err){ console.error(err); }
@@ -10636,10 +10646,12 @@
     const del = document.getElementById('escDelete');
     if(del) del.onclick = () => esc.editMode === 'culto'
       ? agDeleteAsk(d.id)
-      : showConfirm('Excluir escala', 'Tirar todas as pessoas desta escala? O culto e a playlist continuam em ⛪ Culto.', async () => {
+      : showConfirm('Excluir escala', 'Tirar todas as pessoas desta escala? O culto e a playlist continuam na 🗓️ Agenda.', async () => {
+          const ev0 = esc.events.find(x => x.id === d.id), avisar = ev0 ? escNotifyPeople(ev0) : [];
           const err = await escClearEscala(d.id);
           if(err){ showAlert('Escala', err.message); return; }
           esc.editing = null; await escLoadAll();
+          if(ev0) escNotifyAsk('escala', ev0, avisar);
         }, { okLabel: 'Excluir escala' });
     document.getElementById('escSave').onclick = async () => {
       grab();
@@ -13280,6 +13292,7 @@
       if(e.playlist.songs && e.playlist.songs.length) h += escPlSongRowsHtml(e, can);
       else h += '<div class="ev-pl-empty">Nenhuma música ainda.</div>';
       // v300: incluir música no repertório do culto (mesmo já montado / no meio do culto)
+      if(escCanSchedule() && esc.plChanged && esc.plChanged[e.id] && escNotifyPeople(e).length) h += '<div class="evp-notify"><span>✏️ Playlist alterada.</span><button type="button" class="btn-primary" data-evp-notify="' + e.id + '">📣 Avisar a equipe</button><button type="button" class="evp-notify-x" data-evp-notify-x="' + e.id + '" title="Não avisar">✕</button></div>';
       if(escCanSchedule()) h += '<button type="button" class="btn-secondary evp-addbtn' + (esc.plAdd === e.id ? ' on' : '') + '" data-evp-addopen="' + e.id + '">' + (esc.plAdd === e.id ? '✕ Fechar busca' : '＋ Adicionar música') + '</button>' + escPlAddHtml(e);
       if(can || (escCanSchedule() && esc.plAdd === e.id)) h +=
         '<div class="evp-note">✓ Mudanças feitas aqui valem para toda a equipe escalada.</div>';
@@ -13304,6 +13317,7 @@
     const r = await esc.sb.from('events').update({ playlist: snap }).eq('id', evId);
     if(r.error){ showAlert('Escala', 'Não consegui ligar a playlist: ' + r.error.message); return; }
     e.playlist = snap; esc.plSwap = null;
+    if(snap){ esc.plChanged = esc.plChanged || {}; esc.plChanged[evId] = true; }
     if(pl && snap) adoptAsEventCopy(pl.id, evId, snap);
     renderEscala();
     try{ if(showingHome) renderHomeView(); }catch(err){}
@@ -13331,6 +13345,8 @@
       esc.plAdd = e.id; esc.plAddQ = ''; renderEscala();
       const q = document.querySelector('[data-evp-q]'); if(q) q.focus();
     });
+    body.querySelectorAll('[data-evp-notify]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const e = esc.events.find(x => x.id === b.dataset.evpNotify); if(!e) return; esc.plChanged[e.id] = false; renderEscala(); escNotifyAsk('playlist', e, escNotifyPeople(e)); });
+    body.querySelectorAll('[data-evp-notify-x]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); esc.plChanged[b.dataset.evpNotifyX] = false; renderEscala(); });
     body.querySelectorAll('[data-pl-addsongs]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); closeEscala(); openPickSongs(b.dataset.plAddsongs); });
   }
 
@@ -13396,6 +13412,7 @@
     const r = await esc.sb.from('events').update({ playlist: ep }).eq('id', evId);
     if(r.error){ showAlert('Escala', 'Não consegui salvar o repertório: ' + r.error.message); return; }
     e.playlist = ep;
+    esc.plChanged = esc.plChanged || {}; esc.plChanged[evId] = true;
     try{ syncEventPlaylists(); }catch(err){}
     renderEscala();
   }
@@ -14049,6 +14066,7 @@
     const e = (esc.events || []).find(x => x.id === id); if(!e) return;
     const k = EVK[e.kind || 'culto'];
     const n = escEventAssignments(e.id).length;
+    const avisar = escNotifyPeople(e);
     showConfirm('Apagar', 'Apagar "' + (e.title || k.label) + '" (' + k.label.toLowerCase() + ' de ' + escDateLabel(e.date) + (e.time ? ' às ' + e.time : '') + ') para todos?' + (n ? ' A escala (' + n + (n === 1 ? ' pessoa' : ' pessoas') + ') também é apagada.' : '') + (e.playlist ? ' A playlist continua em Playlists.' : ''), async () => {
       await esc.sb.from('assignments').delete().eq('event_id', id);
       const { error } = await esc.sb.from('events').delete().eq('id', id);
@@ -14056,6 +14074,7 @@
       if(esc.openCu === id) esc.openCu = null;
       esc.editing = null; await escLoadAll();
       showImportFeedback('🗑 Apagado da Agenda.', true);
+      escNotifyAsk('cancel', e, avisar);
     }, { okLabel: '🗑 Apagar' });
   }
 
@@ -14217,6 +14236,7 @@ function rebalanceAdaptiveCols(wrap, repack){
       try{ history.pushState({ cep: idx }, ''); }catch(e){}
     }
     function closeLayer(){
+      const dov = document.querySelector('.decl-ov, .tour-ov'); if(dov){ const x = dov.querySelector('.nt-close, .tour-skip'); if(x) x.click(); else dov.remove(); return true; }
       const om = document.getElementById('optionsMenu');
       if(om && om.classList.contains('open')){ document.getElementById('btnOptionsMenu').click(); return true; }
       const cp = document.getElementById('colorsPopover');
@@ -14300,6 +14320,46 @@ function rebalanceAdaptiveCols(wrap, repack){
     }
     if(document.readyState === 'complete') setTimeout(start, 300); else window.addEventListener('load', () => setTimeout(start, 300));
   })();
+
+  // ================= AVISAR A EQUIPE (v313) =================
+  // Ao cancelar (apagar) um culto/ensaio/evento, desfazer a escala ou mudar a
+  // playlist do culto: pergunta se quer avisar quem estava escalado — no
+  // grupo do WhatsApp (uma mensagem) ou pessoa por pessoa.
+  function escNotifyPeople(e){
+    const seen = new Set(), out = [];
+    escEventAssignments(e.id).forEach(a => { if(seen.has(a.profile_id) || (esc.user && a.profile_id === esc.user.id)) return; seen.add(a.profile_id); const p = escProfile(a.profile_id); out.push({ id: a.profile_id, name: escName(a.profile_id), first: escFirst(a.profile_id), fn: a.function, phone: (p && p.phone) || '' }); });
+    if(e.minister_id && !seen.has(e.minister_id) && !(esc.user && e.minister_id === esc.user.id)){ const p = escProfile(e.minister_id); if(p) out.push({ id: e.minister_id, name: escName(e.minister_id), first: escFirst(e.minister_id), fn: 'Ministro', phone: p.phone || '' }); }
+    return out;
+  }
+  function escNotifyText(kind, e, first){
+    const k = EVK[e.kind || 'culto'], quando = escDateLabel(e.date) + (e.time ? ' às ' + e.time : '');
+    const oi = first ? 'Oi ' + first + '! ' : '';
+    if(kind === 'cancel') return oi + '⚠️ *' + k.label + ' cancelado*\n' + (e.title || k.label) + ' — ' + quando + ' foi *cancelado*. Quem estava escalado está liberado. 🙏';
+    if(kind === 'escala') return oi + '⚠️ *Escala desfeita*\nA escala do ' + (e.title || k.label) + ' — ' + quando + ' foi desfeita. Aguarde a nova escala. 🙏';
+    const pls = e.playlist ? (((e.playlist.songIds || []).length ? evPlSongs(e.playlist.songIds, e.playlist.overrides || {}) : null) || e.playlist.songs || []) : [];
+    return oi + '🎵 *Playlist atualizada*\n' + (e.title || k.label) + ' — ' + quando + '\n\n' + (pls.length ? pls.map((x, i) => (i + 1) + '. ' + x.title + (x.key ? ' (' + x.key + ')' : '')).join('\n') : 'Repertório ainda não definido.') + '\n\nAbrir no CEP Louvor: ' + escAppLink(e.id);
+  }
+  function escNotifyAsk(kind, e, people){
+    if(!people || !people.length) return;
+    const tit = kind === 'cancel' ? 'Avisar do cancelamento?' : kind === 'escala' ? 'Avisar que a escala foi desfeita?' : 'Avisar da mudança na playlist?';
+    const ov = document.createElement('div'); ov.className = 'decl-ov';
+    ov.innerHTML = '<div class="decl-box" role="dialog" aria-modal="true" style="max-width:440px"><h3>📣 ' + escH(tit) + '</h3>' +
+      '<p>' + people.length + (kind === 'playlist' ? (people.length === 1 ? ' pessoa está escalada' : ' pessoas estão escaladas') : (people.length === 1 ? ' pessoa estava escalada' : ' pessoas estavam escaladas')) + ' em <b>' + escH(e.title || EVK[e.kind || 'culto'].label) + '</b> (' + escH(escDateLabel(e.date)) + ').</p>' +
+      '<button type="button" class="btn-primary nt-group" style="width:100%"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no grupo do WhatsApp</button>' +
+      '<div class="nt-sub">ou uma a uma:</div><ul class="nt-list">' + people.map((p, i) => '<li><span>' + escFnIcon(p.fn) + ' ' + escH(p.name) + '</span>' +
+        (p.phone ? '<a class="btn-secondary" data-nt="' + i + '" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(escNotifyText(kind, e, p.first)) + '"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Avisar</a>' : '<small>sem telefone</small>') + '</li>').join('') + '</ul>' +
+      '<div class="decl-acts"><button type="button" class="btn-secondary nt-close">Não avisar / fechar</button></div></div>';
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.querySelector('.nt-close').onclick = close;
+    ov.addEventListener('click', ev => { if(ev.target === ov) close(); });
+    ov.querySelector('.nt-group').onclick = () => {
+      const text = escNotifyText(kind, e, '');
+      if(navigator.share && isPhoneView()) navigator.share({ text }).catch(() => {});
+      else window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+    };
+    ov.querySelectorAll('[data-nt]').forEach(a => a.addEventListener('click', () => { a.classList.add('done'); a.innerHTML = '✓ Enviado'; }));
+  }
 
 })();
 </script>
