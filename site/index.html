@@ -3200,7 +3200,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v303 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v304 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4121,7 +4121,7 @@
         const a = document.createElement('a');
         a.textContent = pl.name + (pl.date ? ' · ' + playlistDateLabel(pl).replace('📅 ', '') : '');
         a.href = 'javascript:void(0)';
-        a.addEventListener('click', () => goHomeToPlaylist(pl));
+        a.addEventListener('click', () => openPlaylistPage(pl));
         plList.appendChild(a);
       });
     }
@@ -4330,7 +4330,7 @@
     box.querySelectorAll('[data-hc-ok]').forEach(b => b.onclick = () => escRespond(b.dataset.hcOk, 'confirmado'));
     box.querySelectorAll('[data-hc-no]').forEach(b => b.onclick = () => escDeclineAsk(b.dataset.hcNo));
     box.querySelectorAll('[data-hc-ev]').forEach(b => b.onclick = () => { esc.tab = 'escalas'; openEscala(b.dataset.hcEv); });
-    box.querySelectorAll('[data-hc-pl]').forEach(b => b.onclick = () => { const pl = playlists.find(x => x.id === b.dataset.hcPl); if(pl) guardIfDirty(() => goHomeToPlaylist(pl)); });
+    box.querySelectorAll('[data-hc-pl]').forEach(b => b.onclick = () => { const pl = playlists.find(x => x.id === b.dataset.hcPl); if(pl) openPlaylistPage(pl); });
     box.querySelectorAll('[data-hc-mode]').forEach(b => b.onclick = () => { if(navSel === 'home') navSel = 'songs'; homeMode = b.dataset.hcMode; homeArtist = null; lsSet('homeMode', homeMode); renderHomeView(); document.getElementById('homeModeSeg').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }
   // ===== PÁGINA DE PLAYLISTS (área principal, ao escolher "Playlists") =====
@@ -13971,7 +13971,7 @@
     ov.querySelector('.cancel').onclick = close;
     ov.querySelector('.go').onclick = () => { close(); escShareEvent(evId); };
     const ob = ov.querySelector('.pl');
-    if(ob) ob.onclick = () => { close(); try{ if(escOverlay().classList.contains('open')) closeEscala(); }catch(_){} guardIfDirty(() => goHomeToPlaylist(pl)); };
+    if(ob) ob.onclick = () => { close(); try{ if(escOverlay().classList.contains('open')) closeEscala(); }catch(_){} openPlaylistPage(pl); };
   }
 
   // Edição em tela cheia (colunas iguais à leitura): uma coluna nunca passa
