@@ -3257,7 +3257,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v310 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v311 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -12983,7 +12983,7 @@
 
     // ---- botão Voltar do celular ----
     const touchy = isPhoneView() || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
-    if(!touchy || !window.history || !history.pushState) return;
+    if(true) return; // v311: o Voltar agora é tratado pelo histórico de telas (navHistory)
     let armed = false, exitTimer = null;
     function arm(){ if(armed) return; try{ history.pushState({ paraisoGuard: 1 }, ''); armed = true; }catch(e){} }
     let toastEl = null;
@@ -14160,6 +14160,123 @@ function rebalanceAdaptiveCols(wrap, repack){
       try{ if(!showingHome || (navSel && navSel !== 'home' && navSel !== 'playlists')) showHomeView(); }catch(e){}
     }
   }
+
+  // ================= HISTÓRICO DE TELAS (v311) =================
+  // Voltar (do navegador, do celular ou o "Voltar"/✕ do app) volta sempre
+  // para a tela que chamou — no celular e no computador. Cada tela (Início,
+  // Músicas, Playlists, uma música, tela cheia, Agenda/Escala/Equipe) vira
+  // uma entrada no histórico do navegador. Trocar de música com ◀ ▶ dentro
+  // da mesma playlist, ou de playlist na lista, só substitui a entrada.
+  (function navHistory(){
+    if(!window.history || !history.pushState) return;
+    const touchy = isPhoneView() || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
+    const panel = document.querySelector('.main-panel');
+    let stack = [], idx = 0, restoring = null, exitArmed = false, exitTimer = null, ready = false;
+    function snap(){
+      if(escOverlay().classList.contains('open')){ const t = esc.tab === 'minhas' ? 'escalas' : esc.tab; return { k:'esc', tab: esc.tab, key:'esc:' + t }; }
+      if(!showingHome && currentId){ const fs = panel.classList.contains('fullscreen-mode'); return { k:'song', id: currentId, pl: navPlaylistId || null, av: activeView, fs, key:'song:' + (navPlaylistId || '') + ':' + currentId + (fs ? ':fs' : '') }; }
+      const nav = navSel || 'home';
+      return { k:'home', nav, pl: nav === 'playlists' ? (openPlaylistId || null) : null, key:'home:' + nav + (nav === 'playlists' ? ':' + (openPlaylistId || '') : '') };
+    }
+    window.__cepNavSnap = () => snap().key;
+    function replaceable(a, b){
+      if(a.k === 'song' && b.k === 'song') return a.pl === b.pl && a.fs === b.fs;
+      if(a.k === 'home' && b.k === 'home') return a.nav === 'playlists' && b.nav === 'playlists';
+      if(a.k === 'esc' && b.k === 'esc') return a.key === b.key;
+      return false;
+    }
+    function record(){
+      if(!ready || restoring) return;
+      const s = snap(), top = stack[idx];
+      if(top && s.key === top.key){ stack[idx] = s; return; }
+      if(top && replaceable(top, s)){ stack[idx] = s; try{ history.replaceState({ cep: idx }, ''); }catch(e){} return; }
+      stack = stack.slice(0, idx + 1); stack.push(s); idx = stack.length - 1;
+      try{ history.pushState({ cep: idx }, ''); }catch(e){}
+    }
+    function closeLayer(){
+      const om = document.getElementById('optionsMenu');
+      if(om && om.classList.contains('open')){ document.getElementById('btnOptionsMenu').click(); return true; }
+      const cp = document.getElementById('colorsPopover');
+      if(cp && cp.classList.contains('open')){ cp.classList.remove('open'); return true; }
+      const mm = document.getElementById('moreMenu');
+      if(mm && !mm.hidden){ mm.hidden = true; const bm = document.getElementById('btnMore'); if(bm) bm.setAttribute('aria-expanded', 'false'); return true; }
+      const vis = el => !!(el && el.offsetParent !== null);
+      const open = [...document.querySelectorAll('.modal-overlay.open')].filter(o => o.id !== 'escalaOverlay');
+      if(open.length){
+        const ov = open.sort((a, b) => (parseInt(getComputedStyle(a).zIndex) || 0) - (parseInt(getComputedStyle(b).zIndex) || 0)).pop();
+        const btn = [...ov.querySelectorAll('[id^="btnClose"],[id$="Close"],[id*="Cancel"],[aria-label="Fechar"],.modal-close')].find(vis);
+        if(btn) btn.click(); else ov.classList.remove('open');
+        return true;
+      }
+      if(typeof metroPanel !== 'undefined' && metroPanel && !metroPanel.hidden){ metroPanel.hidden = true; return true; }
+      if(fullscreenEditing){ const c = document.getElementById('btnFullscreenEditCancel'); if(c) c.click(); return true; }
+      if(window.innerWidth <= 820 && sidebar.classList.contains('open')){ sidebar.classList.remove('open'); return true; }
+      if(escOverlay().classList.contains('open') && esc.editing){ escGuard(() => { esc.editing = null; renderEscala(); }); return true; }
+      if(isPhoneView() && !isFsMode() && !showingHome && !controlsBar.classList.contains('mobile-collapsed')){ document.getElementById('btnToggleControls').click(); return true; }
+      return false;
+    }
+    function restore(s){
+      restoring = s.key;
+      try{
+        if(s.k === 'esc'){
+          esc.tab = s.tab; esc.editing = null;
+          if(escOverlay().classList.contains('open') || (esc.user && esc.events)){ escOverlay().classList.add('open'); renderEscala(); markEscNav(); }
+          else openEscala();
+        } else {
+          if(escOverlay().classList.contains('open')) closeEscala();
+          if(scrolling && typeof stopScroll === 'function') stopScroll();
+          if(s.k === 'song'){
+            if(showingHome || currentId !== s.id || (navPlaylistId || null) !== s.pl){ showingHome = false; activeView = s.av || activeView; if(s.pl){ openPlaylistId = s.pl; selectSong(s.id, s.pl); } else selectSong(s.id); }
+            if(panel.classList.contains('fullscreen-mode') !== !!s.fs) toggleFullscreen();
+          } else {
+            if(panel.classList.contains('fullscreen-mode')) toggleFullscreen();
+            showHomeView(); navSel = s.nav;
+            if(s.nav === 'playlists'){ activeView = 'playlists'; if(s.pl) openPlaylistId = s.pl; }
+            renderSidebar(); renderHomeView();
+            try{ syncNavActive(); }catch(e){}
+            if(s.nav === 'playlists' && s.from){ /* rola até a música que estava aberta */ }
+          }
+        }
+      }catch(e){ console.error(e); }
+      setTimeout(() => { restoring = null; const n = snap(); if(stack[idx]) stack[idx] = Object.assign({}, stack[idx], n.key === stack[idx].key ? n : {}); }, 350);
+    }
+    function toast(msg){
+      let t = document.querySelector('.back-toast');
+      if(!t){ t = document.createElement('div'); t.className = 'back-toast'; document.body.appendChild(t); }
+      t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1900);
+    }
+    window.addEventListener('popstate', (e) => {
+      const st = e.state || {};
+      const i = typeof st.cep === 'number' ? st.cep : -1;
+      if(i < idx && closeLayer()){ try{ history.pushState({ cep: idx }, ''); }catch(err){} return; }
+      if(i < 0){
+        if(!touchy || exitArmed){ history.back(); return; }
+        exitArmed = true; clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitArmed = false; }, 2000);
+        toast('Toque em Voltar de novo para sair');
+        try{ history.pushState({ cep: 0 }, ''); }catch(err){}
+        idx = 0; if(stack[0] && snap().key !== stack[0].key) restore(stack[0]);
+        return;
+      }
+      if(!stack[i]){ idx = Math.min(i, stack.length - 1); return; }
+      idx = i;
+      if(snap().key !== stack[i].key) guardIfDirty(() => restore(stack[i]));
+    });
+    // Os "Voltar"/✕ do próprio app usam o mesmo histórico (voltam para quem chamou)
+    function viaHistory(id){
+      const b = document.getElementById(id); if(!b) return;
+      b.addEventListener('click', (e) => {
+        if(idx > 0 && stack[idx - 1]){ e.stopImmediatePropagation(); e.preventDefault(); const go = () => history.back(); if(id === 'btnCloseEscala') escGuard(go); else guardIfDirty(go); }
+      }, true);
+    }
+    ['btnBack', 'btnCloseEscala', 'btnFullscreenExit'].forEach(viaHistory);
+    function start(){
+      try{ history.replaceState({ cep: -1 }, ''); history.pushState({ cep: 0 }, ''); }catch(e){}
+      stack = [snap()]; idx = 0; ready = true;
+      ['click', 'keyup'].forEach(ev => document.addEventListener(ev, () => { setTimeout(record, 0); setTimeout(record, 450); }, true));
+      setInterval(record, 400);
+    }
+    if(document.readyState === 'complete') setTimeout(start, 300); else window.addEventListener('load', () => setTimeout(start, 300));
+  })();
 
 })();
 </script>
