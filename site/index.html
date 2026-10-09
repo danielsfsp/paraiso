@@ -2491,6 +2491,13 @@
   .evp-notify{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(255,95,200,.10); border:1px solid rgba(255,95,200,.35); font-size:13px;}
   .evp-notify span{flex:1;} .evp-notify .btn-primary{padding:6px 12px; font-size:13px; margin:0;}
   .evp-notify-x{background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px;}
+  /* v314: arrastar música na playlist */
+  .plp-drag{flex-shrink:0; width:22px; margin:-6px -6px -6px -6px; padding:10px 0; text-align:center; color:var(--text-dim); font-size:15px; letter-spacing:-3px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; opacity:.7;}
+  .plp-drag:hover{color:var(--accent); opacity:1;}
+  .plp-songs.is-dragging{user-select:none; -webkit-user-select:none;}
+  .plp-songs.is-dragging .plp-drag{cursor:grabbing;}
+  .plp-song.dragging{background:var(--surface-3, rgba(255,255,255,.08)) !important; box-shadow:0 6px 18px rgba(0,0,0,.45); position:relative; z-index:2; outline:1px solid var(--accent);}
+  body.role-part .plp-drag{display:none !important;}
 </style>
 </head>
 <body>
@@ -3265,7 +3272,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v313 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v314 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4441,7 +4448,7 @@
         '<button type="button" class="plp-btn" data-plp-arch title="' + (sel.archived ? 'Desarquivar' : 'Arquivar (sai da lista, mas continua nas estatísticas)') + '">' + (sel.archived ? '↩️ Desarquivar' : '🗄️ Arquivar') + '</button>' +
         '<button type="button" class="plp-btn danger" data-plp-del title="Excluir playlist">🗑️ Excluir</button></div></div>';
       if(!items.length) html += '<div class="home-empty-note" style="margin-top:14px">Playlist vazia. Toque em "＋ Música" para escolher músicas.</div>';
-      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
+      else html += '<div class="plp-songs">' + items.map((sg, i) => { const k = plEffKey(sel, sg); const ri = sel.songIds.indexOf(sg.id); return '<div role="button" tabindex="0" class="plp-song' + (sg.id === currentId ? ' on' : '') + '" data-plp-song="' + sg.id + '"><span class="plp-drag" data-drag title="Arraste para mudar a ordem" aria-label="Arrastar">⋮⋮</span><span class="n">' + (i + 1) + '</span><span class="t"><b>' + escapeHtml(displayTitle(sg)) + '</b><small>' + escapeHtml(sg.artist || '') + '</small></span>' + (k.key ? '<span class="k' + (k.moved ? ' moved' : '') + '" title="' + (k.moved ? 'Tom transposto nesta playlist' : 'Tom') + '">' + escapeHtml(k.key) + '</span>' : '') +
         '<span class="plp-ctl"><button type="button" data-mv="-1" data-ri="' + ri + '" title="Subir"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-mv="1" data-ri="' + ri + '" title="Descer"' + (i === items.length - 1 ? ' disabled' : '') + '>▼</button><button type="button" data-rm="' + sg.id + '" title="Tirar da playlist">✕</button></span></div>'; }).join('') + '</div>';
     } else html += '<div class="home-empty-note">Crie uma playlist para montar o repertório do culto.</div>';
     html += '</div></div>';
@@ -4460,6 +4467,7 @@
       try{ bindPlEscalaCard(box, sel); }catch(e){}
       const ar = q('[data-plp-arch]'); if(ar) ar.onclick = () => { setPlaylistArchived(sel, !sel.archived); renderPlaylistsPage(); };
       const dl = q('[data-plp-del]'); if(dl) dl.onclick = () => showConfirm('Excluir playlist', 'Deseja excluir a playlist "' + sel.name + '"? As músicas continuam salvas na biblioteca.' + plDeleteEscNote(sel) + (sel.date ? ' Ela deixa de contar nas estatísticas — para guardar o histórico, prefira arquivar (🗄️).' : ''), () => { performDeletePlaylist(sel.id); if(openPlaylistId === sel.id) openPlaylistId = null; renderPlaylistsPage(); }, { okLabel: '🗑️ Excluir' });
+      plBindDrag(box.querySelector('.plp-songs'), sel);
       box.querySelectorAll('.plp-ctl [data-mv]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); movePlaylistSong(sel.id, +b.dataset.ri, +b.dataset.mv); renderPlaylistsPage(); });
       box.querySelectorAll('.plp-ctl [data-rm]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); const sg = songs.find(x => x.id === b.dataset.rm); showConfirm('Tirar da playlist', 'Tirar "' + (sg ? sg.title : '') + '" da playlist "' + sel.name + '"? A música continua no repertório.', () => { removeSongFromPlaylist(sel.id, b.dataset.rm); renderSidebar(); renderPlaylistsPage(); }, { okLabel: 'Tirar' }); });
       box.querySelectorAll('[data-plp-song]').forEach(b => b.onclick = () => guardIfDirty(() => { showingHome = false; activeView = 'playlists'; openPlaylistId = sel.id; selectSong(b.dataset.plpSong, sel.id); }));
@@ -14359,6 +14367,52 @@ function rebalanceAdaptiveCols(wrap, repack){
       else window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
     };
     ov.querySelectorAll('[data-nt]').forEach(a => a.addEventListener('click', () => { a.classList.add('done'); a.innerHTML = '✓ Enviado'; }));
+  }
+
+  // ================= ARRASTAR MÚSICAS NA PLAYLIST (v314) =================
+  // Segura o ⋮⋮ à esquerda e arrasta a música para cima/baixo (mouse ou dedo).
+  function plBindDrag(list, pl){
+    if(!list || !pl) return;
+    const scroller = el => { while(el && el !== document.body){ const o = getComputedStyle(el).overflowY; if((o === 'auto' || o === 'scroll') && el.scrollHeight > el.clientHeight) return el; el = el.parentElement; } return document.scrollingElement || document.documentElement; };
+    list.querySelectorAll('[data-drag]').forEach(h => {
+      h.addEventListener('click', e => e.stopPropagation());
+      h.addEventListener('pointerdown', (e) => {
+        if(e.button !== undefined && e.button !== 0) return;
+        e.preventDefault(); e.stopPropagation();
+        const row = h.closest('.plp-song'); if(!row) return;
+        const sc = scroller(list);
+        const startOrder = [...list.querySelectorAll('.plp-song')].map(r => r.dataset.plpSong);
+        let lastY = e.clientY, moved = false, raf = null;
+        row.classList.add('dragging'); list.classList.add('is-dragging');
+        const place = (y) => {
+          const rows = [...list.querySelectorAll('.plp-song')].filter(r => r !== row);
+          let before = null;
+          for(const r of rows){ const b = r.getBoundingClientRect(); if(y < b.top + b.height / 2){ before = r; break; } }
+          if(before){ if(row.nextElementSibling !== before) { list.insertBefore(row, before); moved = true; } }
+          else if(list.lastElementChild !== row){ list.appendChild(row); moved = true; }
+        };
+        const tick = () => {
+          const m = 70, H = window.innerHeight;
+          if(lastY < m) sc.scrollTop -= Math.ceil((m - lastY) / 4);
+          else if(lastY > H - m) sc.scrollTop += Math.ceil((lastY - (H - m)) / 4);
+          place(lastY); raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        const onMove = (ev) => { lastY = ev.clientY; };
+        const onUp = () => {
+          cancelAnimationFrame(raf);
+          window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp);
+          row.classList.remove('dragging'); list.classList.remove('is-dragging');
+          const order = [...list.querySelectorAll('.plp-song')].map(r => r.dataset.plpSong);
+          if(!moved || order.join('|') === startOrder.join('|')){ renderPlaylistsPage(); return; }
+          const rest = pl.songIds.filter(id => !order.includes(id));
+          pl.songIds = order.concat(rest);
+          savePlaylists(); renderSidebar(); renderPlaylistsPage();
+          showImportFeedback('↕️ Ordem da playlist atualizada.', true);
+        };
+        window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onUp);
+      });
+    });
   }
 
 })();
