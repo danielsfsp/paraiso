@@ -2502,6 +2502,8 @@
   .cu-tags{display:inline-flex; flex-wrap:wrap; gap:4px; vertical-align:middle; margin-left:4px;}
   .cu-tags i{font-style:normal; font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:99px; background:rgba(255,174,31,.14); color:#FFAE1F; border:1px solid rgba(255,174,31,.35);}
   .cu-tags-pick button.on{background:rgba(255,174,31,.18) !important; border-color:#FFAE1F !important; color:#FFAE1F !important;}
+  .cu-tag-plus{font:inherit; font-size:13px; font-weight:700; padding:6px 12px; border-radius:99px; border:1px dashed #FFAE1F !important; background:transparent !important; color:#FFAE1F !important; cursor:pointer;}
+  .cu-tag-new[hidden]{display:none !important;}
   .cu-tag-new{display:flex; gap:6px; margin-top:6px;} .cu-tag-new .esc-input{flex:1; margin:0;}
   .ag-arch-tags{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 4px; font-size:12px; color:var(--text-dim);}
   .ag-arch-tags button{font:inherit; font-size:12px; font-weight:700; padding:4px 10px; border-radius:99px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer;}
@@ -3280,7 +3282,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v315 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v316 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10615,6 +10617,7 @@
       renderEscala();
     };
     body.querySelectorAll('[data-cutag]').forEach(b => b.onclick = () => { grab(); const t = b.dataset.cutag; d.tags = d.tags || []; d.tags = d.tags.includes(t) ? d.tags.filter(x => x !== t) : d.tags.concat(t); renderEscala(); });
+    { const pb = document.getElementById('cuTagPlus'); if(pb) pb.onclick = () => { esc.tagNewOpen = true; const r = document.getElementById('cuTagNewRow'); if(r){ r.hidden = false; const i = document.getElementById('cuTagNew'); if(i) i.focus(); } }; }
     { const ti = document.getElementById('cuTagNew'); if(ti){ const add = () => { const v = ti.value.trim().replace(/\s+/g, ' ').slice(0, 30); if(!v) return; grab(); d.tags = d.tags || []; if(!d.tags.some(x => x.toLowerCase() === v.toLowerCase())) d.tags.push(v); renderEscala(); const t2 = document.getElementById('cuTagNew'); if(t2) t2.focus(); }; ti.onkeydown = ev => { if(ev.key === 'Enter'){ ev.preventDefault(); add(); } }; const ab = document.getElementById('cuTagAdd'); if(ab) ab.onclick = add; } }
     body.querySelectorAll('[data-cuname]').forEach(b => b.onclick = () => { document.getElementById('escTitle').value = b.dataset.cuname; body.querySelectorAll('[data-cuname]').forEach(x => x.classList.toggle('on', x === b)); });
     body.querySelectorAll('[data-dress]').forEach(b => b.onclick = () => { document.getElementById('escDress').value = b.dataset.dress; });
@@ -14444,8 +14447,9 @@ function rebalanceAdaptiveCols(wrap, repack){
     const cur = d.tags || [];
     const all = cuTagsKnown(); cur.forEach(t => { if(!all.includes(t)) all.push(t); });
     return '<div class="ed-culto cu-tags-ed"><div class="esc-sub">🏷️ Marcações <small>(para separar depois — escolha quantas quiser)</small></div><div class="esc-dress-chips cu-tags-pick">' +
-      all.map(t => '<button type="button" data-cutag="' + escH(t) + '"' + (cur.includes(t) ? ' class="on"' : '') + '>' + (cur.includes(t) ? '✓ ' : '') + escH(t) + '</button>').join('') + '</div>' +
-      '<div class="cu-tag-new"><input id="cuTagNew" class="esc-input" maxlength="30" placeholder="Nova marcação (ex.: Santa Ceia, Vigília)"><button type="button" class="btn-secondary" id="cuTagAdd">＋</button></div></div>';
+      all.map(t => '<button type="button" data-cutag="' + escH(t) + '"' + (cur.includes(t) ? ' class="on"' : '') + '>' + (cur.includes(t) ? '✓ ' : '') + escH(t) + '</button>').join('') +
+      '<button type="button" class="cu-tag-plus" id="cuTagPlus" title="Incluir uma marcação que não está na lista">＋ Outra</button></div>' +
+      '<div class="cu-tag-new" id="cuTagNewRow"' + (esc.tagNewOpen ? '' : ' hidden') + '><input id="cuTagNew" class="esc-input" maxlength="30" placeholder="Digite a marcação (ex.: Santa Ceia, Vigília)"><button type="button" class="btn-primary" id="cuTagAdd">＋ Incluir</button></div></div>';
   }
   function cuTagsChips(e){
     const t = e && e.tags; if(!t || !t.length) return '';
