@@ -2449,6 +2449,14 @@
     #escalaOverlay .esc-head h2{font-size:24px;}
     #escalaOverlay .esc-head .sec-ico{width:38px; height:38px; min-width:38px; font-size:18px;}
   }
+  /* v308: escalar avulso */
+  .esc-avulso-btn.on{border-color:var(--accent) !important; color:var(--accent) !important;}
+  .esc-avulso{margin:8px 0 10px; padding:10px; border:1px dashed var(--border); border-radius:12px;}
+  .esc-avulso-h{font-size:12px; color:var(--text-dim); margin-bottom:6px;}
+  .esc-avulso-sec{font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:8px 0 4px;}
+  .esc-avulso-list{display:flex; flex-wrap:wrap; gap:6px;}
+  .esc-avulso-list button{display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding:7px 10px; border-radius:10px; border:1px solid var(--border-soft); background:var(--surface); color:var(--text); cursor:pointer;}
+  .esc-avulso-list button b{font-size:13px;} .esc-avulso-list button small{font-size:11px; color:var(--text-dim);}
 </style>
 </head>
 <body>
@@ -3222,7 +3230,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v307 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v308 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10366,6 +10374,7 @@
 
   // ---------- EDITOR DE ESCALA ----------
   function escStartEdit(id, mode){
+    esc.avulsoOpen = false;
     esc.editMode = mode || 'escala';
     const e = id ? esc.events.find(x => x.id === id) : null;
     esc.editing = e ? {
@@ -10466,7 +10475,20 @@
       '<div class="ed-escala"><div class="esc-sub">Quem toca o quê</div>';
     const lastEv = esc.events.filter(x => x.id !== d.id && x.date < (d.date || '9999') && escEventAssignments(x.id).length).sort((a, b) => b.date.localeCompare(a.date))[0];
     html += '<div class="esc-team-fill">' + esc.teams.map(t => '<button type="button" class="btn-secondary" data-team="' + t.id + '">⚡ ' + escH(t.name) + '</button>').join(' ') +
+      ' <button type="button" class="btn-secondary esc-avulso-btn' + (esc.avulsoOpen ? ' on' : '') + '" id="escAvulso">👤 Avulso</button>' +
       '</div>';
+    // v308: escalar pessoa avulsa (fora das equipes) — escolhe direto da lista de pessoas
+    if(esc.avulsoOpen){
+      const inTeam = new Set([].concat(...esc.teams.map(t => t.member_ids || [])));
+      const inRows = new Set(d.rows.map(r => r.profile_id));
+      const all = people.concat(prePeople).filter(p => !inRows.has(p.id)).sort((a, b) => (inTeam.has(a.id) - inTeam.has(b.id)) || a.name.localeCompare(b.name, 'pt-BR'));
+      const chip = p => '<button type="button" data-avulso="' + p.id + '"><b>' + escH(p.name) + '</b><small>' + escH((p.functions || []).filter(f => f !== 'Ministro').join(', ') || 'sem função') + (p.is_pre ? ' · pré-cadastro' : '') + (unavOn(p.id) ? ' · ⚠ indisponível' : '') + (busyOn(p.id) ? ' · já escalado no dia' : '') + '</small></button>';
+      const fora = all.filter(p => !inTeam.has(p.id)), dentro = all.filter(p => inTeam.has(p.id));
+      html += '<div class="esc-avulso"><div class="esc-avulso-h">Toque na pessoa para incluir na escala (depois ajuste a função ao lado do nome):</div>' +
+        (fora.length ? '<div class="esc-avulso-sec">Fora das equipes</div><div class="esc-avulso-list">' + fora.map(chip).join('') + '</div>' : '') +
+        (dentro.length ? '<div class="esc-avulso-sec">Também em equipes</div><div class="esc-avulso-list">' + dentro.map(chip).join('') + '</div>' : '') +
+        (!all.length ? '<div class="esc-avulso-h">Todo mundo já está na escala.</div>' : '') + '</div>';
+    }
     html += '<div id="escRows">';
     d.rows.forEach((r, i) => {
       html += '<div class="esc-row" data-i="' + i + '"><select class="esc-input esc-fn-sel">' + fnOpts(r.function) + '</select>' +
@@ -10546,6 +10568,12 @@
       esc.editOrig = escEditKey(esc.editing);
       renderEscala();
     };
+    { const av = document.getElementById('escAvulso'); if(av) av.onclick = () => { grab(); esc.avulsoOpen = !esc.avulsoOpen; renderEscala(); }; }
+    body.querySelectorAll('[data-avulso]').forEach(b => b.onclick = () => {
+      grab(); const pid = b.dataset.avulso; const p = escProfile(pid); if(!p || d.rows.some(r => r.profile_id === pid)) return;
+      d.rows.push({ id: null, function: (p.functions || []).find(f => f !== 'Ministro') || (p.functions || [])[0] || 'Vocal', profile_id: pid, status: 'pendente' });
+      renderEscala();
+    });
     body.querySelectorAll('[data-team]').forEach(b => b.onclick = () => {
       grab(); const t = esc.teams.find(x => x.id === b.dataset.team); if(!t) return;
       t.member_ids.forEach(pid => {
