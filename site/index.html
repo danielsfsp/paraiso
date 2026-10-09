@@ -3194,7 +3194,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v301 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v302 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3853,6 +3853,9 @@
   let librarySortBy = 'title'; // 'title' (A–Z), 'plays' (mais tocadas) ou 'oldest' (esquecidas)
   const shifts = {};
   let fontSize = 14;
+  // v302: quando a pessoa escolhe a FONTE (A− / A+), o tamanho fica fixo —
+  // a leitura não reduz mais sozinha para caber na tela.
+  let fontLocked = false;
   // Modo "📋 Resumo": mostra só a sequência de acordes por estrofe, sem a
   // letra. É um modo de visualização à parte (não mexe em tom/colunas/
   // fonte/edição) — reseta pra "letra normal" sempre que troca de música.
@@ -6107,7 +6110,7 @@
     }
     cifraBody.style.fontSize = (fontSize - fitShrink) + 'px';
     const fsd = document.getElementById('fontSizeDisplay');
-    if(fsd){ fsd.textContent = fitShrink ? (fontSize - fitShrink) + '*' : fontSize; fsd.title = fitShrink ? 'Fonte reduzida automaticamente para a música caber na tela (escolhida: ' + fontSize + ')' : 'Tamanho da fonte'; }
+    if(fsd){ fsd.textContent = fitShrink ? (fontSize - fitShrink) + '*' : fontSize; fsd.title = fitShrink ? 'Fonte reduzida automaticamente para a música caber na tela (escolhida: ' + fontSize + '). Use A− / A+ para fixar um tamanho.' : (fontLocked ? 'Tamanho da fonte (fixo — escolhido por você)' : 'Tamanho da fonte'); }
 
     // Não existe mais um número de colunas escolhido pela pessoa — só a
     // LARGURA de cada coluna (esse slider) e o tamanho da tela é que
@@ -6152,7 +6155,7 @@
       if(!singleColumn && cifraBody.offsetParent){
         const vp = cifraViewport;
         const minFs = Math.max(10, Math.round(fontSize * 0.7));
-        if(vp.scrollWidth > vp.clientWidth + 2 && fontSize - fitShrink - 1 >= minFs){
+        if(!fontLocked && vp.scrollWidth > vp.clientWidth + 2 && fontSize - fitShrink - 1 >= minFs){
           fitShrink++; fitPass = true; renderCifra(); return;
         }
       }
@@ -7089,7 +7092,7 @@
   function saveDisplayPrefsForCurrentSong(){
     const song = currentSong();
     if(!song) return;
-    const prefsObj = { fontSize, colWidth, colHeightPct, singleColumn, chordColor, lyricColor, cifraBgColor };
+    const prefsObj = { fontSize, colWidth, colHeightPct, singleColumn, chordColor, lyricColor, cifraBgColor, fontLocked };
     if(isPhoneView()){
       // No celular o "1 coluna" é sempre o padrão: não grava por cima do que
       // está salvo para o computador.
@@ -7149,6 +7152,7 @@
     const plPrefs = (pl && pl.overrides && pl.overrides[song.id] && pl.overrides[song.id][plPrefsKey()]) || null;
     const p = plPrefs || song[songPrefsKey()] || {};
     fontSize = p.fontSize !== undefined ? p.fontSize : DEFAULT_DISPLAY_PREFS.fontSize;
+    fontLocked = !!p.fontLocked;
     colWidth = p.colWidth !== undefined ? p.colWidth : DEFAULT_DISPLAY_PREFS.colWidth;
     colHeightPct = p.colHeightPct !== undefined ? p.colHeightPct : DEFAULT_DISPLAY_PREFS.colHeightPct;
     singleColumn = p.singleColumn !== undefined ? p.singleColumn : DEFAULT_DISPLAY_PREFS.singleColumn;
@@ -7194,6 +7198,7 @@
   }
   function changeFont(delta){
     fontSize = Math.max(9, Math.min(30, fontSize + delta));
+    fontLocked = true;
     updateFontSizeDisplay();
     if(fullscreenEditing) reapplyEditColumnsIfEditing(); else renderCifra();
     markDisplayDirty();
@@ -12490,13 +12495,15 @@
   // ela (lista aberta); senão, volta para a tela inicial.
   document.getElementById('btnBack').addEventListener('click', () => guardIfDirty(() => {
     if(scrolling && typeof stopScroll === 'function') stopScroll();
-    const plId = navPlaylistId;
+    const plId = navPlaylistId, fromSong = currentId;
     showHomeView();
     if(plId && playlists.some(p => p.id === plId)){
-      activeView = 'playlists';
+      // v302: volta para a tela da playlist (lista de músicas), na música que estava aberta
+      activeView = 'playlists'; navSel = 'playlists';
       openPlaylistId = plId;
-      renderSidebar();
-      sidebar.classList.add('open');
+      renderSidebar(); renderHomeView();
+      sidebar.classList.remove('open');
+      setTimeout(() => { const r = fromSong && document.querySelector('.plp-detail [data-plp-song="' + fromSong + '"]'); const d = r || document.querySelector('.plp-detail'); if(d && (r || window.innerWidth < 900)) d.scrollIntoView({ block: r ? 'center' : 'start' }); }, 60);
     }
   }));
 
