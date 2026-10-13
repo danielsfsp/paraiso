@@ -3306,7 +3306,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v325 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v326 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7722,6 +7722,9 @@
     clearTimeout(fitColsTimer);
     fitColsTimer = setTimeout(() => {
       if(singleColumn) return;
+      // v326: na tela cheia (ex.: F11 liga/desliga), mantém a formatação como
+      // está — se não couber, aparece a barra de rolagem.
+      if(isFsMode() && !fullscreenEditing) return;
       if(cifraBody.offsetParent && cifraBody.classList.contains('adaptive-cols')){
         const vp = cifraViewport, st = vp.scrollTop, sl = vp.scrollLeft;
         renderCifra(); vp.scrollTop = st; vp.scrollLeft = sl;
