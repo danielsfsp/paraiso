@@ -2588,22 +2588,6 @@
   .ens-prog.done{color:#3ecf8e;}
   .ens-reset{background:none; border:none; color:var(--text-dim); text-decoration:underline; font:inherit; font-size:12px; cursor:pointer; padding:0;}
   body.role-part .plp-ens{pointer-events:auto;}
-  /* v340 modo telão */
-  .telao{display:none; position:fixed; inset:0; z-index:100000; background:#000; color:#fff; user-select:none; -webkit-user-select:none;}
-  .telao.open{display:flex; flex-direction:column;}
-  .tl-stage{flex:1; display:flex; align-items:center; justify-content:center; padding:4vh 4vw; overflow:hidden; cursor:pointer;}
-  .tl-text{text-align:center; font-family:Manrope, system-ui, sans-serif; font-weight:700; line-height:1.3; max-width:100%; text-shadow:0 2px 12px rgba(0,0,0,.6);}
-  .tl-text > div{margin:.08em 0;}
-  .tl-title .tl-t{font-family:Fraunces, Georgia, serif; font-weight:700; line-height:1.15;}
-  .tl-title .tl-a{font-size:.42em; opacity:.7; font-weight:600; margin-top:.4em;}
-  .telao.black .tl-stage{visibility:hidden;}
-  .tl-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 14px; font-size:13px; color:rgba(255,255,255,.55); background:rgba(255,255,255,.04); transition:opacity .4s;}
-  .telao.idle .tl-foot{opacity:0;}
-  .telao.idle{cursor:none;}
-  .tl-info{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .tl-btns{display:flex; gap:6px; flex-shrink:0;}
-  .tl-btns button{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:#fff; border-radius:8px; padding:6px 12px; font:inherit; cursor:pointer;}
-  .tl-btns button:disabled{opacity:.3; cursor:default;}
 </style>
 </head>
 <body>
@@ -2750,7 +2734,6 @@
             <button class="options-item desktop-only" id="btnPrint" type="button" role="menuitem">🖨️ Imprimir</button>
             <button class="options-item" id="btnAddToPlaylist" type="button" role="menuitem">➕ Adicionar a playlist</button>
             <button class="options-item" id="btnShareSong" type="button" role="menuitem">📤 Compartilhar</button>
-            <button class="options-item" id="btnTelao" type="button" role="menuitem" title="Só a letra, grande, para projetar">📽️ Modo telão</button>
             <button class="options-item" id="btnLibRevert" type="button" role="menuitem" style="display:none;" title="Descarta a sua edição pessoal desta música e volta para a cifra oficial do ministério">↺ Voltar à versão do ministério</button>
             <div class="options-sep"></div>
             <button class="options-item danger" id="btnDelete" type="button" role="menuitem">🗑️ Excluir</button>
@@ -3382,7 +3365,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v340 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v341 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4551,7 +4534,7 @@
       const items = sel.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
       const fromEv = sel.fromEvent && typeof esc !== 'undefined' ? (esc.events || []).find(e => e.id === sel.fromEvent) : null;
       html += '<div class="plp-head"><div><div class="sec-tag sec-pl">🎵 Playlist</div>' + (sel.fromEvent ? '<div class="sec-from">recebida da <b class="c-cu">🗓️ Agenda</b>' + (fromEv ? ' “' + escapeHtml(fromEv.title || 'Culto') + '” · ' + escapeHtml(escDateLabel(fromEv.date)) : '') + '</div>' : '') + '<div class="plp-title">' + escapeHtml(sel.name) + '</div><div class="plp-sub">' + [sel.date ? WEEKDAYS_PT[isoToDate(sel.date).getDay()] + ', ' + fmtDateBR(sel.date) : 'Sem data', items.length + (items.length === 1 ? ' música' : ' músicas'), sel.archived ? '🗄️ arquivada' : ''].filter(Boolean).join(' · ') + '</div></div>' +
-        '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button><button type="button" class="plp-btn" data-plp-telao title="Projetar só a letra das músicas, em sequência">📽️ Telão</button>' : '') +
+        '<div class="plp-acts">' + (items.length ? '<button type="button" class="plp-btn pri" data-plp-play>▶ Abrir</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-add>＋ Música</button>' +
         (sel.fromEvent && items.length ? '<button type="button" class="plp-btn chg" data-plp-chg title="Enviar suas alterações (tom, formatação, cifra) para a equipe do culto">📣 Compartilhar alterações</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-share title="Compartilhar playlist"' + (items.length ? '' : ' disabled') + '><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
@@ -4571,7 +4554,6 @@
     if(sel){
       const q = sel1 => box.querySelector(sel1);
       const pb = q('[data-plp-play]'); if(pb) pb.onclick = () => guardIfDirty(() => goHomeToPlaylist(sel));
-      const tl = q('[data-plp-telao]'); if(tl) tl.onclick = () => telaoOpenPlaylist(sel, null);
       box.querySelectorAll('[data-ens]').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); ensToggle(sel, b.dataset.ens); renderPlaylistsPage(); });
       const er = q('[data-ens-reset]'); if(er) er.onclick = () => { sel.rehearsed = []; savePlaylists(); renderPlaylistsPage(); };
       const ad = q('[data-plp-add]'); if(ad) ad.onclick = () => openPickSongs(sel.id);
@@ -14965,137 +14947,6 @@ function rebalanceAdaptiveCols(wrap, repack){
     return '<div class="ens-prog' + (n && n === t ? ' done' : '') + '"><span>🎸 Ensaio: <b>' + n + '/' + t + '</b>' + (n && n === t ? ' — tudo ensaiado! 🙌' : ' músicas ensaiadas') + '</span><span class="ens-bar"><i style="width:' + pct + '%"></i></span>' + (n ? '<button type="button" class="ens-reset" data-ens-reset title="Desmarcar todas">limpar</button>' : '') + '</div>';
   }
 
-  // ================= MODO TELÃO (v340) =================
-  // Só a letra, grande, para projetar: uma estrofe por tela. Avança com
-  // → / Espaço / clique à direita; volta com ← / clique à esquerda;
-  // B apaga a tela (tela preta); Esc sai. Numa playlist, segue para a
-  // próxima música sozinho.
-  function telaoStanzas(sg, pl){
-    const ov = pl && pl.overrides && pl.overrides[sg.id] ? pl.overrides[sg.id] : null;
-    const body = String((ov && ov.body) || (ov && ov.meta && ov.meta.body) || sg.body || '').replace(/\r\n/g, '\n');
-    // 1) blocos: separados por linha em branco ou por rótulo [Refrão]
-    const blocks = []; let cur = { label: '', lines: [], newLabel: false }, label = '';
-    const push = (lab) => { if(cur.lines.length) blocks.push(cur); cur = { label: lab !== undefined ? lab : '', lines: [], newLabel: lab !== undefined }; };
-    const FMT = /\[\/?(?:b|i|u|s|cor|c|color|bg)(?:=[^\]]*)?\]/gi;
-    body.split('\n').forEach(raw => {
-      let line = raw.replace(FMT, '');
-      try{ if(isTabLine(line)) return; }catch(e){}
-      const lm = line.trim().match(/^\[([^\]]{1,40})\]\s*(.*)$/);
-      if(lm){ push(lm[1].trim()); line = lm[2]; if(!line.trim()) return; }
-      if(!line.trim()){ if(cur.lines.length) push(); return; }
-      if(isChordLine(line)) return;
-      const t = line.replace(/\{[^}]*\}/g, '').replace(/[ \t]+/g, ' ').trim();
-      if(!t || /^[|:\-–—_.\s]+$/.test(t)) return;
-      cur.lines.push(t);
-    });
-    push();
-    // 2) com rótulos ([Refrão] etc.) cada seção vira um grupo; sem rótulos,
-    //    se a cifra tem linha em branco entre todas as linhas, junta tudo
-    const hasLabels = blocks.some(b => b.newLabel);
-    const singles = blocks.filter(b => b.lines.length === 1).length;
-    let groups = blocks;
-    if(hasLabels || (blocks.length && singles / blocks.length >= 0.5)){
-      groups = [];
-      blocks.forEach(b => { if(!groups.length || b.newLabel) groups.push({ label: b.label, lines: b.lines.slice() }); else groups[groups.length - 1].lines.push(...b.lines); });
-    }
-    // 3) no máximo 4 linhas por tela, divididas por igual
-    const out = [];
-    groups.forEach(g => {
-      const n = g.lines.length, parts = Math.max(1, Math.ceil(n / 4)), per = Math.ceil(n / parts);
-      for(let i = 0; i < n; i += per) out.push({ label: i ? '' : g.label, lines: g.lines.slice(i, i + per) });
-    });
-    return out;
-  }
-  const telao = { slides: [], i: 0, black: false, el: null, fs: false, hideT: null };
-  function telaoBuild(list){ // list: [{sg, pl}]
-    const slides = [];
-    list.forEach(({ sg, pl }) => {
-      slides.push({ kind: 'title', sg });
-      telaoStanzas(sg, pl).forEach(st => slides.push({ kind: 'st', sg, st }));
-    });
-    return slides;
-  }
-  function telaoOpenPlaylist(pl, startSongId){
-    const list = pl.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean).map(sg => ({ sg, pl }));
-    if(!list.length) return;
-    telaoStart(telaoBuild(list), startSongId);
-  }
-  function telaoOpenCurrent(){
-    const sg = currentSong(); if(!sg) return;
-    const pl = typeof getOverridePlaylist === 'function' ? getOverridePlaylist() : null;
-    if(pl && pl.songIds.includes(sg.id)) telaoOpenPlaylist(pl, sg.id);
-    else telaoStart(telaoBuild([{ sg, pl: null }]), sg.id);
-  }
-  function telaoStart(slides, startSongId){
-    if(!slides.length) return;
-    try{ closeOptionsMenuIfOpen(); }catch(e){}
-    telao.slides = slides; telao.black = false;
-    telao.i = Math.max(0, startSongId ? slides.findIndex(x => x.sg.id === startSongId) : 0);
-    let el = document.getElementById('telao');
-    if(!el){
-      el = document.createElement('div'); el.id = 'telao'; el.className = 'telao';
-      el.innerHTML = '<div class="tl-stage"><div class="tl-text"></div></div>' +
-        '<div class="tl-foot"><span class="tl-info"></span><span class="tl-btns"><button type="button" data-tl="prev" title="Anterior (←)">◀</button><button type="button" data-tl="black" title="Tela preta (B)">⬛</button><button type="button" data-tl="next" title="Próxima (→ ou Espaço)">▶</button><button type="button" data-tl="close" title="Sair (Esc)">✕ Sair</button></span></div>';
-      document.body.appendChild(el);
-      el.querySelector('.tl-stage').addEventListener('click', (e) => { const r = el.getBoundingClientRect(); telaoGo(e.clientX < r.width / 3 ? -1 : 1); });
-      el.querySelectorAll('[data-tl]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const a = b.dataset.tl; if(a === 'prev') telaoGo(-1); else if(a === 'next') telaoGo(1); else if(a === 'black') telaoBlack(); else telaoClose(); }));
-      el.addEventListener('mousemove', telaoWake); el.addEventListener('touchstart', telaoWake, { passive: true });
-      let sx = null; el.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
-      el.addEventListener('touchend', (e) => { if(sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if(Math.abs(dx) > 50){ e.preventDefault(); telaoGo(dx < 0 ? 1 : -1); } });
-    }
-    telao.el = el; el.classList.add('open'); document.body.classList.add('telao-on');
-    telao.fs = false;
-    try{ if(!document.fullscreenElement && document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(() => { telao.fs = true; telaoRender(); }).catch(() => {}); } }catch(e){}
-    try{ stopScroll(); }catch(e){}
-    telaoRender(); telaoWake();
-  }
-  function telaoWake(){ if(!telao.el) return; telao.el.classList.remove('idle'); clearTimeout(telao.hideT); telao.hideT = setTimeout(() => { if(telao.el) telao.el.classList.add('idle'); }, 2500); }
-  function telaoBlack(){ telao.black = !telao.black; telaoRender(); }
-  function telaoGo(d){
-    if(telao.black){ telao.black = false; telaoRender(); return; }
-    const n = telao.i + d; if(n < 0 || n >= telao.slides.length) return;
-    telao.i = n; telaoRender();
-  }
-  function telaoRender(){
-    const el = telao.el; if(!el) return;
-    const sl = telao.slides[telao.i]; const box = el.querySelector('.tl-text');
-    el.classList.toggle('black', telao.black);
-    if(sl.kind === 'title'){
-      box.className = 'tl-text tl-title';
-      box.innerHTML = '<div class="tl-t">' + escapeHtml(sl.sg.title || '') + '</div>' + (sl.sg.artist ? '<div class="tl-a">' + escapeHtml(sl.sg.artist) + '</div>' : '');
-    } else {
-      box.className = 'tl-text';
-      box.innerHTML = sl.st.lines.map(l => '<div>' + escapeHtml(l) + '</div>').join('');
-    }
-    // maior letra que cabe na tela
-    const stage = el.querySelector('.tl-stage');
-    let fsz = Math.min(stage.clientHeight / (sl.kind === 'title' ? 5 : Math.max(3.2, (sl.st ? sl.st.lines.length : 1) * 1.45)), stage.clientWidth / 9);
-    box.style.fontSize = fsz + 'px';
-    for(let k = 0; k < 40 && (box.scrollHeight > stage.clientHeight * 0.92 || box.scrollWidth > stage.clientWidth * 0.94); k++){ fsz *= 0.93; box.style.fontSize = fsz + 'px'; }
-    const songSlides = telao.slides.filter(x => x.sg.id === sl.sg.id), pos = songSlides.indexOf(sl) + 1;
-    const nextTitle = (() => { for(let j = telao.i + 1; j < telao.slides.length; j++){ if(telao.slides[j].kind === 'title') return telao.slides[j].sg.title; } return ''; })();
-    el.querySelector('.tl-info').textContent = (sl.sg.title || '') + ' · ' + pos + '/' + songSlides.length + (sl.st && sl.st.label ? ' · ' + sl.st.label : '') + (nextTitle ? '   →  próxima: ' + nextTitle : '');
-    el.querySelector('[data-tl="prev"]').disabled = telao.i === 0;
-    el.querySelector('[data-tl="next"]').disabled = telao.i === telao.slides.length - 1;
-  }
-  function telaoClose(){
-    const el = telao.el; if(!el) return;
-    el.classList.remove('open'); document.body.classList.remove('telao-on');
-    try{ if(telao.fs && document.fullscreenElement) document.exitFullscreen(); }catch(e){}
-    telao.fs = false;
-  }
-  function closeOptionsMenuIfOpen(){ const m = document.getElementById('optionsMenu'); if(m) m.classList.remove('open'); }
-  document.addEventListener('keydown', (e) => {
-    if(!document.body.classList.contains('telao-on')) return;
-    const k = e.key;
-    if(['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)){ e.preventDefault(); e.stopImmediatePropagation(); telaoGo(1); }
-    else if(['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)){ e.preventDefault(); e.stopImmediatePropagation(); telaoGo(-1); }
-    else if(k === 'b' || k === 'B' || k === '.'){ e.preventDefault(); e.stopImmediatePropagation(); telaoBlack(); }
-    else if(k === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); telaoClose(); }
-    else if(k === 'Home'){ e.preventDefault(); telao.i = 0; telaoRender(); }
-  }, true);
-  window.addEventListener('resize', () => { if(document.body.classList.contains('telao-on')) telaoRender(); });
-  document.getElementById('btnTelao').addEventListener('click', () => telaoOpenCurrent());
 
 })();
 </script>

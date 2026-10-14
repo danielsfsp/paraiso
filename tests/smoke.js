@@ -104,7 +104,7 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     }
 
     // 2) CIFRA / COMPARTILHAR / TELÃO / ENSAIO (visitante, computador)
-    console.log('\n▶ Cifra, compartilhar, telão e ensaio');
+    console.log('\n▶ Cifra, compartilhar e ensaio');
     db = freshDb();
     const c2 = await newCtx(b, { viewport: { width: 1366, height: 800 } }); await c2.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://127.0.0.1:' + PORT });
     const p2 = await page(c2, errs, 'cifra');
@@ -136,12 +136,6 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p2.click('.sidebar-tabs [data-view="playlists"]'); await p2.waitForTimeout(700);
     await p2.click('[data-ens]'); await p2.waitForTimeout(300);
     check(/1\/3/.test(await p2.evaluate(() => document.querySelector('.ens-prog').innerText)), 'checklist de ensaio marca e mostra o progresso');
-    await p2.click('[data-plp-telao]'); await p2.waitForTimeout(400);
-    await p2.keyboard.press('ArrowRight'); await p2.waitForTimeout(200);
-    const tl = await p2.evaluate(() => ({ on: document.body.classList.contains('telao-on'), lines: document.querySelectorAll('.tl-text > div').length, info: document.querySelector('.tl-info').textContent }));
-    check(tl.on && tl.lines >= 1 && /\/\d+/.test(tl.info), 'modo telão abre e avança (' + tl.info.slice(0, 40) + ')');
-    await p2.keyboard.press('Escape'); await p2.waitForTimeout(200);
-    check(!(await p2.evaluate(() => document.body.classList.contains('telao-on'))), 'Esc fecha o telão');
     // setas fixas
     await p2.click('[data-plp-song]'); await p2.waitForTimeout(900);
     const ys = [];

@@ -13,7 +13,7 @@ Letras, cifras, playlists e escala do ministério de louvor.
 ## Antes de publicar: roteiro de testes
 `node tests/smoke.js` — abre o `site/` num servidor local com um banco de dados **falso**
 (não toca o Supabase de verdade) e confere, no computador e no celular: modo visitante,
-cifra simplificada, compartilhar música, telão, checklist de ensaio, tom por ministro,
+cifra simplificada, compartilhar música, checklist de ensaio, tom por ministro,
 participante e abertura com internet lenta/sem internet. Só publicar se terminar com `0 falha(s)`.
 
 ## Banco sempre acordado
