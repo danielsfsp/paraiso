@@ -3436,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v349 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v350 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6362,7 +6362,7 @@
   // AJUSTE À TELA: em colunas, se a música não cabe na largura da tela, a
   // fonte diminui 1 ponto por vez (até 70% do tamanho escolhido, mínimo 10)
   // até caber — o tamanho escolhido em FONTE vira o máximo.
-  let fitShrink = 0, fitPass = false, keepColsOnce = null;
+  let fitShrink = 0, fitPass = false, keepColsOnce = null, keepColsUntil = 0;
   function renderCifra(){
     const song = currentSong();
     if(!song) return;
@@ -6429,7 +6429,8 @@
       if(!singleColumn) adaptReadingColumns();
       // v330: trocar a CIFRA (completa/simplificada/contrabaixo) mantém as mesmas linhas em cada coluna
       let keptCols = false;
-      if(!singleColumn && keepColsOnce){ const kc = keepColsOnce; keepColsOnce = null; try{ keptCols = distributeEditCols(cifraBody, kc, true); }catch(e){} }
+      if(keepColsOnce && Date.now() > keepColsUntil) keepColsOnce = null; // v350: vale por ~1,5 s (a tela pode redesenhar mais de uma vez)
+      if(!singleColumn && keepColsOnce){ const kc = keepColsOnce; try{ keptCols = distributeEditCols(cifraBody, kc, true); }catch(e){} }
       if(!keptCols && !singleColumn && cifraBody.offsetParent){
         const vp = cifraViewport;
         const minFs = Math.max(10, Math.round(fontSize * 0.7));
@@ -8668,11 +8669,15 @@
     const wrap = document.getElementById('cifraBodyEditCols');
     const lines = getEditRows(wrap).map(div => div.textContent);
     const newBody = lines.join('\n').replace(/\n+$/, '');
+    // v350: a leitura volta com as MESMAS colunas que estavam na edição
+    // (o navegador reequilibrava as colunas e uma linha pulava para a seguinte)
+    const editCols = (!singleColumn && wrap.classList.contains('adaptive-cols')) ? Array.from(wrap.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length).filter(n => n > 0) : null;
     setEffectiveBody(song, newBody);
     // Salva junto tom/formatação pendentes (os botões "Salvar/Descartar
     // alterações" não aparecem na tela cheia).
     if(displayPrefsDirty) saveDisplayPrefsForCurrentSong();
     exitFullscreenInlineEdit();
+    if(editCols && editCols.length > 1){ keepColsOnce = editCols; keepColsUntil = Date.now() + 1500; }
     renderViewer();
   }
   // Descarta tom/formatação pendentes (usado ao sair da edição em tela
@@ -12877,7 +12882,7 @@
     simplifyOn = (v === 'simple' || v === 'bass') ? v : false;
     lsSet('chordMode', simplifyOn || 'full');
     ['selChordMode', 'selChordModeFs'].forEach(id => { const el = document.getElementById(id); if(el){ el.value = simplifyOn || 'full'; el.classList.toggle('on', !!simplifyOn); } });
-    keepColsOnce = (!singleColumn && cifraBody.classList.contains('adaptive-cols')) ? Array.from(cifraBody.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length) : null;
+    keepColsOnce = (!singleColumn && cifraBody.classList.contains('adaptive-cols')) ? Array.from(cifraBody.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length) : null; keepColsUntil = Date.now() + 1500;
     fitPass = true; // mantém também a fonte já ajustada à tela
     renderCifra();
   }
