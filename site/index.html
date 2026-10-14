@@ -2614,6 +2614,24 @@
   .av-fns .hi{color:var(--accent); font-weight:700;} .av-fns .none{opacity:.6; font-style:italic;}
   .av-add{font-size:12px; font-weight:700; color:var(--accent); white-space:nowrap;}
   @media (max-width: 640px){ .av-row{grid-template-columns:1fr auto; } .av-fns{grid-column:1 / -1; grid-row:2;} }
+
+  /* v344 sair da escala: salvar / descartar / continuar */
+  .eg-acts{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+  .eg-acts button{width:100%; justify-content:center;}
+  .eg-discard{color:#ff6b6b !important;}
+
+  /* v344 etiquetas coloridas por função */
+  .fn-tag{display:inline-flex; align-items:center; gap:3px; padding:1px 8px; border-radius:999px; font-size:.92em; font-weight:700; line-height:1.5; white-space:nowrap;
+    color:var(--fc); background:color-mix(in srgb, var(--fc) 14%, transparent); border:1px solid color-mix(in srgb, var(--fc) 40%, transparent);}
+  html[data-theme="light"] .fn-tag{color:color-mix(in srgb, var(--fc) 55%, #000); background:color-mix(in srgb, var(--fc) 20%, #fff);}
+  .tm-fn.fn-tag{color:var(--fc);}
+  html[data-theme="light"] .tm-fn.fn-tag{color:color-mix(in srgb, var(--fc) 55%, #000);}
+  .av-fns .fn-tag{font-weight:600;} .av-fns .fn-tag.hi{font-weight:800; box-shadow:0 0 0 1.5px var(--fc);}
+  .av-fnchips .fn-chip{border-color:color-mix(in srgb, var(--fc) 45%, transparent); color:var(--fc);}
+  .av-fnchips .fn-chip.on{background:color-mix(in srgb, var(--fc) 22%, transparent); border-color:var(--fc); color:var(--text);}
+  html[data-theme="light"] .av-fnchips .fn-chip{color:color-mix(in srgb, var(--fc) 55%, #000);}
+  .esc-fn-sel[style*="--fc"]{border-left:4px solid var(--fc) !important;}
+  .ev-mine .fn-tag{font-size:.95em;}
 </style>
 </head>
 <body>
@@ -3391,7 +3409,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v343 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v344 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10161,6 +10179,14 @@
   function escCanOnline(){ return spCanUse(); } // mesmo critério do Spotify: só no site (https), não dentro do Claude
   function escH(s){ return escapeHtml(String(s == null ? '' : s)); }
   function escFnIcon(f){ return ESC_FN_ICON[f] || '🎵'; }
+  // v344: cor de cada função (etiquetas coloridas)
+  const ESC_FN_COLOR = { 'Ministro': '#ffd166', 'Vocal': '#ff8fab', 'Back vocal': '#c4a7ff', 'Violão': '#f4a261', 'Guitarra': '#ff6b6b', 'Teclado': '#4cc9f0', 'Baixo': '#80ed99', 'Bateria': '#2ec4b6', 'Percussão': '#c3e46b', 'Som': '#a5b4c8', 'Projeção/Mídia': '#8b9cff' };
+  function fnColor(f){
+    if(ESC_FN_COLOR[f]) return ESC_FN_COLOR[f];
+    let h = 0; for(const ch of String(f || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return 'hsl(' + (h % 360) + ' 70% 68%)';
+  }
+  function fnTagHtml(f){ return '<span class="fn-tag" style="--fc:' + fnColor(f) + '">' + escFnIcon(f) + ' ' + escH(f) + '</span>'; }
   function escProfile(id){
     if(typeof id === 'string' && id.startsWith('pre:')){
       const x = (esc.pre || []).find(y => 'pre:' + y.id === id);
@@ -10466,7 +10492,7 @@
       // Minha resposta
       mine.forEach(a => {
         const answered = a.status !== 'pendente';
-        html += '<div class="esc-mine ev-mine ' + a.status + (answered && !esc._reanswer ? ' answered' : '') + '"><span>Você: <b>' + escFnIcon(a.function) + ' ' + escH(a.function) + '</b>' + (a.status === 'confirmado' ? ' · confirmado ✓' : a.status === 'recusado' ? ' · não pode' : '') + '</span>' +
+        html += '<div class="esc-mine ev-mine ' + a.status + (answered && !esc._reanswer ? ' answered' : '') + '"><span>Você: <b>' + fnTagHtml(a.function) + '</b>' + (a.status === 'confirmado' ? ' · confirmado ✓' : a.status === 'recusado' ? ' · não pode' : '') + '</span>' +
           '<span class="esc-mine-btns"><button type="button" class="esc-ok' + (a.status === 'confirmado' ? ' on' : '') + '" data-confirm="' + a.id + '">✓ Confirmo</button>' +
           '<button type="button" class="esc-no' + (a.status === 'recusado' ? ' on' : '') + '" data-decline="' + a.id + '">✕ Não posso</button></span></div>';
       });
@@ -10483,7 +10509,7 @@
           const msg = 'Oi ' + escFirst(a.profile_id) + '! Você está na escala do ' + (e.title || 'culto') + ' de ' + escDateLabel(e.date) + (e.time ? ' às ' + e.time : '') + ' no ' + a.function + '. Confirma pra gente? 🙏\n' + escAppLink(e.id);
           nudge = '<a class="ev-nudge" target="_blank" rel="noopener noreferrer" href="https://wa.me/' + escPhoneDigits(p.phone) + '?text=' + encodeURIComponent(msg) + '"><i class=\"fa-brands fa-whatsapp ic-wa\" aria-hidden=\"true\"></i> Lembrar</a>';
         }
-        html += '<div class="ev-person">' + homeAvatar(p, null) + '<div class="ev-pmain"><div class="ev-pname">' + escH(escName(a.profile_id)) + (p && p.is_pre ? ' <small>pré-cadastro</small>' : '') + '</div><div class="ev-sub">' + escFnIcon(a.function) + ' ' + escH(a.function) +
+        html += '<div class="ev-person">' + homeAvatar(p, null) + '<div class="ev-pmain"><div class="ev-pname">' + escH(escName(a.profile_id)) + (p && p.is_pre ? ' <small>pré-cadastro</small>' : '') + '</div><div class="ev-sub">' + fnTagHtml(a.function) +
           (unav ? ' · <em class="esc-warn">⚠ marcou que não pode</em>' : '') + (a.status === 'recusado' && a.reason ? ' · “' + escH(a.reason) + '”' : '') + '</div></div>' + st + nudge + '</div>';
       });
       html += '</div>';
@@ -10607,11 +10633,33 @@
     return escEditKey(esc.editing) !== esc.editOrig;
   }
   // Sair da edição da escala: se mudou algo, pergunta antes de descartar.
+  // v344: três opções — salvar e sair, descartar, ou continuar editando
   function escGuard(action){
     if(!escEditorDirty()){ esc.editing = null; action(); return; }
-    showConfirm('Descartar alterações?', 'Você mudou esta escala e ainda não salvou. Se sair agora, as alterações serão perdidas.',
-      () => { esc.editing = null; action(); }, { okLabel: 'Descartar alterações', cancelLabel: 'Continuar editando' });
+    if(document.querySelector('.esc-guard-ov')) return;
+    const ov = document.createElement('div'); ov.className = 'decl-ov esc-guard-ov';
+    ov.innerHTML = '<div class="decl-box" role="dialog" aria-modal="true" style="max-width:420px"><h3>Salvar as alterações?</h3>' +
+      '<p>Você mudou ' + (esc.editMode === 'culto' ? 'este evento' : 'esta escala') + ' e ainda não salvou.</p>' +
+      '<div class="eg-acts"><button type="button" class="btn-primary" data-eg="save">💾 Salvar e sair</button>' +
+      '<button type="button" class="btn-secondary eg-discard" data-eg="discard">Descartar alterações</button>' +
+      '<button type="button" class="btn-secondary" data-eg="stay">Continuar editando</button></div></div>';
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', e => { if(e.target === ov) close(); });
+    ov.querySelector('[data-eg="stay"]').onclick = close;
+    ov.querySelector('[data-eg="discard"]').onclick = () => { close(); esc.editing = null; action(); };
+    ov.querySelector('[data-eg="save"]').onclick = () => { close(); const b = document.getElementById('escSave'); if(!b){ esc.editing = null; action(); return; } esc.afterSave = action; b.click(); };
+    setTimeout(() => { try{ ov.querySelector('[data-eg="save"]').focus(); }catch(e){} }, 30);
   }
+  // Sair por outro caminho (menu lateral, barra do celular, perfil): passa pela mesma pergunta
+  document.addEventListener('click', (e) => {
+    if(esc.guardBypass || !esc.editing || !escOverlay().classList.contains('open')) return;
+    const el = e.target.closest('.side-nav button, .side-nav-item, #mobileTabbar button, .sidebar-footer button, #btnMenuHome, .logo-btn, #homeProfileMenu button');
+    if(!el || escOverlay().contains(el) || !escEditorDirty()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    escGuard(() => { esc.guardBypass = true; try{ el.click(); }finally{ esc.guardBypass = false; } });
+  }, true);
+  window.addEventListener('beforeunload', (e) => { try{ if(esc.editing && escEditorDirty()){ e.preventDefault(); e.returnValue = ''; } }catch(err){} });
   function escPlaylistSnapshot(pl){
     const ov = {}; (pl.songIds || []).forEach(id => {
       const o = Object.assign({}, (pl.overrides && pl.overrides[id]) || {});
@@ -10705,12 +10753,12 @@
       const item = (p, f) => {
         const fs = fnsOf(p), t = tags(p);
         if(view === 'cartoes') return '<button type="button" data-avulso="' + p.id + '"' + (f ? ' data-avfn="' + escH(f) + '"' : '') + '><b>' + escH(p.name) + '</b><small>' + escH(fs.join(', ') || 'sem função') + (t.length ? ' · ' + escH(t.join(' · ')) : '') + '</small></button>';
-        return '<button type="button" class="av-row" data-avulso="' + p.id + '"' + (f ? ' data-avfn="' + escH(f) + '"' : '') + '><span class="av-name"><b>' + escH(p.name) + '</b>' + t.map(x => '<i class="av-tag' + (/⚠|já/.test(x) ? ' warn' : '') + '">' + escH(x) + '</i>').join('') + '</span><span class="av-fns">' + (fs.length ? fs.map(x => '<span' + (x === (f || fn) ? ' class="hi"' : '') + '>' + escFnIcon(x) + ' ' + escH(x) + '</span>').join('') : '<span class="none">sem função</span>') + '</span><span class="av-add">＋ ' + escH(f || fn || 'Incluir') + '</span></button>';
+        return '<button type="button" class="av-row" data-avulso="' + p.id + '"' + (f ? ' data-avfn="' + escH(f) + '"' : '') + '><span class="av-name"><b>' + escH(p.name) + '</b>' + t.map(x => '<i class="av-tag' + (/⚠|já/.test(x) ? ' warn' : '') + '">' + escH(x) + '</i>').join('') + '</span><span class="av-fns">' + (fs.length ? fs.map(x => '<span class="fn-tag' + (x === (f || fn) ? ' hi' : '') + '" style="--fc:' + fnColor(x) + '">' + escFnIcon(x) + ' ' + escH(x) + '</span>').join('') : '<span class="none">sem função</span>') + '</span><span class="av-add">＋ ' + escH(f || fn || 'Incluir') + '</span></button>';
       };
       const listCls = view === 'cartoes' ? 'esc-avulso-list' : 'esc-avulso-rows';
       let sec = '';
       if(grp === 'funcao' && !fn){
-        fnList.forEach(f => { const ps = all.filter(p => fnsOf(p).includes(f)); if(ps.length) sec += '<div class="esc-avulso-sec">' + escFnIcon(f) + ' ' + escH(f) + ' <small>(' + ps.length + ')</small></div><div class="' + listCls + '">' + ps.map(p => item(p, f)).join('') + '</div>'; });
+        fnList.forEach(f => { const ps = all.filter(p => fnsOf(p).includes(f)); if(ps.length) sec += '<div class="esc-avulso-sec" style="color:' + fnColor(f) + '">' + escFnIcon(f) + ' ' + escH(f) + ' <small>(' + ps.length + ')</small></div><div class="' + listCls + '">' + ps.map(p => item(p, f)).join('') + '</div>'; });
         const sem = all.filter(p => !fnsOf(p).length); if(sem.length) sec += '<div class="esc-avulso-sec">Sem função</div><div class="' + listCls + '">' + sem.map(p => item(p, '')).join('') + '</div>';
       } else {
         const fora = shown.filter(p => !inTeam.has(p.id)), dentro = shown.filter(p => inTeam.has(p.id));
@@ -10720,7 +10768,7 @@
       }
       html += '<div class="esc-avulso">' +
         '<div class="av-bar"><span class="av-lbl">Função:</span><div class="av-fnchips"><button type="button" data-avf=""' + (!fn ? ' class="on"' : '') + '>Todas <small>' + all.length + '</small></button>' +
-          fnList.filter(f => counts[f]).map(f => '<button type="button" data-avf="' + escH(f) + '"' + (fn === f ? ' class="on"' : '') + '>' + escFnIcon(f) + ' ' + escH(f) + ' <small>' + counts[f] + '</small></button>').join('') + '</div></div>' +
+          fnList.filter(f => counts[f]).map(f => '<button type="button" data-avf="' + escH(f) + '" class="fn-chip' + (fn === f ? ' on' : '') + '" style="--fc:' + fnColor(f) + '">' + escFnIcon(f) + ' ' + escH(f) + ' <small>' + counts[f] + '</small></button>').join('') + '</div></div>' +
         '<div class="av-bar av-bar2"><span class="av-lbl">Agrupar:</span><div class="av-seg"><button type="button" data-avg="equipe"' + (grp === 'equipe' ? ' class="on"' : '') + '>Equipe</button><button type="button" data-avg="funcao"' + (grp === 'funcao' ? ' class="on"' : '') + '>Função</button></div>' +
           '<span class="av-lbl">Ver:</span><div class="av-seg"><button type="button" data-avv="lista"' + (view === 'lista' ? ' class="on"' : '') + '>☰ Lista</button><button type="button" data-avv="cartoes"' + (view === 'cartoes' ? ' class="on"' : '') + '>▦ Cartões</button></div></div>' +
         '<div class="esc-avulso-h">Toque na pessoa para incluir na escala' + (fn ? ' como <b>' + escH(fn) + '</b>' : grp === 'funcao' ? ' na função do grupo' : ' (depois ajuste a função ao lado do nome)') + ':</div>' +
@@ -10729,7 +10777,7 @@
     }
     html += '<div id="escRows">';
     d.rows.forEach((r, i) => {
-      html += '<div class="esc-row" data-i="' + i + '"><select class="esc-input esc-fn-sel">' + fnOpts(r.function) + '</select>' +
+      html += '<div class="esc-row" data-i="' + i + '"><select class="esc-input esc-fn-sel" style="--fc:' + fnColor(r.function) + '">' + fnOpts(r.function) + '</select>' +
         '<select class="esc-input esc-pp-sel">' + personOpts(r.profile_id, r.function) + '</select>' +
         '<button type="button" class="esc-x" title="Tirar">✕</button></div>';
     });
@@ -10839,6 +10887,7 @@
           if(ev0) escNotifyAsk('escala', ev0, avisar);
         }, { okLabel: 'Excluir escala' });
     document.getElementById('escSave').onclick = async () => {
+      const after = esc.afterSave; esc.afterSave = null;
       grab();
       if(esc.editMode !== 'culto' && !d.id){ showAlert('Escala', 'Escolha primeiro o culto, ensaio ou evento da 🗓️ Agenda. A escala não cria eventos na Agenda.'); return; }
       if(esc.editMode !== 'culto' && !d.rows.some(r => r.profile_id)){ showAlert('Escala', 'Coloque pelo menos uma pessoa em "Quem toca o quê" antes de salvar.'); return; }
@@ -10869,6 +10918,7 @@
         if(rec.playlist && rec.playlist.srcId) adoptAsEventCopy(rec.playlist.srcId, evId, rec.playlist);
         esc.editing = null; esc.openEventId = evId;
         await escLoadAll();
+        if(typeof after === 'function'){ try{ after(); }catch(e){} }
         const ev = esc.events.find(x => x.id === evId);
         if(ev) showImportFeedback('✓ ' + (esc.editMode === 'culto' ? 'Salvo na Agenda.' : 'Escala salva. Para avisar a equipe, use Compartilhar na 🗓️ Agenda.'), true);
         if(false) showConfirm('Escala salva ✅', 'A escala já está salva e a equipe já consegue ver no CEP Louvor. Quer avisar também no grupo do WhatsApp?', () => escShareEvent(evId), { okLabel: '<i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> Enviar no WhatsApp', cancelLabel: '✓ Só salvar', okNeutral: true });
@@ -10888,7 +10938,7 @@
     const approvedList = esc.profiles.filter(p => p.approved).sort((a, b) => (escIsAdmin(b) - escIsAdmin(a)) || ((b.active !== false) - (a.active !== false)) || (a.name || '').localeCompare(b.name || '', 'pt-BR'));
     const open = leader ? escPreOpen() : [];
     const av = p => p && p.photo_url ? '<img class="tm-av" src="' + escH(p.photo_url) + '" alt="" referrerpolicy="no-referrer">' : homeAvatar(p, null).replace('class="hc-av"', 'class="hc-av tm-av"');
-    const fnChips = fns => (fns && fns.length) ? fns.map(f => '<span class="tm-fn">' + escFnIcon(f) + ' ' + escH(f) + '</span>').join('') : '<span class="tm-fn none">sem funções</span>';
+    const fnChips = fns => (fns && fns.length) ? fns.map(f => '<span class="tm-fn fn-tag" style="--fc:' + fnColor(f) + '">' + escFnIcon(f) + ' ' + escH(f) + '</span>').join('') : '<span class="tm-fn none">sem funções</span>';
     const roleBadge = p => escIsAdmin(p) ? '<span class="tm-role admin">Administrador</span>' : (p.is_leader ? '<span class="tm-role">Líder</span>' : '') + (p.is_minister ? '<span class="tm-role min">Ministro</span>' : '') + (p.is_participant && !p.is_leader && !p.is_minister ? '<span class="tm-role part">Participante</span>' : '');
     let html = '';
     // Resumo + ações
@@ -13449,7 +13499,7 @@
       const as = escEventAssignments(ev.id);
       const stIco = st => st === 'confirmado' ? '<b class="ok">✓</b>' : st === 'recusado' ? '<b class="no">✕</b>' : '<b class="pe">…</b>';
       if(ev.minister_id) h += '<div class="plp-esc-p"><span class="plp-esc-av">' + homeAvatar(escProfile(ev.minister_id), null) + '</span><span class="nm">' + escapeHtml(escName(ev.minister_id)) + '</span><span class="fn">🎤 Ministro</span></div>';
-      h += as.length ? as.map(a => '<div class="plp-esc-p"><span class="plp-esc-av">' + homeAvatar(escProfile(a.profile_id), a.status) + '</span><span class="nm">' + escapeHtml(escName(a.profile_id)) + '</span><span class="fn">' + escFnIcon(a.function) + ' ' + escapeHtml(a.function) + '</span>' + stIco(a.status) + '</div>').join('')
+      h += as.length ? as.map(a => '<div class="plp-esc-p"><span class="plp-esc-av">' + homeAvatar(escProfile(a.profile_id), a.status) + '</span><span class="nm">' + escapeHtml(escName(a.profile_id)) + '</span><span class="fn fn-tag" style="--fc:' + fnColor(a.function) + '">' + escFnIcon(a.function) + ' ' + escapeHtml(a.function) + '</span>' + stIco(a.status) + '</div>').join('')
         : '<div class="plp-esc-empty">Ninguém escalado ainda.</div>';
       h += '<div class="plp-esc-acts">' + (can ? '<button type="button" class="plp-btn pri" data-plp-esc-edit="' + ev.id + '">👥 Escolher pessoas</button>' : '') + '<button type="button" class="plp-btn" data-plp-esc-open="' + ev.id + '">📅 Ver escala</button></div>';
     } else {
