@@ -2632,6 +2632,14 @@
   html[data-theme="light"] .av-fnchips .fn-chip{color:color-mix(in srgb, var(--fc) 55%, #000);}
   .esc-fn-sel[style*="--fc"]{border-left:4px solid var(--fc) !important;}
   .ev-mine .fn-tag{font-size:.95em;}
+
+  /* v345 Agenda: Ativos / Arquivados */
+  .ag-show{margin-left:auto; display:inline-flex; gap:14px; align-items:center;}
+  .ag-show label{display:inline-flex; align-items:center; gap:5px; cursor:pointer; color:var(--text); font-weight:600;}
+  .ag-show input{accent-color:var(--accent); width:15px; height:15px; margin:0;}
+  .ag-show label.arc{color:var(--text-dim);}
+  .ag-pill.arch, .ag-wev.arch{filter:grayscale(1); opacity:.45;}
+  .ag-arc-sec{margin-top:14px;}
 </style>
 </head>
 <body>
@@ -3409,7 +3417,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v344 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v345 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -14176,7 +14184,14 @@
   const AG_MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const AG_WD = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   function agAddDays(iso, n){ const d = isoToDate(iso); d.setDate(d.getDate() + n); return isoFromDate(d); }
-  function agEventsOn(iso){ return (esc.events || []).filter(e => e.date === iso).sort((a, b) => (a.time || '').localeCompare(b.time || '')); }
+  // v345: Ativos / Arquivados — o que aparece no calendário (arquivados em cinza)
+  function agShowAct(){ const v = lsGet('agShowAct'); return v === null || v === undefined || v === '' ? true : v === '1'; }
+  function agShowArc(){ return lsGet('agShowArc') === '1'; }
+  function agIsArch(e){ return !!(esc.arch && esc.arch.includes(e)); }
+  function agEventsOn(iso){
+    const list = (agShowAct() ? (esc.events || []) : []).concat(agShowArc() ? (esc.arch || []) : []);
+    return list.filter(e => e.date === iso).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  }
   function agCalendarHtml(cardHtml, futureEvs, can){
     if(!esc.agView) esc.agView = lsGet('agView') || 'mes';
     const today = todayIso();
@@ -14191,8 +14206,9 @@
       else { const ws = agAddDays(esc.agCursor, -((cur.getDay() + 6) % 7)); const we = agAddDays(ws, 6); title = fmtDateBR(ws).slice(0, 5) + ' – ' + fmtDateBR(we).slice(0, 5); }
       h += '<div class="ag-nav"><button type="button" data-agnav="-1" aria-label="Anterior">‹</button><span class="ag-title">' + title + '</span><button type="button" data-agnav="1" aria-label="Próximo">›</button><button type="button" data-agnav="0">Hoje</button></div>';
     }
-    h += '</div><div class="ag-legend"><span class="k-culto"><i></i>Culto</span><span class="k-ensaio"><i></i>Ensaio</span><span class="k-evento"><i></i>Outros</span></div>';
-    const pill = e => '<span class="ag-pill k-' + (e.kind || 'culto') + '" title="' + escH((e.time ? e.time + ' · ' : '') + (e.title || '')) + '">' + escH((e.time ? e.time + ' ' : '') + EVK[e.kind || 'culto'].label + (e.title && e.title !== EVK[e.kind || 'culto'].label ? ' · ' + e.title : '')) + '</span>';
+    h += '</div><div class="ag-legend"><span class="k-culto"><i></i>Culto</span><span class="k-ensaio"><i></i>Ensaio</span><span class="k-evento"><i></i>Outros</span>' +
+      '<span class="ag-show"><label><input type="checkbox" data-agshow="act"' + (agShowAct() ? ' checked' : '') + '> Ativos</label><label class="arc"><input type="checkbox" data-agshow="arc"' + (agShowArc() ? ' checked' : '') + '> Arquivados</label></span></div>';
+    const pill = e => '<span class="ag-pill k-' + (e.kind || 'culto') + (agIsArch(e) ? ' arch' : '') + '" title="' + escH((e.time ? e.time + ' · ' : '') + (e.title || '')) + '">' + escH((e.time ? e.time + ' ' : '') + EVK[e.kind || 'culto'].label + (e.title && e.title !== EVK[e.kind || 'culto'].label ? ' · ' + e.title : '')) + '</span>';
     if(v === 'mes'){
       const first = isoFromDate(new Date(cur.getFullYear(), cur.getMonth(), 1));
       const start = agAddDays(first, -((isoToDate(first).getDay() + 6) % 7));
@@ -14210,23 +14226,26 @@
       for(let i = 0; i < 7; i++){
         const iso = agAddDays(ws, i), d = isoToDate(iso), evs = agEventsOn(iso);
         h += '<div class="ag-wcol' + (iso === today ? ' today' : '') + (iso === esc.agSel ? ' sel' : '') + '" data-agday="' + iso + '"><div class="ag-whead">' + AG_WD[d.getDay()] + '<b>' + d.getDate() + '</b></div>' +
-          evs.map(e => '<div class="ag-wev k-' + (e.kind || 'culto') + '" data-agev="' + e.id + '"><b>' + EVK[e.kind || 'culto'].ico + ' ' + EVK[e.kind || 'culto'].label + '</b><small>' + escH([e.time || '', e.title && e.title !== EVK[e.kind || 'culto'].label ? e.title : ''].filter(Boolean).join(' · ')) + '</small></div>').join('') + '</div>';
+          evs.map(e => '<div class="ag-wev k-' + (e.kind || 'culto') + (agIsArch(e) ? ' arch' : '') + '" data-agev="' + e.id + '"><b>' + EVK[e.kind || 'culto'].ico + ' ' + EVK[e.kind || 'culto'].label + '</b><small>' + escH([e.time || '', e.title && e.title !== EVK[e.kind || 'culto'].label ? e.title : ''].filter(Boolean).join(' · ')) + '</small></div>').join('') + '</div>';
       }
       h += '</div>';
     }
     if(v === 'lista'){
-      if(!futureEvs.length) h += '<div class="esc-empty">Nada marcado.' + (can ? ' Toque em "＋ Novo".' : '') + '</div>';
-      h += futureEvs.map(cardHtml).join('');
+      const act = agShowAct() ? futureEvs : [], arc = agShowArc() ? (esc.arch || []).slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || ''))) : [];
+      if(!act.length && !arc.length) h += '<div class="esc-empty">' + (!agShowAct() && !agShowArc() ? 'Marque "Ativos" ou "Arquivados" para ver os eventos.' : 'Nada marcado.' + (can && agShowAct() ? ' Toque em "＋ Novo".' : '')) + '</div>';
+      h += act.map(cardHtml).join('');
+      if(arc.length) h += '<div class="esc-avulso-sec ag-arc-sec">🗄️ Arquivados e finalizados</div>' + arc.map(e => agArchRowHtml(e, can)).join('');
     } else {
       const dayEvs = agEventsOn(esc.agSel);
       const sd = isoToDate(esc.agSel);
       h += '<div class="ag-daylist"><h4>' + AG_WD[sd.getDay()] + ', ' + sd.getDate() + ' de ' + AG_MESES[sd.getMonth()] + '</h4>' +
-        (dayEvs.length ? dayEvs.map(cardHtml).join('') : '<div class="esc-empty">Nada marcado neste dia.' + (can ? ' Toque em "＋ Novo" para marcar.' : '') + '</div>') + '</div>';
+        (dayEvs.length ? dayEvs.map(e => agIsArch(e) ? agArchRowHtml(e, can) : cardHtml(e)).join('') : '<div class="esc-empty">Nada marcado neste dia.' + (can ? ' Toque em "＋ Novo" para marcar.' : '') + '</div>') + '</div>';
     }
     return h;
   }
   function bindAgCalendar(body){
     body.querySelectorAll('[data-agview]').forEach(b => b.onclick = () => { esc.agView = b.dataset.agview; lsSet('agView', esc.agView); renderEscala(); });
+    body.querySelectorAll('[data-agshow]').forEach(b => b.onchange = () => { lsSet(b.dataset.agshow === 'act' ? 'agShowAct' : 'agShowArc', b.checked ? '1' : '0'); renderEscala(); });
     body.querySelectorAll('[data-agnav]').forEach(b => b.onclick = () => {
       const n = +b.dataset.agnav;
       if(n === 0){ esc.agCursor = todayIso(); esc.agSel = esc.agCursor; }
@@ -14424,10 +14443,13 @@ function rebalanceAdaptiveCols(wrap, repack){
     let h = '<div class="ag-arch"><button type="button" class="plp-arch-toggle" data-ag-archtoggle>🗄️ Arquivados e finalizados (' + archAll.length + ') ' + (esc.showArch ? '▴' : '▾') + '</button>';
     if(esc.showArch && tagSet.length) h += '<div class="ag-arch-tags"><span>🏷️ Filtrar:</span>' + [[null, 'Todos (' + archAll.length + ')']].concat(tagSet.sort((a, b) => a.localeCompare(b, 'pt-BR')).map(t => [t, t + ' (' + archAll.filter(e => (e.tags || []).includes(t)).length + ')'])).concat(archAll.some(e => !(e.tags || []).length) ? [['__none', 'Sem marcação']] : []).map(([v, l]) => '<button type="button" data-archtag="' + escH(v || '') + '"' + ((esc.archTag || null) === v ? ' class="on"' : '') + '>' + escH(l) + '</button>').join('') + '</div>';
     if(esc.showArch && !arch.length) h += '<div class="esc-empty">Nada com essa marcação.</div>';
-    if(esc.showArch) h += arch.map(e => { const k = e.kind || 'culto', dd = isoToDate(e.date), n = escEventAssignments(e.id).length;
-      return '<div class="ag-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + '</span><span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '') + EVK[k].label + ' · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + (n ? ' · escala com ' + n + (n === 1 ? ' pessoa' : ' pessoas') : '') + '</span></span>' +
-        (can ? '<button type="button" class="btn-secondary" data-cu-unarch="' + e.id + '">↩️ Desarquivar</button>' : '') + '</div>'; }).join('');
+    if(esc.showArch) h += arch.map(e => agArchRowHtml(e, can)).join('');
     return h + '</div>';
+  }
+  function agArchRowHtml(e, can){
+    { const k = e.kind || 'culto', dd = isoToDate(e.date), n = escEventAssignments(e.id).length;
+      return '<div class="ag-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + '</span><span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '') + EVK[k].label + ' · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + (n ? ' · escala com ' + n + (n === 1 ? ' pessoa' : ' pessoas') : '') + '</span></span>' +
+        (can ? '<button type="button" class="btn-secondary" data-cu-unarch="' + e.id + '">↩️ Desarquivar</button>' : '') + '</div>'; }
   }
   async function agSetArchived(id, on, finished){
     const from = on ? esc.events : (esc.arch || []);
