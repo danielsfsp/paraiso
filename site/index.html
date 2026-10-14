@@ -3436,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v353 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v354 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8702,7 +8702,11 @@
     const newBody = lines.join('\n').replace(/\n+$/, '');
     // v350: a leitura volta com as MESMAS colunas que estavam na edição
     // (o navegador reequilibrava as colunas e uma linha pulava para a seguinte)
-    const editCols = (!singleColumn && wrap.classList.contains('adaptive-cols')) ? Array.from(wrap.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length).filter(n => n > 0) : null;
+    // v354: também quando a edição está em colunas "normais" (ex.: depois de
+    // desmarcar "1 coluna" ou mudar a fonte) — conta as linhas de cada coluna pela posição na tela
+    const editCols = singleColumn ? null : (wrap.classList.contains('adaptive-cols')
+      ? Array.from(wrap.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length).filter(n => n > 0)
+      : colCountsByPosition(wrap));
     setEffectiveBody(song, newBody);
     try{ setFsCols(song, editCols && editCols.length > 1 ? { n: editCols, t: editCols.reduce((a, b) => a + b, 0), fs: fontSize, ch: colHeightPct, vh: window.innerHeight, vw: window.innerWidth } : null); }catch(e){}
     // Salva junto tom/formatação pendentes (os botões "Salvar/Descartar
@@ -14474,6 +14478,17 @@ function rebalanceAdaptiveCols(wrap, repack, fromCol){
       }
     }
     cols.forEach(c => { if(!c.children.length && wrap.querySelectorAll(':scope > .cifra-col').length > 1) c.remove(); });
+  }
+  function colCountsByPosition(wrap){
+    const lines = Array.from(wrap.querySelectorAll('.cifra-line'));
+    const counts = []; let curLeft = null;
+    lines.forEach(el => {
+      const r = el.getBoundingClientRect();
+      if(!r.width && !r.height){ if(counts.length) counts[counts.length - 1]++; else counts.push(1); return; }
+      if(curLeft === null || r.left > curLeft + 20){ counts.push(0); curLeft = r.left; }
+      counts[counts.length - 1]++;
+    });
+    return counts.length > 1 ? counts : null;
   }
   function markEditColHeights(wrap){
     if(!wrap || !wrap.classList.contains('adaptive-cols')) return;
