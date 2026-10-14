@@ -3329,7 +3329,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v336 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v337 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6099,6 +6099,7 @@
       if(tok === '(' || tok === ')') return tok;
       const m = tok.match(/^\{([^{}]+)\}$/);
       const bare = m ? m[1] : tok;
+      if(SIMPLIFY_ACTIVE && !CHORD_TOKEN_RE.test(bare) && CHORD_EXT_FRAG_RE.test(bare)) return ' '.repeat(tok.length); // v337: "7+", "5+", "9", "(11)" soltos somem na simplificada/contrabaixo
       const full = shift ? transposeChordRaw(bare, shift) : bare;
       if(!SIMPLIFY_ACTIVE) return full;
       // mantém a posição dos acordes seguintes (alinhamento com a letra)
