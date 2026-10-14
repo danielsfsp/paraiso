@@ -3436,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v352 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v353 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7505,7 +7505,11 @@
     const fv = document.getElementById('fsFontVal'); if(fv) fv.textContent = fontSize;
   }
   function changeFont(delta){
-    fontSize = Math.max(9, Math.min(30, fontSize + delta));
+    // v353: se a fonte estava reduzida automaticamente (ex.: "10*"), A+/A− partem
+    // do tamanho que está na tela (10 → 11), e não do escolhido antes (14 → 15)
+    const shown = fitShrink ? fontSize - fitShrink : fontSize;
+    fitShrink = 0;
+    fontSize = Math.max(9, Math.min(30, shown + delta));
     fontLocked = true;
     updateFontSizeDisplay();
     if(fullscreenEditing) reapplyEditColumnsIfEditing(); else renderCifra();
