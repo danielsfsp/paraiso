@@ -3310,7 +3310,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v331 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v332 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10224,7 +10224,7 @@
     ]);
     const err = pr.error || tm.error || ev.error || un.error;
     if(err){ esc.loading = false; if(!esc.quiet) showAlert('Escala', 'Erro ao carregar: ' + err.message); renderEscala(); return; }
-    esc.profiles = pr.data || []; esc.teams = tm.data || []; esc.events = (ev.data || []).filter(e => !e.archived); esc.arch = (ev.data || []).filter(e => e.archived); esc.unav = un.data || [];
+    esc.profiles = pr.data || []; esc.teams = (tm.data || []).map(t => Object.assign({}, t, { member_ids: (t.member_ids || []).concat((t.pre_ids || []).map(id => 'pre:' + id)) })); esc.events = (ev.data || []).filter(e => !e.archived); esc.arch = (ev.data || []).filter(e => e.archived); esc.unav = un.data || [];
     await escLoadAdmins();
     await escLoadPre();
     const ids = esc.events.concat(esc.arch || []).map(e => e.id);
@@ -10923,11 +10923,13 @@
     const body = document.getElementById('escalaBody');
     body.innerHTML = '<div class="esc-editor"><button type="button" class="esc-link" id="escBack">← Voltar</button><h3>' + (id ? 'Editar equipe' : 'Nova equipe') + '</h3>' +
       '<label>Nome<input id="escTeamName" class="esc-input" value="' + escH(t.name) + '" placeholder="Equipe A"></label>' +
-      '<div class="esc-sub">Membros</div><div class="esc-checks">' + esc.profiles.filter(p => (p.approved && p.active !== false) || t.member_ids.includes(p.id)).map(p => '<label><input type="checkbox" value="' + p.id + '"' + (t.member_ids.includes(p.id) ? ' checked' : '') + '> ' + escH(p.name) + ' <small>' + escH(p.functions.join(', ')) + '</small></label>').join('') + '</div>' +
+      '<div class="esc-sub">Membros</div><div class="esc-checks">' + esc.profiles.filter(p => (p.approved && p.active !== false) || t.member_ids.includes(p.id)).map(p => '<label><input type="checkbox" value="' + p.id + '"' + (t.member_ids.includes(p.id) ? ' checked' : '') + '> ' + escH(p.name) + ' <small>' + escH(p.functions.join(', ')) + '</small></label>').join('') +
+        (esc.pre || []).filter(x => !x.linked_profile || t.member_ids.includes('pre:' + x.id)).map(x => '<label><input type="checkbox" value="pre:' + x.id + '"' + (t.member_ids.includes('pre:' + x.id) ? ' checked' : '') + '> ' + escH(x.name) + ' <small>' + escH((x.functions || []).join(', ')) + ' · <i>pré-cadastro</i></small></label>').join('') + '</div>' +
       '<div class="esc-actions esc-save-row">' + (id ? '<button type="button" class="btn-secondary esc-del" id="escTeamDel">🗑 Apagar</button>' : '') + '<button type="button" class="btn-primary" id="escTeamSave">💾 Salvar</button></div></div>';
     document.getElementById('escBack').onclick = () => renderEscala();
     document.getElementById('escTeamSave').onclick = async () => {
-      const rec = { name: document.getElementById('escTeamName').value.trim() || 'Equipe', member_ids: [...body.querySelectorAll('.esc-checks input:checked')].map(i => i.value) };
+      const sel = [...body.querySelectorAll('.esc-checks input:checked')].map(i => i.value);
+      const rec = { name: document.getElementById('escTeamName').value.trim() || 'Equipe', member_ids: sel.filter(v => !v.startsWith('pre:')), pre_ids: sel.filter(v => v.startsWith('pre:')).map(v => v.slice(4)) }; // v332: pré-cadastros também
       const r = id ? await esc.sb.from('teams').update(rec).eq('id', id) : await esc.sb.from('teams').insert(rec);
       if(r.error){ showAlert('Equipe', r.error.message); return; }
       await escLoadAll();
