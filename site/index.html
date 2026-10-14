@@ -3310,7 +3310,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v330 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v331 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -3555,8 +3555,8 @@
     return lsGetEarly('simplify') === '1' ? 'simple' : false;
   })();
   function bassChord(ch){
-    const m = String(ch).match(/^([A-G][#b]?)[^\/]*\/([A-G][#b]?)/);
-    return m ? m[2] : simplifyChord(ch);
+    const m = String(ch).match(/^[A-G][#b]?.*\/([A-G][#b]?)[^\/]*$/);
+    return m ? m[1] : simplifyChord(ch);
   }
   function chordForMode(ch){
     return SIMPLIFY_ACTIVE === 'bass' ? bassChord(ch) : SIMPLIFY_ACTIVE ? simplifyChord(ch) : ch;
@@ -3581,7 +3581,7 @@
   }
   function transposeChordRaw(str, steps){
     if(!steps) return str;
-    const m = str.match(/^([A-G])([#b]?)([^\/]*)(?:\/([A-G])([#b]?)(.*))?$/);
+    const m = str.match(/^([A-G])([#b]?)(.*?)(?:\/([A-G])([#b]?)([^\/]*))?$/);
     if(!m) return str;
     const root = m[1] + (m[2] || '');
     const suffix = m[3] || '';
@@ -3694,7 +3694,7 @@
     const tokens = trimmed.split(/\s+/);
     // Anotações comuns no meio dos acordes ("Riff 1", "Solo", "2x", "(bis)")
     // não impedem a linha de ser de acordes — desde que tenha acorde de verdade.
-    const NOTE_RE = /^\(?(riff|solo|bis|base|intro|final|x?\d{1,2}x?|\d{1,2}ª?)\)?:?$/i;
+    const NOTE_RE = /^\(?(riff|solo|bis|base|intro|final|meio|ponte|x?\d{1,2}x?|\d{1,2}ª?|\d{1,2}°)\)?:?$/i;
     let chords = 0;
     const ok = tokens.every(tok => {
       if(tok === '(' || tok === ')' || /^\|+:?$/.test(tok) || /^:?\|+$/.test(tok) || tok === '-') return true;
@@ -8642,13 +8642,12 @@
   // (# ou b) e/ou DEPOIS (+ ou -) — cobre tanto "(b5)"/("#9") quanto a
   // notação "(5-)"/("(5+)" que alguns usam pra 5ª bemol/sustenida.
   const CHORD_ALTERATION_GROUP = '(\\([#b]?\\d+[+-]?(?:[,\\s]+[#b]?\\d+[+-]?)*\\))?';
-  const CHORD_TOKEN_RE = new RegExp(
-    '^[A-G](#|b)?(7sus4|7sus2|9sus4|7\\+|9\\+|maj7|maj9|madd9|add9|sus2|sus4|dim7|dim|aug|min|m7b5|m6|m7|m9|m11|m13|m|6\\/9|7M|M7|6|7|9|11|13|5|4|2|°|ø|\\+)?' +
-    CHORD_ALTERATION_GROUP +
-    '(\\/[A-G](#|b)?(maj7|maj9|add9|sus2|sus4|dim7|dim|aug|min|m7b5|m6|m7|m9|m11|m13|m|7M|M7|6|7|9|11|13|5|4|2|°|ø|\\+)?' +
-    CHORD_ALTERATION_GROUP +
-    ')?$'
-  );
+  // v331: aceita também a notação brasileira com extensões compostas —
+  // E7(4/9), Gm7(9/11), D9+(7/5+), D7/4, D9/7+, D7M/9, Bm5-, A4+, Fsus, A9-…
+  const CHORD_BODY = '(?:maj|min|dim|aug|sus|add|m|M|°|º|ø|\\+|-|#|b|\\d{1,2})*';
+  const CHORD_PAR = '(?:\\([#b]?\\d{1,2}[+\\-#b]?(?:[\\/,\\s]+[#b]?\\d{1,2}[+\\-#b]?)*\\))?';
+  const CHORD_TOKEN_RE = new RegExp('^[A-G](?:#|b)?' + CHORD_BODY + CHORD_PAR +
+    '(?:\\/(?:[A-G](?:#|b)?' + CHORD_BODY + CHORD_PAR + '|[#b]?\\d{1,2}[+\\-]?' + CHORD_PAR + '))*$');
 
   // ================= MODAL: MÚSICA =================
   const modalOverlay = document.getElementById('modalOverlay');
