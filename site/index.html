@@ -2554,6 +2554,9 @@
     .main-panel:not(.fullscreen-mode) .viewer-header #navArrows{align-self:flex-start; margin-top:4px;}
     .main-panel:not(.fullscreen-mode) .viewer-header .header-actions{align-self:flex-start;}
   }
+
+  /* v338: ▶ da rolagem colado na velocidade */
+  .main-panel.fullscreen-mode #btnFsScroll{margin-right:-4px; margin-left:6px;}
 </style>
 </head>
 <body>
@@ -2639,8 +2642,8 @@
     <div class="fullscreen-controls-fixed" id="fullscreenControlsFixed">
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsPrev" type="button">◀</button>
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsNext" type="button">▶</button>
-      <button class="fullscreen-exit-fixed fs-scroll-btn" id="btnFsScroll" type="button" title="Rolagem automática (Espaço)">▶</button>
       <select id="selChordModeFs" class="chord-mode-select fs-cmode" title="Como mostrar os acordes (a cifra salva não muda)"><option value="full">Cifra completa</option><option value="simple">Simplificada</option><option value="bass">Contrabaixo</option></select>
+      <button class="fullscreen-exit-fixed fs-scroll-btn" id="btnFsScroll" type="button" title="Rolagem automática (Espaço)">▶</button>
       <span class="fs-speed-ctl" id="fsSpeedCtl" title="Velocidade da rolagem"><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedDown" aria-label="Rolagem mais devagar">−</button><span id="fsSpeedVal">0.8×</span><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedUp" aria-label="Rolagem mais rápida">+</button></span>
       <button class="fullscreen-exit-fixed metro-chip metro-fs-btn" id="btnFsMetro" type="button" title="Metrônomo (atalho: M liga/desliga)">🥁 <span class="metro-chip-bpm" id="metroFsBpm"></span></button>
       <button class="fullscreen-exit-fixed" id="btnFullscreenEdit" type="button" title="Editar letra e cifra direto na tela"><span>✎</span><span class="fs-txt"> Editar</span></button>
@@ -3329,7 +3332,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v337 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v338 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
