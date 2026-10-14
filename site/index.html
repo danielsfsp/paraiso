@@ -3306,7 +3306,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v326 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v327 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6393,7 +6393,7 @@
     applyResumoVisibility();
   }
   function applyResumoVisibility(){
-    cifraBody.style.display = resumoActive ? 'none' : '';
+    let fsEd = false; try{ fsEd = fullscreenEditing; }catch(e){} cifraBody.style.display = (resumoActive || fsEd) ? 'none' : ''; // v327: na edição a leitura fica escondida (não duplica)
     resumoBody.style.display = resumoActive ? 'block' : 'none';
     // TOM/COLUNAS/LARGURA/CORES não têm efeito nenhum no resumo (ele não
     // usa coluna nem cor por trecho), e mexer neles às cegas aqui mudaria
@@ -8399,6 +8399,7 @@
     const song = currentSong();
     if(!song) return;
     fullscreenEditing = true;
+    { const sc = document.getElementById('selChordMode'); if(sc){ sc.disabled = true; sc.title = 'Na edição a cifra aparece completa (como está salva). Saia da edição para mudar a forma de ver.'; } }
     // A barra de TOM/LARGURA/ALTURA/1 coluna/FONTE/ROLAGEM agora mora
     // AQUI, na tela de edição (antes ficava só na leitura, e era
     // preciso salvar formatação pendente antes de poder editar a
@@ -8491,6 +8492,7 @@
   }
   function exitFullscreenInlineEdit(){
     fullscreenEditing = false;
+    { const sc = document.getElementById('selChordMode'); if(sc){ sc.disabled = false; sc.title = 'Como mostrar os acordes (a cifra salva não muda)'; } }
     setFullscreenHeaderLocked(false);
     editUndoStack = [];
     editRedoStack = [];
@@ -12649,6 +12651,7 @@
   document.getElementById('selChordMode').value = simplifyOn || 'full';
   document.getElementById('selChordMode').classList.toggle('on', !!simplifyOn);
   document.getElementById('selChordMode').addEventListener('change', (e) => {
+    if(fullscreenEditing){ e.target.value = simplifyOn || 'full'; showImportFeedback('A CIFRA (Completa/Simplificada/Contrabaixo) muda só a leitura — saia da edição para trocar.', false); return; }
     const v = e.target.value; simplifyOn = (v === 'simple' || v === 'bass') ? v : false;
     lsSet('chordMode', simplifyOn || 'full');
     e.target.classList.toggle('on', !!simplifyOn);
