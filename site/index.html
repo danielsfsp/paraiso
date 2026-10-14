@@ -2640,6 +2640,19 @@
   .ag-show label.arc{color:var(--text-dim);}
   .ag-pill.arch, .ag-wev.arch{filter:grayscale(1); opacity:.45;}
   .ag-arc-sec{margin-top:14px;}
+
+  /* v346 arquivados: ver escala e playlist */
+  .ag-arch-row[data-arch-open]{cursor:pointer;}
+  .ag-arch-row[data-arch-open]:hover{border-color:var(--border);}
+  .arch-chev{margin-left:6px; color:var(--text-dim); font-size:12px;}
+  .ag-arch-wrap.open .ag-arch-row{opacity:1; border-bottom-left-radius:0; border-bottom-right-radius:0;}
+  .arch-body{border:1px solid var(--border-soft); border-top:none; border-radius:0 0 12px 12px; padding:6px 14px 14px; background:var(--surface);}
+  .arch-meta{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--text-dim); margin:6px 0;}
+  .arch-people{display:flex; flex-direction:column; gap:2px;}
+  .arch-p{display:grid; grid-template-columns:22px minmax(120px, 1fr) auto; align-items:center; gap:8px; padding:5px 2px; border-bottom:1px solid var(--border-soft); font-size:13px;}
+  .arch-p:last-child{border-bottom:none;}
+  .arch-p small{color:var(--text-dim);}
+  .arch-body .evp-edit-hint, .arch-body .evp-notify, .arch-body .ev-swap-top{display:none !important;}
 </style>
 </head>
 <body>
@@ -3417,7 +3430,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v345 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v346 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -14448,8 +14461,20 @@ function rebalanceAdaptiveCols(wrap, repack){
   }
   function agArchRowHtml(e, can){
     { const k = e.kind || 'culto', dd = isoToDate(e.date), n = escEventAssignments(e.id).length;
-      return '<div class="ag-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + '</span><span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '') + EVK[k].label + ' · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + (n ? ' · escala com ' + n + (n === 1 ? ' pessoa' : ' pessoas') : '') + '</span></span>' +
-        (can ? '<button type="button" class="btn-secondary" data-cu-unarch="' + e.id + '">↩️ Desarquivar</button>' : '') + '</div>'; }
+      const op = esc.openArch === e.id;
+      return '<div class="ag-arch-wrap' + (op ? ' open' : '') + '"><div class="ag-arch-row k-' + k + '" data-arch-open="' + e.id + '" role="button" tabindex="0" title="Ver escala e playlist"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + cuTagsChips(e) + '</span><span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '') + EVK[k].label + ' · ' + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + (n ? ' · escala com ' + n + (n === 1 ? ' pessoa' : ' pessoas') : '') + '</span></span>' +
+        (can ? '<button type="button" class="btn-secondary" data-cu-unarch="' + e.id + '">↩️ Desarquivar</button>' : '') + '<span class="arch-chev">' + (op ? '▴' : '▾') + '</span></div>' + (op ? agArchDetailHtml(e) : '') + '</div>'; }
+  }
+  // v346: detalhe (só consulta) de um culto/evento arquivado: escala + playlist
+  function agArchDetailHtml(e){
+    const as = escEventAssignments(e.id);
+    let h = '<div class="arch-body">';
+    if(e.dress_code || e.notes) h += '<div class="arch-meta">' + (e.dress_code ? '<span>👔 ' + escH(e.dress_code) + '</span>' : '') + (e.notes ? '<span>📝 ' + escH(e.notes) + '</span>' : '') + '</div>';
+    h += '<div class="ev-sec c-es">📅 Escala</div>';
+    h += as.length ? '<div class="arch-people">' + as.map(a => { const p = escProfile(a.profile_id) || {}; return '<div class="arch-p"><span>' + escStatusIcon(a.status) + '</span><b>' + escH(p.name || escName(a.profile_id) || '—') + '</b><small>' + escFnIcon(a.function) + ' ' + escH(a.function || '') + '</small></div>'; }).join('') + '</div>'
+      : '<div class="ev-pl-empty">Sem escala.</div>';
+    try{ h += escPlBlockHtml(e, true); }catch(err){}
+    return h + '</div>';
   }
   async function agSetArchived(id, on, finished){
     const from = on ? esc.events : (esc.arch || []);
@@ -14813,9 +14838,10 @@ function rebalanceAdaptiveCols(wrap, repack){
     let h = '<div class="ag-arch esc-arch"><button type="button" class="plp-arch-toggle" data-esc-archtoggle>🗄️ Escalas arquivadas e finalizadas (' + arch.length + ') ' + (esc.showEscArch ? '▴' : '▾') + '</button>';
     if(esc.showEscArch) h += arch.map(e => {
       const k = e.kind || 'culto', dd = isoToDate(e.date), as = escEventAssignments(e.id);
-      return '<div class="ag-arch-row esc-arch-row k-' + k + '"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + (typeof cuTagsChips === 'function' ? cuTagsChips(e) : '') + '</span>' +
+      const op = esc.openArch === e.id;
+      return '<div class="ag-arch-wrap' + (op ? ' open' : '') + '"><div class="ag-arch-row esc-arch-row k-' + k + '" data-arch-open="' + e.id + '" role="button" tabindex="0" title="Ver escala e playlist"><span class="cu-ico">' + EVK[k].ico + '</span><span class="cu-main"><span class="cu-title">' + escH(e.title || EVK[k].label) + (typeof cuTagsChips === 'function' ? cuTagsChips(e) : '') + '</span>' +
         '<span class="cu-sub">' + (e.finished ? '<b class="ag-fin">✅ Finalizado</b> · ' : '🗄️ Arquivado · ') + escH(WEEKDAYS_PT[dd.getDay()].toLowerCase() + ', ' + fmtDateBR(e.date)) + (e.time ? ' · ' + escH(e.time) : '') + '</span>' +
-        '<span class="esc-arch-people">' + as.map(a => '<i class="st-' + escH(a.status) + '">' + escFnIcon(a.function) + ' ' + escH(escFirst(a.profile_id)) + ' <small>' + escH(a.function) + '</small></i>').join('') + '</span></span></div>';
+        '<span class="esc-arch-people">' + as.map(a => '<i class="st-' + escH(a.status) + '">' + escFnIcon(a.function) + ' ' + escH(escFirst(a.profile_id)) + ' <small>' + escH(a.function) + '</small></i>').join('') + '</span></span><span class="arch-chev">' + (op ? '▴' : '▾') + '</span></div>' + (op ? agArchDetailHtml(e) : '') + '</div>';
     }).join('');
     return h + '</div>';
   }
@@ -15087,6 +15113,16 @@ function rebalanceAdaptiveCols(wrap, repack){
     return '<div class="ens-prog' + (n && n === t ? ' done' : '') + '"><span>🎸 Ensaio: <b>' + n + '/' + t + '</b>' + (n && n === t ? ' — tudo ensaiado! 🙌' : ' músicas ensaiadas') + '</span><span class="ens-bar"><i style="width:' + pct + '%"></i></span>' + (n ? '<button type="button" class="ens-reset" data-ens-reset title="Desmarcar todas">limpar</button>' : '') + '</div>';
   }
 
+
+
+  // v346: tocar num item arquivado abre/fecha a escala e a playlist (consulta)
+  document.addEventListener('click', (ev) => {
+    const row = ev.target.closest('[data-arch-open]'); if(!row) return;
+    if(ev.target.closest('button, a, select, input') && !ev.target.closest('.arch-chev')) return;
+    esc.openArch = esc.openArch === row.dataset.archOpen ? null : row.dataset.archOpen;
+    renderEscala();
+    setTimeout(() => { const w = document.querySelector('.ag-arch-wrap.open'); if(w) w.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
+  });
 
 })();
 </script>
