@@ -2557,6 +2557,10 @@
 
   /* v338: ▶ da rolagem colado na velocidade */
   .main-panel.fullscreen-mode #btnFsScroll{margin-right:-4px; margin-left:6px;}
+
+  /* v339 compartilhar música */
+  .ss-row{display:flex; gap:8px;}
+  .ss-row > button{flex:1; justify-content:center;}
 </style>
 </head>
 <body>
@@ -2701,6 +2705,7 @@
             <button class="options-item" id="btnResumo" type="button" role="menuitem" title="Mapa da música: partes, compassos, repetições e progressão harmônica">📋 Resumo</button>
             <button class="options-item desktop-only" id="btnPrint" type="button" role="menuitem">🖨️ Imprimir</button>
             <button class="options-item" id="btnAddToPlaylist" type="button" role="menuitem">➕ Adicionar a playlist</button>
+            <button class="options-item" id="btnShareSong" type="button" role="menuitem">📤 Compartilhar</button>
             <button class="options-item" id="btnLibRevert" type="button" role="menuitem" style="display:none;" title="Descarta a sua edição pessoal desta música e volta para a cifra oficial do ministério">↺ Voltar à versão do ministério</button>
             <div class="options-sep"></div>
             <button class="options-item danger" id="btnDelete" type="button" role="menuitem">🗑️ Excluir</button>
@@ -3332,7 +3337,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v338 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v339 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -14709,11 +14714,12 @@ function rebalanceAdaptiveCols(wrap, repack){
     if(on && !was){ try{ closeEscala(); }catch(e){} }
   }
   function visitorEnter(quiet){
+    const first = !isVisitorFlag();
     lsSet('visitor', '1');
     visitorApply();
     try{ libApplyPermissions(); }catch(e){}
     try{ gateEl().hidden = true; document.body.classList.remove('gate-on'); }catch(e){}
-    try{ if(!showingHome) showHomeView(); }catch(e){}
+    try{ if(first && !showingHome) showHomeView(); }catch(e){}
     setTimeout(() => { try{ libPull(); }catch(e){} }, quiet ? 400 : 50);
   }
   function visitorLeave(){ lsSet('visitor', ''); visitorApply(); }
@@ -14735,6 +14741,85 @@ function rebalanceAdaptiveCols(wrap, repack){
     });
     try{ renderHomeCards(); }catch(e){}
   })();
+
+
+  // ================= COMPARTILHAR MÚSICA (v339) =================
+  // Link que abre a música no app (no tom em que está) ou a letra e cifra
+  // em texto, do jeito que está na tela (tom e modo de cifra atuais).
+  function songShareData(sg){ return { i: sg.id, t: sg.title || '', a: sg.artist || '', s: liveShift || 0 }; }
+  function songShareLink(sg){ return appShareUrl() + '#m=' + b64urlEncode(JSON.stringify(songShareData(sg))); }
+  function songShareKey(){ try{ return (keyDisplay.textContent || '').trim(); }catch(e){ return ''; } }
+  function songShareHead(sg){
+    const k = songShareKey();
+    return '*🎵 ' + (sg.title || 'Música') + '*' + (sg.artist ? '\n' + sg.artist : '') + (k ? '\nTom: ' + k : '');
+  }
+  function songShareLinkText(sg){ return songShareHead(sg) + '\n\nAbrir no CEP Louvor: ' + songShareLink(sg); }
+  function songShareCifraText(sg){
+    let body = '';
+    try{ body = document.getElementById('cifraBody').innerText; }catch(e){}
+    body = String(body || '').split('\n').map(l => l.replace(/\s+$/, '')).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    return songShareHead(sg) + '\n\n```\n' + body + '\n```\n\nCEP Louvor: ' + songShareLink(sg);
+  }
+  function openShareSong(){
+    const sg = currentSong(); if(!sg) return;
+    const k = songShareKey();
+    const ov = document.createElement('div'); ov.className = 'decl-ov';
+    ov.innerHTML = '<div class="decl-box ss-box" role="dialog" aria-modal="true" style="max-width:420px"><h3>📤 Compartilhar música</h3>' +
+      '<p><b>' + escapeHtml(sg.title || '') + '</b>' + (sg.artist ? ' · ' + escapeHtml(sg.artist) : '') + (k ? ' · Tom ' + escapeHtml(k) : '') + '</p>' +
+      '<div class="nt-sub">Link para abrir no CEP Louvor (no tom atual):</div>' +
+      '<div class="ss-row"><button type="button" class="btn-primary" data-ss="wa-link"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> WhatsApp</button><button type="button" class="btn-secondary" data-ss="copy-link">🔗 Copiar link</button></div>' +
+      '<div class="nt-sub">Letra e cifra em texto (como está na tela):</div>' +
+      '<div class="ss-row"><button type="button" class="btn-primary" data-ss="wa-cifra"><i class="fa-brands fa-whatsapp ic-wa" aria-hidden="true"></i> WhatsApp</button><button type="button" class="btn-secondary" data-ss="copy-cifra">📋 Copiar texto</button></div>' +
+      (navigator.share ? '<div class="ss-row" style="margin-top:10px"><button type="button" class="btn-secondary" data-ss="native" style="flex:1">📲 Outros apps…</button></div>' : '') +
+      '<div class="decl-acts"><button type="button" class="btn-secondary ss-close">Fechar</button></div></div>';
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.querySelector('.ss-close').onclick = close;
+    ov.addEventListener('click', ev => { if(ev.target === ov) close(); });
+    const copy = async (txt, msg) => { try{ await navigator.clipboard.writeText(txt); showImportFeedback(msg, true); }catch(e){ window.prompt('Copie:', txt); } };
+    const wa = txt => window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+    ov.querySelectorAll('[data-ss]').forEach(b => b.addEventListener('click', () => {
+      const a = b.dataset.ss;
+      if(a === 'wa-link') wa(songShareLinkText(sg));
+      else if(a === 'wa-cifra') wa(songShareCifraText(sg));
+      else if(a === 'copy-link') copy(songShareLink(sg), '🔗 Link da música copiado.');
+      else if(a === 'copy-cifra') copy(songShareCifraText(sg).replace(/```\n?/g, ''), '📋 Letra e cifra copiadas.');
+      else if(a === 'native') navigator.share({ title: sg.title, text: songShareLinkText(sg) }).catch(() => {});
+    }));
+  }
+  document.getElementById('btnShareSong').addEventListener('click', () => openShareSong());
+  // Recebendo um link de música (#m=...)
+  function handleSongHash(){
+    const m = (location.hash || '').match(/^#m=([A-Za-z0-9_-]+)/);
+    if(!m) return;
+    let d = null; try{ d = JSON.parse(b64urlDecode(m[1])); }catch(e){ d = null; }
+    history.replaceState(history.state, '', location.pathname + location.search);
+    if(!d) return;
+    const go = (tries) => {
+      if(document.body.classList.contains('gate-on')){ setTimeout(() => go(tries), 600); return; }
+      const norm = x => foldForSearch(String(x || '')).replace(/\s+/g, ' ').trim();
+      const sg = songs.find(x => x.id === d.i) || songs.find(x => norm(x.title) === norm(d.t) && (!d.a || norm(x.artist) === norm(d.a))) || songs.find(x => norm(x.title) === norm(d.t));
+      if(!sg){
+        if(tries < 8){ setTimeout(() => go(tries + 1), 1000); return; } // repertório ainda chegando da nuvem
+        showAlert('Música recebida', 'Não encontrei "' + (d.t || '') + '" no seu repertório.'); return;
+      }
+      const sh = Number(d.s) || 0;
+      // a abertura do app ainda pode voltar para o Início: confere e reabre
+      const open = (n) => {
+        try{ activeView = 'library'; openPlaylistId = null; }catch(e){}
+        selectSong(sg.id);
+        setTimeout(() => {
+          let ok = false; try{ ok = currentId === sg.id && !showingHome; }catch(e){}
+          if(!ok && n < 4){ open(n + 1); return; }
+          if(sh) try{ if(currentId === sg.id){ liveShift = sh; refreshKeyDisplayAndBadge(); renderCifra(); } }catch(e){}
+        }, 700);
+      };
+      open(0);
+    };
+    go(0);
+  }
+  window.addEventListener('hashchange', handleSongHash);
+  setTimeout(handleSongHash, 350);
 
 })();
 </script>
