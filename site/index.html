@@ -3436,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v348 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v349 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8210,7 +8210,7 @@
     pushEditCheckpoint();
     clearMultiRowSelection();
     const landing = deleteMultiRowSelectionRows(rootWrap, rows);
-    forceEditReflow(rootWrap, true);
+    forceEditReflow(rootWrap); // v349: apagar não puxa linhas das outras colunas
     if(landing) focusRowAt(landing, 0);
     return true;
   }
@@ -8269,7 +8269,7 @@
     const colCounts = wrap.classList.contains('adaptive-cols') ? Array.from(wrap.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length) : null;
     wrap.innerHTML = '';
     wrap.appendChild(buildEditUnitsFragment(bodyText));
-    if(colCounts) distributeEditCols(wrap, colCounts, false);
+    if(colCounts){ distributeEditCols(wrap, colCounts, false); try{ markEditColHeights(wrap); }catch(e){} }
     forceEditReflow(wrap);
     const rows = getEditRows(wrap);
     if(rows.length){
@@ -8440,7 +8440,7 @@
           const mergeAt = prev.textContent.length;
           setRowText(prev, prev.textContent + div.textContent);
           removeRowAndMaybeUnit(div);
-          forceEditReflow(rootWrap, true);
+          forceEditReflow(rootWrap); // v349: apagar não puxa linhas das outras colunas
           focusRowAt(prev, mergeAt);
         }
         // Primeira linha de tudo: não tem pra onde fundir, deixa quieto.
@@ -8462,7 +8462,7 @@
           const mergeAt = text.length;
           setRowText(div, text + next.textContent);
           removeRowAndMaybeUnit(next);
-          forceEditReflow(rootWrap, true);
+          forceEditReflow(rootWrap); // v349: apagar não puxa linhas das outras colunas
           focusRowAt(div, mergeAt);
         }
       }
@@ -8585,6 +8585,7 @@
     wrap.style.display = 'block';
     cifraBody.style.display = 'none';
     wrap.appendChild(buildEditUnitsFragment(inlineChordsToAbove(getEffectiveBody(song))));
+    if(readCols) requestAnimationFrame(() => { try{ markEditColHeights(wrap); }catch(e){} });
     if(!(readCols && distributeEditCols(wrap, readCols, true))){
       wrap.classList.remove('adaptive-cols');
       // Só agora (visível e com o conteúdo) dá pra medir a largura certa.
@@ -14406,12 +14407,18 @@
   window.__cepColH = () => computeColumnHeightPx();
 function rebalanceAdaptiveCols(wrap, repack){
     if(!wrap || singleColumn) return;
-    const maxH = computeColumnHeightPx();
+    const maxH0 = computeColumnHeightPx();
+    // v349: na edição, cada coluna pode manter a altura que já tinha ao entrar
+    // (copiada da leitura) — apagar/editar numa coluna não empurra a última
+    // linha da coluna anterior para a seguinte. Vale só enquanto a ALTURA não muda.
+    const limOf = c => (c && c.dataset.h0 && +c.dataset.h0max === Math.round(maxH0)) ? Math.max(maxH0, +c.dataset.h0) : maxH0;
+    let maxH = maxH0;
     let cols = Array.from(wrap.querySelectorAll(':scope > .cifra-col'));
     if(!cols.length) return;
     const newCol = () => { const c = document.createElement('div'); c.className = 'cifra-col'; wrap.appendChild(c); return c; };
     for(let i = 0; i < cols.length; i++){
       const col = cols[i];
+      maxH = limOf(col);
       if(repack){
         let next = cols[i + 1];
         while(next){
@@ -14428,6 +14435,11 @@ function rebalanceAdaptiveCols(wrap, repack){
       }
     }
     cols.forEach(c => { if(!c.children.length && wrap.querySelectorAll(':scope > .cifra-col').length > 1) c.remove(); });
+  }
+  function markEditColHeights(wrap){
+    if(!wrap || !wrap.classList.contains('adaptive-cols')) return;
+    const m = Math.round(computeColumnHeightPx());
+    wrap.querySelectorAll(':scope > .cifra-col').forEach(c => { c.dataset.h0 = c.scrollHeight; c.dataset.h0max = m; });
   }
 
   // v301: "▶ Abrir" do culto mostra a lista de músicas da playlist (tela
