@@ -2592,6 +2592,28 @@
   .ens-prog.done{color:#3ecf8e;}
   .ens-reset{background:none; border:none; color:var(--text-dim); text-decoration:underline; font:inherit; font-size:12px; cursor:pointer; padding:0;}
   body.role-part .plp-ens{pointer-events:auto;}
+
+  /* v343 escolher pessoas: lista, filtro por função, agrupamento */
+  .av-bar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+  .av-lbl{font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--text-dim);}
+  .av-fnchips{display:flex; gap:6px; flex-wrap:wrap;}
+  .av-fnchips button, .av-seg button{background:var(--surface); border:1px solid var(--border-soft, var(--border)); color:var(--text-dim); border-radius:999px; padding:4px 10px; font:inherit; font-size:12.5px; cursor:pointer;}
+  .av-fnchips button small{opacity:.7; margin-left:2px;}
+  .av-fnchips button.on, .av-seg button.on{background:var(--accent-dim); border-color:var(--accent); color:var(--text);}
+  .av-seg{display:inline-flex; gap:0;}
+  .av-seg button{border-radius:0;} .av-seg button:first-child{border-radius:999px 0 0 999px;} .av-seg button:last-child{border-radius:0 999px 999px 0; border-left:none;}
+  .av-bar2 .av-lbl:not(:first-child){margin-left:8px;}
+  .esc-avulso-sec small{opacity:.7; font-weight:600;}
+  .esc-avulso-rows{display:flex; flex-direction:column; border:1px solid var(--border-soft, var(--border)); border-radius:10px; overflow:hidden;}
+  .av-row{display:grid; grid-template-columns:minmax(220px, 1.3fr) 2fr auto; align-items:center; gap:10px; padding:8px 12px; background:var(--surface); border:none; border-bottom:1px solid var(--border-soft, var(--border)); color:var(--text); font:inherit; text-align:left; cursor:pointer;}
+  .av-row:last-child{border-bottom:none;}
+  .av-row:hover{background:var(--accent-dim);}
+  .av-name b{font-size:13.5px; white-space:nowrap;} .av-tag{font-style:normal; font-size:10.5px; color:var(--text-dim); border:1px solid var(--border-soft, var(--border)); border-radius:99px; padding:0 6px; margin-left:6px; white-space:nowrap;}
+  .av-tag.warn{color:#f5a524; border-color:#f5a52466;}
+  .av-fns{display:flex; flex-wrap:wrap; gap:4px 10px; font-size:12px; color:var(--text-dim);}
+  .av-fns .hi{color:var(--accent); font-weight:700;} .av-fns .none{opacity:.6; font-style:italic;}
+  .av-add{font-size:12px; font-weight:700; color:var(--accent); white-space:nowrap;}
+  @media (max-width: 640px){ .av-row{grid-template-columns:1fr auto; } .av-fns{grid-column:1 / -1; grid-row:2;} }
 </style>
 </head>
 <body>
@@ -3369,7 +3391,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v342 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v343 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10564,7 +10586,7 @@
 
   // ---------- EDITOR DE ESCALA ----------
   function escStartEdit(id, mode){
-    esc.avulsoOpen = false;
+    esc.avulsoOpen = false; esc.avFn = '';
     esc.editMode = mode || 'escala';
     const e = id ? esc.events.find(x => x.id === id) : null;
     esc.editing = e ? {
@@ -10666,19 +10688,44 @@
       '<div class="ed-escala"><div class="esc-sub">Quem toca o quê</div>';
     const lastEv = esc.events.filter(x => x.id !== d.id && x.date < (d.date || '9999') && escEventAssignments(x.id).length).sort((a, b) => b.date.localeCompare(a.date))[0];
     html += '<div class="esc-team-fill">' + esc.teams.map(t => '<button type="button" class="btn-secondary" data-team="' + t.id + '">⚡ ' + escH(t.name) + '</button>').join(' ') +
-      ' <button type="button" class="btn-secondary esc-avulso-btn' + (esc.avulsoOpen ? ' on' : '') + '" id="escAvulso">👤 Avulso</button>' +
+      ' <button type="button" class="btn-secondary esc-avulso-btn' + (esc.avulsoOpen ? ' on' : '') + '" id="escAvulso" title="Escolher qualquer pessoa, uma a uma (mesmo fora das equipes)">👤 Escolher pessoas</button>' +
       '</div>';
     // v308: escalar pessoa avulsa (fora das equipes) — escolhe direto da lista de pessoas
     if(esc.avulsoOpen){
+      // v343: lista ou cartões · filtro por função · agrupar por equipe ou função
       const inTeam = new Set([].concat(...esc.teams.map(t => t.member_ids || [])));
       const inRows = new Set(d.rows.map(r => r.profile_id));
-      const all = people.concat(prePeople).filter(p => !inRows.has(p.id)).sort((a, b) => (inTeam.has(a.id) - inTeam.has(b.id)) || a.name.localeCompare(b.name, 'pt-BR'));
-      const chip = p => '<button type="button" data-avulso="' + p.id + '"><b>' + escH(p.name) + '</b><small>' + escH((p.functions || []).filter(f => f !== 'Ministro').join(', ') || 'sem função') + (p.is_pre ? ' · pré-cadastro' : '') + (unavOn(p.id) ? ' · ⚠ indisponível' : '') + (busyOn(p.id) ? ' · já escalado no dia' : '') + '</small></button>';
-      const fora = all.filter(p => !inTeam.has(p.id)), dentro = all.filter(p => inTeam.has(p.id));
-      html += '<div class="esc-avulso"><div class="esc-avulso-h">Toque na pessoa para incluir na escala (depois ajuste a função ao lado do nome):</div>' +
-        (fora.length ? '<div class="esc-avulso-sec">Fora das equipes</div><div class="esc-avulso-list">' + fora.map(chip).join('') + '</div>' : '') +
-        (dentro.length ? '<div class="esc-avulso-sec">Também em equipes</div><div class="esc-avulso-list">' + dentro.map(chip).join('') + '</div>' : '') +
-        (!all.length ? '<div class="esc-avulso-h">Todo mundo já está na escala.</div>' : '') + '</div>';
+      const all = people.concat(prePeople).filter(p => !inRows.has(p.id)).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const fnsOf = p => (p.functions || []).filter(f => f !== 'Ministro');
+      const view = esc.avView || lsGet('escAvView') || 'lista', grp = esc.avGroup || lsGet('escAvGroup') || 'equipe', fn = esc.avFn || '';
+      const fnList = ESC_FUNCTIONS.filter(f => f !== 'Ministro').concat([...new Set([].concat(...all.map(fnsOf)))].filter(f => !ESC_FUNCTIONS.includes(f)));
+      const counts = {}; all.forEach(p => fnsOf(p).forEach(f => counts[f] = (counts[f] || 0) + 1));
+      const shown = fn ? all.filter(p => fnsOf(p).includes(fn)) : all;
+      const tags = p => [p.is_pre ? 'pré-cadastro' : '', inTeam.has(p.id) ? '' : 'fora das equipes', unavOn(p.id) ? '⚠ indisponível' : '', busyOn(p.id) ? 'já escalado no dia' : ''].filter(Boolean);
+      const item = (p, f) => {
+        const fs = fnsOf(p), t = tags(p);
+        if(view === 'cartoes') return '<button type="button" data-avulso="' + p.id + '"' + (f ? ' data-avfn="' + escH(f) + '"' : '') + '><b>' + escH(p.name) + '</b><small>' + escH(fs.join(', ') || 'sem função') + (t.length ? ' · ' + escH(t.join(' · ')) : '') + '</small></button>';
+        return '<button type="button" class="av-row" data-avulso="' + p.id + '"' + (f ? ' data-avfn="' + escH(f) + '"' : '') + '><span class="av-name"><b>' + escH(p.name) + '</b>' + t.map(x => '<i class="av-tag' + (/⚠|já/.test(x) ? ' warn' : '') + '">' + escH(x) + '</i>').join('') + '</span><span class="av-fns">' + (fs.length ? fs.map(x => '<span' + (x === (f || fn) ? ' class="hi"' : '') + '>' + escFnIcon(x) + ' ' + escH(x) + '</span>').join('') : '<span class="none">sem função</span>') + '</span><span class="av-add">＋ ' + escH(f || fn || 'Incluir') + '</span></button>';
+      };
+      const listCls = view === 'cartoes' ? 'esc-avulso-list' : 'esc-avulso-rows';
+      let sec = '';
+      if(grp === 'funcao' && !fn){
+        fnList.forEach(f => { const ps = all.filter(p => fnsOf(p).includes(f)); if(ps.length) sec += '<div class="esc-avulso-sec">' + escFnIcon(f) + ' ' + escH(f) + ' <small>(' + ps.length + ')</small></div><div class="' + listCls + '">' + ps.map(p => item(p, f)).join('') + '</div>'; });
+        const sem = all.filter(p => !fnsOf(p).length); if(sem.length) sec += '<div class="esc-avulso-sec">Sem função</div><div class="' + listCls + '">' + sem.map(p => item(p, '')).join('') + '</div>';
+      } else {
+        const fora = shown.filter(p => !inTeam.has(p.id)), dentro = shown.filter(p => inTeam.has(p.id));
+        if(grp === 'funcao' || !esc.teams.length) sec = shown.length ? '<div class="' + listCls + '">' + shown.map(p => item(p, fn)).join('') + '</div>' : '';
+        else sec = (fora.length ? '<div class="esc-avulso-sec">Fora das equipes <small>(' + fora.length + ')</small></div><div class="' + listCls + '">' + fora.map(p => item(p, fn)).join('') + '</div>' : '') +
+          (dentro.length ? '<div class="esc-avulso-sec">Também em equipes <small>(' + dentro.length + ')</small></div><div class="' + listCls + '">' + dentro.map(p => item(p, fn)).join('') + '</div>' : '');
+      }
+      html += '<div class="esc-avulso">' +
+        '<div class="av-bar"><span class="av-lbl">Função:</span><div class="av-fnchips"><button type="button" data-avf=""' + (!fn ? ' class="on"' : '') + '>Todas <small>' + all.length + '</small></button>' +
+          fnList.filter(f => counts[f]).map(f => '<button type="button" data-avf="' + escH(f) + '"' + (fn === f ? ' class="on"' : '') + '>' + escFnIcon(f) + ' ' + escH(f) + ' <small>' + counts[f] + '</small></button>').join('') + '</div></div>' +
+        '<div class="av-bar av-bar2"><span class="av-lbl">Agrupar:</span><div class="av-seg"><button type="button" data-avg="equipe"' + (grp === 'equipe' ? ' class="on"' : '') + '>Equipe</button><button type="button" data-avg="funcao"' + (grp === 'funcao' ? ' class="on"' : '') + '>Função</button></div>' +
+          '<span class="av-lbl">Ver:</span><div class="av-seg"><button type="button" data-avv="lista"' + (view === 'lista' ? ' class="on"' : '') + '>☰ Lista</button><button type="button" data-avv="cartoes"' + (view === 'cartoes' ? ' class="on"' : '') + '>▦ Cartões</button></div></div>' +
+        '<div class="esc-avulso-h">Toque na pessoa para incluir na escala' + (fn ? ' como <b>' + escH(fn) + '</b>' : grp === 'funcao' ? ' na função do grupo' : ' (depois ajuste a função ao lado do nome)') + ':</div>' +
+        sec +
+        (!all.length ? '<div class="esc-avulso-h">Todo mundo já está na escala.</div>' : (!shown.length ? '<div class="esc-avulso-h">Ninguém disponível com essa função.</div>' : '')) + '</div>';
     }
     html += '<div id="escRows">';
     d.rows.forEach((r, i) => {
@@ -10765,9 +10812,13 @@
     { const av = document.getElementById('escAvulso'); if(av) av.onclick = () => { grab(); esc.avulsoOpen = !esc.avulsoOpen; renderEscala(); }; }
     body.querySelectorAll('[data-avulso]').forEach(b => b.onclick = () => {
       grab(); const pid = b.dataset.avulso; const p = escProfile(pid); if(!p || d.rows.some(r => r.profile_id === pid)) return;
-      d.rows.push({ id: null, function: (p.functions || []).find(f => f !== 'Ministro') || (p.functions || [])[0] || 'Vocal', profile_id: pid, status: 'pendente' });
+      const fn = b.dataset.avfn || esc.avFn || (p.functions || []).find(f => f !== 'Ministro') || (p.functions || [])[0] || 'Vocal';
+      d.rows.push({ id: null, function: fn, profile_id: pid, status: 'pendente' });
       renderEscala();
     });
+    body.querySelectorAll('[data-avf]').forEach(b => b.onclick = () => { grab(); esc.avFn = b.dataset.avf; renderEscala(); });
+    body.querySelectorAll('[data-avg]').forEach(b => b.onclick = () => { grab(); esc.avGroup = b.dataset.avg; lsSet('escAvGroup', esc.avGroup); renderEscala(); });
+    body.querySelectorAll('[data-avv]').forEach(b => b.onclick = () => { grab(); esc.avView = b.dataset.avv; lsSet('escAvView', esc.avView); renderEscala(); });
     body.querySelectorAll('[data-team]').forEach(b => b.onclick = () => {
       grab(); const t = esc.teams.find(x => x.id === b.dataset.team); if(!t) return;
       t.member_ids.forEach(pid => {
