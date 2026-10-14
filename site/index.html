@@ -3310,7 +3310,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v332 · 08/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v333 · 08/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -14292,7 +14292,7 @@ function rebalanceAdaptiveCols(wrap, repack){
     if(!window.history || !history.pushState) return;
     const touchy = isPhoneView() || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
     const panel = document.querySelector('.main-panel');
-    let stack = [], idx = 0, restoring = null, exitArmed = false, exitTimer = null, ready = false;
+    let stack = [], idx = 0, restoring = null, exitArmed = false, exitTimer = null, ready = false, gen = 1, menuNav = false;
     function snap(){
       if(escOverlay().classList.contains('open')){ const t = esc.tab === 'minhas' ? 'escalas' : esc.tab; return { k:'esc', tab: esc.tab, key:'esc:' + t }; }
       if(!showingHome && currentId){ const fs = panel.classList.contains('fullscreen-mode'); return { k:'song', id: currentId, pl: navPlaylistId || null, av: activeView, fs, key:'song:' + (navPlaylistId || '') + ':' + currentId + (fs ? ':fs' : '') }; }
@@ -14310,9 +14310,18 @@ function rebalanceAdaptiveCols(wrap, repack){
       if(!ready || restoring) return;
       const s = snap(), top = stack[idx];
       if(top && s.key === top.key){ stack[idx] = s; return; }
-      if(top && replaceable(top, s)){ stack[idx] = s; try{ history.replaceState({ cep: idx }, ''); }catch(e){} return; }
+      // v333: entrou por um item do MENU (Início, Músicas, Playlists, Agenda,
+      // Escala, Equipe): o Voltar dali leva sempre para o Início.
+      if(menuNav){
+        menuNav = false; gen++;
+        const home = { k:'home', nav:'home', pl:null, key:'home:home' };
+        if(s.key === 'home:home'){ stack = [s]; idx = 0; try{ history.pushState({ cep: 0, gen }, ''); }catch(e){} }
+        else { stack = [home, s]; idx = 1; try{ history.pushState({ cep: 1, gen }, ''); }catch(e){} }
+        return;
+      }
+      if(top && replaceable(top, s)){ stack[idx] = s; try{ history.replaceState({ cep: idx, gen }, ''); }catch(e){} return; }
       stack = stack.slice(0, idx + 1); stack.push(s); idx = stack.length - 1;
-      try{ history.pushState({ cep: idx }, ''); }catch(e){}
+      try{ history.pushState({ cep: idx, gen }, ''); }catch(e){}
     }
     function closeLayer(){
       const dov = document.querySelector('.decl-ov, .tour-ov'); if(dov){ const x = dov.querySelector('.nt-close, .tour-skip'); if(x) x.click(); else dov.remove(); return true; }
@@ -14369,13 +14378,14 @@ function rebalanceAdaptiveCols(wrap, repack){
     }
     window.addEventListener('popstate', (e) => {
       const st = e.state || {};
-      const i = typeof st.cep === 'number' ? st.cep : -1;
-      if(i < idx && closeLayer()){ try{ history.pushState({ cep: idx }, ''); }catch(err){} return; }
+      let i = typeof st.cep === 'number' ? st.cep : -1;
+      if(st.gen !== gen) i = idx - 1; // entrada antiga (antes de voltar ao menu): conta como "voltar um"
+      if(i < idx && closeLayer()){ try{ history.pushState({ cep: idx, gen }, ''); }catch(err){} return; }
       if(i < 0){
         if(!touchy || exitArmed){ history.back(); return; }
         exitArmed = true; clearTimeout(exitTimer); exitTimer = setTimeout(() => { exitArmed = false; }, 2000);
         toast('Toque em Voltar de novo para sair');
-        try{ history.pushState({ cep: 0 }, ''); }catch(err){}
+        try{ history.pushState({ cep: 0, gen }, ''); }catch(err){}
         idx = 0; if(stack[0] && snap().key !== stack[0].key) restore(stack[0]);
         return;
       }
@@ -14392,8 +14402,9 @@ function rebalanceAdaptiveCols(wrap, repack){
     }
     ['btnBack', 'btnCloseEscala', 'btnFullscreenExit'].forEach(viaHistory);
     function start(){
-      try{ history.replaceState({ cep: -1 }, ''); history.pushState({ cep: 0 }, ''); }catch(e){}
+      try{ history.replaceState({ cep: -1 }, ''); history.pushState({ cep: 0, gen }, ''); }catch(e){}
       stack = [snap()]; idx = 0; ready = true;
+      document.addEventListener('click', (e) => { if(e.target.closest('.side-nav-item, #mobileTabbar [data-tb], #navHome, #navSongs')) menuNav = true; }, true);
       ['click', 'keyup'].forEach(ev => document.addEventListener(ev, () => { setTimeout(record, 0); setTimeout(record, 450); }, true));
       setInterval(record, 400);
     }
