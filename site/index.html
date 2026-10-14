@@ -2575,6 +2575,10 @@
   .mk-chip.min{border-color:var(--accent);}
   .mk-chip.on{background:var(--accent-dim); border-color:var(--accent); color:var(--text);}
   .mk-chip.mk-save{border-style:dashed;}
+  .mk-chip-wrap{display:inline-flex; align-items:center;}
+  .mk-chip.has-del{border-top-right-radius:0; border-bottom-right-radius:0; border-right:none;}
+  .mk-del{background:var(--surface); border:1px solid var(--border); border-left:1px solid var(--border-soft, var(--border)); color:var(--text-dim); border-radius:0 999px 999px 0; padding:3px 9px 3px 7px; font:inherit; font-size:11px; line-height:1.4; cursor:pointer;}
+  .mk-del:hover{color:#ff6b6b; border-color:#ff6b6b;}
   .main-panel.fullscreen-mode .mk-row{display:none !important;}
 
   /* v340 checklist de ensaio */
@@ -3365,7 +3369,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v341 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v342 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -14907,7 +14911,9 @@ function rebalanceAdaptiveCols(wrap, repack){
     list.sort((a, b) => (b.profile_id === evMin) - (a.profile_id === evMin) || escName(a.profile_id).localeCompare(escName(b.profile_id), 'pt-BR')).forEach(x => {
       const nm = x.profile_id === esc.user.id ? 'Você' : escFirst(x.profile_id);
       const on = cur && mkNoteIdx(cur) === mkNoteIdx(x.key) && /m(?!aj)/.test(cur.slice(1)) === /m(?!aj)/.test(String(x.key).slice(1));
-      h += '<button type="button" class="mk-chip' + (on ? ' on' : '') + (x.profile_id === evMin ? ' min' : '') + '" data-mk="' + escapeHtml(x.key) + '" title="Usar o tom de ' + escapeHtml(escName(x.profile_id)) + '">🎤 ' + escapeHtml(nm) + ' · <b>' + escapeHtml(x.key) + '</b></button>';
+      const canDel = x.profile_id === esc.user.id ? mkCanSave() : !!(esc.me && (esc.me.is_leader || escIsAdmin(esc.me)));
+      h += '<span class="mk-chip-wrap"><button type="button" class="mk-chip' + (on ? ' on' : '') + (x.profile_id === evMin ? ' min' : '') + (canDel ? ' has-del' : '') + '" data-mk="' + escapeHtml(x.key) + '" title="Usar o tom de ' + escapeHtml(escName(x.profile_id)) + '">🎤 ' + escapeHtml(nm) + ' · <b>' + escapeHtml(x.key) + '</b></button>' +
+        (canDel ? '<button type="button" class="mk-del" data-mk-del="' + escapeHtml(x.profile_id) + '" title="Remover este tom salvo" aria-label="Remover tom">✕</button>' : '') + '</span>';
     });
     if(mkCanSave()){
       const mine = mkFind(sg.id, esc.user.id);
@@ -14917,6 +14923,17 @@ function rebalanceAdaptiveCols(wrap, repack){
     row.querySelectorAll('[data-mk]').forEach(b => b.onclick = () => {
       const d = mkShiftTo(meta.key, b.dataset.mk); if(d === null) return;
       if(d !== liveShift){ liveShift = d; refreshKeyDisplayAndBadge(); renderCifra(); markDisplayDirty(); }
+    });
+    row.querySelectorAll('[data-mk-del]').forEach(b => b.onclick = () => {
+      const pid = b.dataset.mkDel, mine = pid === esc.user.id, k = mkFind(sg.id, pid);
+      showConfirm('Remover tom', (mine ? 'Remover o seu tom salvo (' + k + ')' : 'Remover o tom salvo de ' + escName(pid) + ' (' + k + ')') + ' em "' + (sg.title || '') + '"?', async () => {
+        const r = await esc.sb.from('minister_keys').delete().eq('song_id', sg.id).eq('profile_id', pid);
+        if(r.error){ showAlert('Tom', 'Não consegui remover: ' + r.error.message); return; }
+        mkList = mkList.filter(x => !(x.song_id === sg.id && x.profile_id === pid));
+        lsSet('mkeys', JSON.stringify(mkList));
+        showImportFeedback('Tom removido.', true);
+        mkRender();
+      }, { okLabel: 'Remover' });
     });
     const sv = row.querySelector('[data-mk-save]');
     if(sv) sv.onclick = async () => {

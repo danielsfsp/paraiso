@@ -155,6 +155,11 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p4.click('[data-plp-song]'); await p4.waitForTimeout(1000);
     const mk = await p4.evaluate(() => ({ k: document.getElementById('keyDisplay').textContent, row: document.getElementById('mkRow').innerText }));
     check(mk.k === 'G' && /João · G/.test(mk.row), 'música do culto abre no tom do ministro escalado (' + mk.k + ')');
+    await p4.click('#btnKeyUp'); await p4.waitForTimeout(200);
+    await p4.click('[data-mk-save]'); await p4.waitForTimeout(600);
+    check(db.minister_keys.some(x => x.profile_id === 'u1'), 'líder salva o próprio tom');
+    await p4.click('[data-mk-del="u1"]'); await p4.waitForTimeout(300); await p4.click('#confirmModalOk'); await p4.waitForTimeout(600);
+    check(!db.minister_keys.some(x => x.profile_id === 'u1') && !/Você ·/.test(await p4.evaluate(() => document.getElementById('mkRow').innerText)), 'tom salvo pode ser removido (✕)');
     await c4.close();
 
     // 4) PARTICIPANTE — menus restritos (celular)
