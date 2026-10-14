@@ -2653,6 +2653,12 @@
   .arch-p:last-child{border-bottom:none;}
   .arch-p small{color:var(--text-dim);}
   .arch-body .evp-edit-hint, .arch-body .evp-notify, .arch-body .ev-swap-top{display:none !important;}
+
+  /* v347: rótulo de parte da cifra ([Intro], [Refrão]) com fundo azul de novo — a etiqueta
+     de seção do app (.sec-tag) tinha passado por cima do estilo da cifra */
+  .sec-tag.cifra-sec{display:inline-block; padding:0 1ch; border-radius:6px; background:rgba(28,173,228,.16); color:#1CADE4; font-weight:700; line-height:1.35;
+    font-size:inherit; letter-spacing:normal; text-transform:none; border:none; box-shadow:none; margin:0; width:auto; gap:0;}
+  html[data-theme="light"] .sec-tag.cifra-sec{background:rgba(21,101,192,.10); color:#1565C0;}
 </style>
 </head>
 <body>
@@ -3430,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v346 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v347 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6367,7 +6373,7 @@
     // Partes da música ([Refrão], [Ponte]…) viram etiquetas — o padding de 1
     // caractere de cada lado ocupa o lugar dos colchetes (alinhamento igual).
     frag.querySelectorAll('.section-line').forEach(el => {
-      el.innerHTML = el.innerHTML.replace(/\[([^\]<]{1,40})\]/, '<span class="sec-tag">$1</span>');
+      el.innerHTML = el.innerHTML.replace(/\[([^\]<]{1,40})\]/, '<span class="sec-tag cifra-sec">$1</span>');
     });
 
     cifraBody.innerHTML = '';
