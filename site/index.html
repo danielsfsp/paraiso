@@ -2548,6 +2548,12 @@
   body.role-visit .home-cards.no-event{display:grid !important;}
   body.role-visit .hc-top, body.role-visit [data-sort="plays"], body.role-visit [data-sort="oldest"], body.role-visit #btnStats, body.role-visit #plpArch{display:none !important;}
   body.role-visit .home-cards .hc-visit{display:block !important; grid-column:1/-1;}
+
+  /* v336: ◀ ▶ fixos no topo (não descem quando o cabeçalho da música fica mais alto) */
+  @media (min-width: 821px){
+    .main-panel:not(.fullscreen-mode) .viewer-header #navArrows{align-self:flex-start; margin-top:4px;}
+    .main-panel:not(.fullscreen-mode) .viewer-header .header-actions{align-self:flex-start;}
+  }
 </style>
 </head>
 <body>
@@ -3323,7 +3329,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v335 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v336 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
