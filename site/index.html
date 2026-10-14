@@ -2546,6 +2546,7 @@
   body.role-visit [data-plp-chg], body.role-visit [data-plp-esc], body.role-visit .pl-chg-btn,
   body.role-visit #btnLibRevert{display:none !important;}
   body.role-visit .home-cards.no-event{display:grid !important;}
+  body.role-visit .hc-top, body.role-visit [data-sort="plays"], body.role-visit [data-sort="oldest"], body.role-visit #btnStats, body.role-visit #plpArch{display:none !important;}
   body.role-visit .home-cards .hc-visit{display:block !important; grid-column:1/-1;}
 </style>
 </head>
@@ -3322,7 +3323,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v334 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v335 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4441,7 +4442,7 @@
     try{ if(isVisitor()) html = '<div class="hc-card hc-visit"><div class="hc-eyebrow">👀 Modo visitante</div><div class="hc-title">Bem-vindo(a) ao CEP Louvor</div><div class="hc-sub">Veja as letras e cifras do repertório e monte suas playlists — elas ficam salvas neste aparelho.</div><div class="hc-actions" style="margin-top:10px"><button type="button" class="hc-btn" data-vis-go="songs">🎼 Ver músicas</button><button type="button" class="hc-btn" data-vis-go="playlists">🎵 Minhas playlists</button></div></div>' + html; }catch(e){}
     const hist = getPlayHistory();
     const top = songs.map(s => ({ s, n: (hist.get(s.id) || []).length })).filter(x => x.n).sort((a, b) => b.n - a.n || a.s.title.localeCompare(b.s.title, 'pt-BR')).slice(0, 4);
-    html += '<div class="hc-card"><div class="hc-eyebrow">Mais tocadas</div>' + (top.length ? '<div class="hc-list">' + top.map(x => '<button type="button" data-hc-song="' + x.s.id + '"><span>' + escapeHtml(displayTitle(x.s)) + '</span><b>' + x.n + '×</b></button>').join('') + '</div>' : '<div class="hc-sub" style="margin-top:10px">Ainda sem histórico. As músicas contam quando a playlist do culto tem data que já passou.</div>') + '</div>';
+    html += '<div class="hc-card hc-top"><div class="hc-eyebrow">Mais tocadas</div>' + (top.length ? '<div class="hc-list">' + top.map(x => '<button type="button" data-hc-song="' + x.s.id + '"><span>' + escapeHtml(displayTitle(x.s)) + '</span><b>' + x.n + '×</b></button>').join('') + '</div>' : '<div class="hc-sub" style="margin-top:10px">Ainda sem histórico. As músicas contam quando a playlist do culto tem data que já passou.</div>') + '</div>';
     const arts = homeArtistGroups().filter(g => g.name !== '(Sem artista)').length;
     const last = songs.slice().sort((a, b) => (parseInt(String(b.id).split('-')[1], 10) || 0) - (parseInt(String(a.id).split('-')[1], 10) || 0))[0];
     html += '<div class="hc-card"><div class="hc-eyebrow">Repertório</div><div class="hc-row" style="gap:26px;margin-top:10px"><div><div class="hc-big">' + songs.length + '</div><div class="hc-sub">músicas</div></div><button type="button" class="hc-bigbtn" data-hc-mode="artistas"><div class="hc-big">' + arts + '</div><div class="hc-sub">artistas ›</div></button></div>' +
