@@ -3436,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v351 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v352 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6431,6 +6431,7 @@
       let keptCols = false;
       if(keepColsOnce && Date.now() > keepColsUntil) keepColsOnce = null; // v350: vale por ~1,5 s (a tela pode redesenhar mais de uma vez)
       if(!singleColumn && keepColsOnce){ const kc = keepColsOnce; try{ keptCols = distributeEditCols(cifraBody, kc, true); }catch(e){} }
+      if(!keptCols && !singleColumn){ try{ const sg = currentSong(); const fc = sg && isFsMode() ? getFsCols(sg) : null; if(fsColsFits(fc)) keptCols = distributeEditCols(cifraBody, fc.n, true); }catch(e){} }
       if(!keptCols && !singleColumn && cifraBody.offsetParent){
         const vp = cifraViewport;
         const minFs = Math.max(10, Math.round(fontSize * 0.7));
@@ -7239,7 +7240,26 @@
     saveSongs();
   }
   // Descarta a cópia da tela cheia: ela volta a mostrar a cifra da tela normal.
+  // v352: colunas da tela cheia guardadas ao salvar a edição — a leitura volta
+  // sempre igual à edição (mesma tela, ALTURA e fonte); senão, o automático.
+  function setFsCols(song, info){
+    const pl = getOverridePlaylist();
+    if(pl){ pl.overrides = pl.overrides || {}; pl.overrides[song.id] = pl.overrides[song.id] || {}; if(info) pl.overrides[song.id].fsCols = info; else delete pl.overrides[song.id].fsCols; savePlaylists(); return; }
+    if(info) song.fsCols = info; else delete song.fsCols;
+    saveSongs();
+  }
+  function getFsCols(song){
+    const pl = getOverridePlaylist();
+    if(pl && pl.overrides && pl.overrides[song.id] && pl.overrides[song.id].fsCols) return pl.overrides[song.id].fsCols;
+    if(pl && pl.overrides && pl.overrides[song.id] && typeof pl.overrides[song.id].bodyFs === 'string') return null;
+    return song.fsCols || null;
+  }
+  function fsColsFits(info){
+    return !!(info && Array.isArray(info.n) && info.n.length > 1 && info.fs === fontSize && info.ch === colHeightPct &&
+      Math.abs((info.vh || 0) - window.innerHeight) <= 40 && Math.abs((info.vw || 0) - window.innerWidth) <= 40);
+  }
   function resetFsBody(song){
+    try{ setFsCols(song, null); }catch(e){}
     const pl = getOverridePlaylist();
     if(pl && pl.overrides && pl.overrides[song.id] && typeof pl.overrides[song.id].bodyFs === 'string'){
       delete pl.overrides[song.id].bodyFs; savePlaylists();
@@ -8680,6 +8700,7 @@
     // (o navegador reequilibrava as colunas e uma linha pulava para a seguinte)
     const editCols = (!singleColumn && wrap.classList.contains('adaptive-cols')) ? Array.from(wrap.querySelectorAll(':scope > .cifra-col')).map(c => c.querySelectorAll('.cifra-line').length).filter(n => n > 0) : null;
     setEffectiveBody(song, newBody);
+    try{ setFsCols(song, editCols && editCols.length > 1 ? { n: editCols, t: editCols.reduce((a, b) => a + b, 0), fs: fontSize, ch: colHeightPct, vh: window.innerHeight, vw: window.innerWidth } : null); }catch(e){}
     // Salva junto tom/formatação pendentes (os botões "Salvar/Descartar
     // alterações" não aparecem na tela cheia).
     if(displayPrefsDirty) saveDisplayPrefsForCurrentSong();
@@ -11352,7 +11373,7 @@
   // Músicas oficiais ficam no Supabase. Só LÍDERES incluem/editam/excluem —
   // e isso chega para todos. Formatação, tom, favoritas e qualquer edição
   // feita por quem não é líder são PESSOAIS: ficam só no aparelho.
-  const LIB_PERSONAL = ['favorite', 'prefs', 'prefsFs', 'bpmCur', 'bpmBeatsCur', 'bodyFs', 'map', 'localEdited'];
+  const LIB_PERSONAL = ['favorite', 'prefs', 'prefsFs', 'bpmCur', 'bpmBeatsCur', 'bodyFs', 'fsCols', 'map', 'localEdited'];
   function libMaster(sg){ const o = {}; Object.keys(sg).sort().forEach(k => { if(!LIB_PERSONAL.includes(k)) o[k] = sg[k]; }); return o; }
   function libHashOf(sg){ return JSON.stringify(libMaster(sg)); }
   function libHashes(){ try{ return JSON.parse(lsGet('libHash') || '{}'); }catch(e){ return {}; } }
