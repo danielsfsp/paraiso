@@ -3436,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v350 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v351 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7995,8 +7995,12 @@
   // alguma outra coisa (rolar, redimensionar) forçar o recálculo. Força
   // esse recálculo na mão, alternando column-width por um instante — sem
   // isso, sobrava esse resto visual bugado.
-  function forceEditReflow(wrap, repack){
-    if(wrap.classList.contains('adaptive-cols')){ rebalanceAdaptiveCols(wrap, !!repack); refreshEditLineOverflow(wrap); return; }
+  function editColIndexOf(wrap, el){
+    const col = el && el.closest ? el.closest('.cifra-col') : null;
+    return col ? Array.from(wrap.querySelectorAll(':scope > .cifra-col')).indexOf(col) : -1;
+  }
+  function forceEditReflow(wrap, repack, fromCol){
+    if(wrap.classList.contains('adaptive-cols')){ rebalanceAdaptiveCols(wrap, !!repack, fromCol); refreshEditLineOverflow(wrap); return; }
     const cur = wrap.style.columnWidth;
     wrap.style.columnWidth = 'auto';
     void wrap.offsetHeight;
@@ -8210,8 +8214,9 @@
     const rows = mrsRows.slice();
     pushEditCheckpoint();
     clearMultiRowSelection();
+    const fromCol = Math.min.apply(null, rows.map(r => editColIndexOf(rootWrap, r)).filter(i => i >= 0).concat([9999]));
     const landing = deleteMultiRowSelectionRows(rootWrap, rows);
-    forceEditReflow(rootWrap); // v349: apagar não puxa linhas das outras colunas
+    forceEditReflow(rootWrap, true, fromCol === 9999 ? -1 : fromCol);
     if(landing) focusRowAt(landing, 0);
     return true;
   }
@@ -8439,9 +8444,10 @@
         if(prev){
           e.preventDefault();
           const mergeAt = prev.textContent.length;
+          const fromCol = editColIndexOf(rootWrap, div);
           setRowText(prev, prev.textContent + div.textContent);
           removeRowAndMaybeUnit(div);
-          forceEditReflow(rootWrap); // v349: apagar não puxa linhas das outras colunas
+          forceEditReflow(rootWrap, true, fromCol);
           focusRowAt(prev, mergeAt);
         }
         // Primeira linha de tudo: não tem pra onde fundir, deixa quieto.
@@ -8461,9 +8467,10 @@
         if(next){
           e.preventDefault();
           const mergeAt = text.length;
+          const fromCol = editColIndexOf(rootWrap, next);
           setRowText(div, text + next.textContent);
           removeRowAndMaybeUnit(next);
-          forceEditReflow(rootWrap); // v349: apagar não puxa linhas das outras colunas
+          forceEditReflow(rootWrap, true, fromCol);
           focusRowAt(div, mergeAt);
         }
       }
@@ -14410,7 +14417,7 @@
   // da ALTURA escolhida — o que sobra desce para a coluna seguinte (v298).
   // repack = true (mudou a ALTURA): reorganiza tudo de novo, puxando de volta.
   window.__cepColH = () => computeColumnHeightPx();
-function rebalanceAdaptiveCols(wrap, repack){
+function rebalanceAdaptiveCols(wrap, repack, fromCol){
     if(!wrap || singleColumn) return;
     const maxH0 = computeColumnHeightPx();
     // v349: na edição, cada coluna pode manter a altura que já tinha ao entrar
@@ -14424,7 +14431,9 @@ function rebalanceAdaptiveCols(wrap, repack){
     for(let i = 0; i < cols.length; i++){
       const col = cols[i];
       maxH = limOf(col);
-      if(repack){
+      // v351: ao apagar, só a coluna editada (e as seguintes) puxam linhas da próxima;
+      // as colunas anteriores ficam como estão
+      if(repack && (fromCol === undefined || fromCol === null || fromCol < 0 || i >= fromCol)){
         let next = cols[i + 1];
         while(next){
           const first = next.firstElementChild;
