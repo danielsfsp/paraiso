@@ -2659,6 +2659,9 @@
   .sec-tag.cifra-sec{display:inline-block; padding:0 1ch; border-radius:6px; background:rgba(28,173,228,.16); color:#1CADE4; font-weight:700; line-height:1.35;
     font-size:inherit; letter-spacing:normal; text-transform:none; border:none; box-shadow:none; margin:0; width:auto; gap:0;}
   html[data-theme="light"] .sec-tag.cifra-sec{background:rgba(21,101,192,.10); color:#1565C0;}
+
+  /* v356 */
+  #cifraBody .cifra-line.col-lead-blank{display:none;}
 </style>
 </head>
 <body>
@@ -3436,7 +3439,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v355 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v356 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6435,8 +6438,12 @@
       // v355: se sobrou espaço embaixo das colunas mas a música passou da largura da
       // tela (barra de rolagem lateral), sobe as linhas para encher as colunas até a ALTURA
       if(!singleColumn && cifraBody.offsetParent && cifraBody.classList.contains('adaptive-cols') && cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){
+        // v356: só vale se resolver (acabar a rolagem); senão, volta exatamente como estava
+        const before = Array.from(cifraBody.querySelectorAll(':scope > .cifra-col')).map(c => c.children.length);
         try{ rebalanceAdaptiveCols(cifraBody, true); tidyColumnEnds(cifraBody); }catch(e){}
+        if(cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){ try{ distributeEditCols(cifraBody, before, true); }catch(e){} }
       }
+      try{ markLeadBlanks(cifraBody); }catch(e){}
       if(!keptCols && !singleColumn && cifraBody.offsetParent){
         const vp = cifraViewport;
         const minFs = Math.max(10, Math.round(fontSize * 0.7));
@@ -14499,12 +14506,22 @@ function rebalanceAdaptiveCols(wrap, repack, fromCol){
   // esses passam para o começo da coluna seguinte.
   function tidyColumnEnds(wrap){
     const cols = Array.from(wrap.querySelectorAll(':scope > .cifra-col'));
-    const weak = el => !el.textContent.trim() || !!el.querySelector('.section-line') || el.classList.contains('section-line');
+    // v356: só o nome de uma parte sozinho no fim passa para a próxima (linha em branco no fim fica — não aparece)
+    const weak = el => !!el.textContent.trim() && (!!el.querySelector('.section-line') || el.classList.contains('section-line')) && !el.querySelector('.chord-token-inline');
     for(let i = 0; i < cols.length - 1; i++){
       const col = cols[i], next = cols[i + 1];
       let guard = 0;
       while(col.children.length > 1 && weak(col.lastElementChild) && guard++ < 4) next.insertBefore(col.lastElementChild, next.firstChild);
     }
+  }
+  // Linha em branco no TOPO de uma coluna (da 2ª em diante) não ocupa espaço na leitura
+  function markLeadBlanks(wrap){
+    wrap.querySelectorAll('.cifra-line.col-lead-blank').forEach(el => el.classList.remove('col-lead-blank'));
+    if(!wrap.classList.contains('adaptive-cols')) return;
+    Array.from(wrap.querySelectorAll(':scope > .cifra-col')).forEach((col, i) => {
+      if(!i) return;
+      for(const el of Array.from(col.children)){ if(el.textContent.trim()) break; el.classList.add('col-lead-blank'); }
+    });
   }
   function markEditColHeights(wrap){
     if(!wrap || !wrap.classList.contains('adaptive-cols')) return;
