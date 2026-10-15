@@ -143,6 +143,31 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     check(ys.every(y => y === ys[0]), 'setas ◀ ▶ ficam no mesmo lugar ao trocar de música');
     await c2.close();
 
+    // 2b) TELA CHEIA: editar → desmarcar "1 coluna" → fonte A− → salvar: a leitura fica igual à edição (e continua depois de recarregar)
+    console.log('\n▶ Tela cheia: colunas iguais depois de salvar a edição');
+    db = freshDb();
+    const c7 = await newCtx(b, { viewport: { width: 1366, height: 767 } }), p7 = await page(c7, errs, 'telacheia');
+    await p7.goto(BASE); await p7.waitForTimeout(800);
+    const sid7 = await p7.evaluate(() => { localStorage['cifraset:visitor'] = '1'; localStorage['cifraset:tourV1'] = '1'; return JSON.parse(localStorage['cifraset:songs']).find(x => /^1000 Graus/.test(x.title)).id; });
+    await p7.reload(); await p7.waitForTimeout(1200);
+    await openSongById(p7, sid7); await p7.waitForTimeout(800);
+    await p7.evaluate(() => { const c = document.getElementById('chkSingleColumn'); if(!c.checked) c.click(); }); await p7.waitForTimeout(400);
+    await p7.evaluate(() => document.getElementById('btnFullscreen').click()); await p7.waitForTimeout(800);
+    await p7.evaluate(() => { if(document.getElementById('confirmModalOverlay').classList.contains('open')) document.getElementById('confirmModalOk').click(); }); await p7.waitForTimeout(1200);
+    await p7.evaluate(() => document.getElementById('btnFullscreenEdit').click()); await p7.waitForTimeout(1200);
+    await p7.evaluate(() => { const c = document.getElementById('chkSingleColumn'); if(c.checked) c.click(); }); await p7.waitForTimeout(700);
+    await p7.evaluate(() => document.getElementById('btnFontDown').click()); await p7.waitForTimeout(700);
+    const byPos = sel => p7.evaluate(sel => { const ls = [...document.querySelectorAll(sel + ' .cifra-line')]; const out = []; let cl = null; ls.forEach(el => { const r = el.getBoundingClientRect(); if(cl === null || r.left > cl + 20){ out.push(0); cl = r.left; } out[out.length - 1]++; }); return out.join(','); }, sel);
+    const ed = await byPos('#cifraBodyEditCols');
+    await p7.evaluate(() => document.getElementById('btnFullscreenEditSave').click()); await p7.waitForTimeout(2500);
+    const sv = await byPos('#cifraBody');
+    check(ed === sv && ed.split(',').length > 1, 'depois de salvar, a leitura tem as mesmas colunas da edição (' + ed + ' → ' + sv + ')');
+    await p7.reload(); await p7.waitForTimeout(1300); await openSongById(p7, sid7); await p7.waitForTimeout(800);
+    await p7.evaluate(() => document.getElementById('btnFullscreen').click()); await p7.waitForTimeout(1500);
+    const rl = await byPos('#cifraBody');
+    check(rl === ed, 'colunas continuam iguais depois de recarregar (' + rl + ')');
+    await c7.close();
+
     // 3) LÍDER — tom do ministro na playlist do culto
     console.log('\n▶ Líder: tom por ministro');
     db = freshDb();
