@@ -3439,7 +3439,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v357 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v358 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8176,7 +8176,9 @@
   let mrsActive = false;
   let mrsAnchorRow = null;
   let mrsRows = [];
+  let mrsHead = null; // v358: ponta móvel da seleção (mouse ou Shift+↑/↓)
   function clearMultiRowSelection(){
+    mrsHead = null;
     if(mrsRows.length) mrsRows.forEach(r => r.classList.remove('row-selected'));
     mrsRows = [];
     mrsActive = false;
@@ -8215,6 +8217,7 @@
     const i1 = rows.indexOf(mrsAnchorRow);
     const i2 = rows.indexOf(div);
     if(i1 === -1 || i2 === -1) return;
+    mrsHead = div;
     highlightRowRange(rows, Math.min(i1, i2), Math.max(i1, i2));
   }
   function onEditMouseUp(){
@@ -8376,6 +8379,26 @@
       e.preventDefault();
       performEditRedo();
       return;
+    }
+
+    // v358: Shift+↑/↓ seleciona linhas inteiras (igual arrastar com o mouse) e
+    // continua a seleção feita com o mouse; ↑/↓ sem Shift desfaz a seleção.
+    if((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !isMod && !e.altKey){
+      if(e.shiftKey){
+        const rows = getEditRows(rootWrap);
+        const anchor = (mrsActive && mrsAnchorRow && rows.includes(mrsAnchorRow)) ? mrsAnchorRow : div;
+        const head = (mrsActive && mrsHead && rows.includes(mrsHead)) ? mrsHead : div;
+        const hi = rows.indexOf(head), ai = rows.indexOf(anchor);
+        const ni = e.key === 'ArrowUp' ? hi - 1 : hi + 1;
+        e.preventDefault();
+        if(hi < 0 || ai < 0 || ni < 0 || ni >= rows.length) return;
+        if(!mrsActive){ const sel = window.getSelection(); if(sel) sel.removeAllRanges(); }
+        mrsActive = true; mrsAnchorRow = anchor; mrsHead = rows[ni];
+        highlightRowRange(rows, Math.min(ai, ni), Math.max(ai, ni));
+        try{ rows[ni].scrollIntoView({ block: 'nearest', inline: 'nearest' }); }catch(err){}
+        return;
+      }
+      if(mrsActive) clearMultiRowSelection();
     }
 
     // Se tem uma seleção de várias linhas ativa (ver mrs* acima), as teclas
