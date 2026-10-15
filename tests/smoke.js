@@ -157,7 +157,7 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p7.evaluate(() => document.getElementById('btnFullscreenEdit').click()); await p7.waitForTimeout(1200);
     await p7.evaluate(() => { const c = document.getElementById('chkSingleColumn'); if(c.checked) c.click(); }); await p7.waitForTimeout(700);
     await p7.evaluate(() => document.getElementById('btnFontDown').click()); await p7.waitForTimeout(700);
-    const byPos = sel => p7.evaluate(sel => { const ls = [...document.querySelectorAll(sel + ' .cifra-line')]; const out = []; let cl = null; ls.forEach(el => { const r = el.getBoundingClientRect(); if(cl === null || r.left > cl + 20){ out.push(0); cl = r.left; } out[out.length - 1]++; }); return out.join(','); }, sel);
+    const byPos = sel => p7.evaluate(sel => { const w = document.querySelector(sel); if(w.classList.contains('adaptive-cols')) return [...w.querySelectorAll(':scope > .cifra-col')].map(c => c.querySelectorAll('.cifra-line').length).join(','); const ls = [...document.querySelectorAll(sel + ' .cifra-line')]; const out = []; let cl = null; ls.forEach(el => { const r = el.getBoundingClientRect(); if(cl === null || r.left > cl + 20){ out.push(0); cl = r.left; } out[out.length - 1]++; }); return out.join(','); }, sel);
     const ed = await byPos('#cifraBodyEditCols');
     await p7.evaluate(() => document.getElementById('btnFullscreenEditSave').click()); await p7.waitForTimeout(2500);
     const sv = await byPos('#cifraBody');
