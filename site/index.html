@@ -3436,7 +3436,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v354 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v355 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6432,6 +6432,11 @@
       if(keepColsOnce && Date.now() > keepColsUntil) keepColsOnce = null; // v350: vale por ~1,5 s (a tela pode redesenhar mais de uma vez)
       if(!singleColumn && keepColsOnce){ const kc = keepColsOnce; try{ keptCols = distributeEditCols(cifraBody, kc, true); }catch(e){} }
       if(!keptCols && !singleColumn){ try{ const sg = currentSong(); const fc = sg && isFsMode() ? getFsCols(sg) : null; if(fsColsFits(fc)) keptCols = distributeEditCols(cifraBody, fc.n, true); }catch(e){} }
+      // v355: se sobrou espaço embaixo das colunas mas a música passou da largura da
+      // tela (barra de rolagem lateral), sobe as linhas para encher as colunas até a ALTURA
+      if(!singleColumn && cifraBody.offsetParent && cifraBody.classList.contains('adaptive-cols') && cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){
+        try{ rebalanceAdaptiveCols(cifraBody, true); tidyColumnEnds(cifraBody); }catch(e){}
+      }
       if(!keptCols && !singleColumn && cifraBody.offsetParent){
         const vp = cifraViewport;
         const minFs = Math.max(10, Math.round(fontSize * 0.7));
@@ -14489,6 +14494,17 @@ function rebalanceAdaptiveCols(wrap, repack, fromCol){
       counts[counts.length - 1]++;
     });
     return counts.length > 1 ? counts : null;
+  }
+  // Coluna não termina com linha em branco nem com o nome de uma parte ([Refrão]) sozinho:
+  // esses passam para o começo da coluna seguinte.
+  function tidyColumnEnds(wrap){
+    const cols = Array.from(wrap.querySelectorAll(':scope > .cifra-col'));
+    const weak = el => !el.textContent.trim() || !!el.querySelector('.section-line') || el.classList.contains('section-line');
+    for(let i = 0; i < cols.length - 1; i++){
+      const col = cols[i], next = cols[i + 1];
+      let guard = 0;
+      while(col.children.length > 1 && weak(col.lastElementChild) && guard++ < 4) next.insertBefore(col.lastElementChild, next.firstChild);
+    }
   }
   function markEditColHeights(wrap){
     if(!wrap || !wrap.classList.contains('adaptive-cols')) return;
