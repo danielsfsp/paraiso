@@ -3439,7 +3439,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v356 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v357 · 14/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -14736,7 +14736,17 @@ function rebalanceAdaptiveCols(wrap, repack, fromCol){
     function viaHistory(id){
       const b = document.getElementById(id); if(!b) return;
       b.addEventListener('click', (e) => {
-        if(idx > 0 && stack[idx - 1]){ e.stopImmediatePropagation(); e.preventDefault(); const go = () => history.back(); if(id === 'btnCloseEscala') escGuard(go); else guardIfDirty(go); }
+        if(idx > 0 && stack[idx - 1]){
+          e.stopImmediatePropagation(); e.preventDefault();
+          // v357: trocou de música dentro da tela cheia (◀ ▶): ao sair, fica na música ATUAL
+          // (a tela de antes da tela cheia passa a ser esta música, fora da tela cheia)
+          const prev = stack[idx - 1];
+          if(id === 'btnFullscreenExit' && prev.k === 'song' && currentId && prev.id !== currentId){
+            const pl = navPlaylistId || null;
+            stack[idx - 1] = Object.assign({}, prev, { id: currentId, pl, fs: false, key: 'song:' + (pl || '') + ':' + currentId });
+          }
+          const go = () => history.back(); if(id === 'btnCloseEscala') escGuard(go); else guardIfDirty(go);
+        }
       }, true);
     }
     ['btnBack', 'btnCloseEscala', 'btnFullscreenExit'].forEach(viaHistory);
