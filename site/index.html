@@ -2663,6 +2663,17 @@
   .rot-chip{font:inherit; font-size:.85em; font-weight:700; line-height:1.3; padding:1px 9px; border-radius:999px; cursor:pointer; background:rgba(28,173,228,.13); color:#1CADE4; border:1px solid rgba(28,173,228,.45);}
   .rot-chip small{font-size:.85em; font-weight:600; opacity:.85;}
   html[data-theme="light"] .rot-chip{background:rgba(21,101,192,.08); color:#1565C0; border-color:rgba(21,101,192,.35);}
+  .mod-box{--mc:rgba(91,127,168,.75); border-left:1.5px solid var(--mc); border-right:1.5px solid var(--mc); padding-left:10px; padding-right:10px; margin-bottom:0; padding-bottom:1px;}
+  .mod-box.mod-top > .section-line{margin-top:0;}
+  .mod-box.mk-ref{--mc:rgba(79,174,90,.85);} .mod-box.mk-ponte{--mc:rgba(154,127,214,.85);} .mod-box.mk-inst{--mc:rgba(140,120,108,.7);} .mod-box.mk-estrofe{--mc:rgba(150,140,130,.45);}
+  .mod-box.mod-top,.mod-box.mod-cut-t{border-top:1.5px solid var(--mc); border-top-left-radius:8px; border-top-right-radius:8px; padding-top:6px;}
+  .mod-box.mod-bot,.mod-box.mod-cut-b{border-bottom:1.5px solid var(--mc); border-bottom-left-radius:8px; border-bottom-right-radius:8px; padding-bottom:6px; margin-bottom:6px;}
+  .mod-box.mod-cut-t{border-top-style:dashed;} .mod-box.mod-cut-b{border-bottom-style:dashed;}
+  .mod-box.mod-fin{border-top:1px dashed var(--mc); padding-top:6px;}
+  .mod-box.mod-fin > .section-line{margin-top:0;}
+  .mod-box.mk-ref .cifra-sec{background:rgba(79,174,90,.16); color:#5fc56b;} .mod-box.mk-ponte .cifra-sec{background:rgba(154,127,214,.18); color:#b9a3f0;}
+  .mod-box.mod-fin .cifra-sec, .mod-box.mk-ref.mod-fin .cifra-sec, .mod-box.mk-ponte.mod-fin .cifra-sec{background:rgba(232,137,58,.16); color:#e8893a;}
+  html[data-theme="light"] .mod-box.mk-ref .cifra-sec{color:#2e7d32;} html[data-theme="light"] .mod-box.mk-ponte .cifra-sec{color:#5e35b1;} html[data-theme="light"] .mod-box.mod-fin .cifra-sec{color:#c25e0a;}
   @keyframes modFlash{0%,60%{background:rgba(232,137,58,.22); box-shadow:0 0 0 2px rgba(232,137,58,.5);}100%{background:transparent; box-shadow:none;}}
   .mod-flash{animation:modFlash 1.6s ease-out; border-radius:6px;}
   .sec-tag.cifra-sec{display:inline-block; padding:0 1ch; border-radius:6px; background:rgba(28,173,228,.16); color:#1CADE4; font-weight:700; line-height:1.35;
@@ -3450,7 +3461,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v359 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v360 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6380,7 +6391,7 @@
   // vezes) também é detectada; o que sobra no fim vira um bloco "[Final]".
   let modulesOn = lsGetEarly('modulos') === '1';
   let modulesPausedSong = null; // rolagem automática usa a cifra completa
-  let modRoad = null;
+  let modRoad = null, modBoxed = false;
   function modNorm(l){ return String(l).replace(/[_\s]+/g, ' ').trim().toLowerCase(); }
   function modTrimBlank(arr){ let a = 0, b = arr.length; while(a < b && !arr[a].trim()) a++; while(b > a && !arr[b - 1].trim()) b--; return arr.slice(a, b); }
   function modFindRepeat(lines){
@@ -6466,6 +6477,55 @@
     hit.forEach(h => { const ln = h.closest('.cifra-stanza') || h.closest('.cifra-line'); if(ln){ ln.classList.remove('mod-flash'); void ln.offsetWidth; ln.classList.add('mod-flash'); } });
     try{ hit[0].scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); }catch(e){}
   }
+  // v360: MOLDURA em volta de cada módulo (cor pelo tipo da parte). Parte com
+  // rótulo ([Refrão]…) = uma moldura até o próximo rótulo; trecho SEM rótulo =
+  // uma moldura por estrofe. É feita linha a linha (bordas laterais em todas,
+  // topo na 1ª, base na última), então continua certa quando o módulo é
+  // dividido entre duas colunas.
+  function modKind(label){
+    const l = String(label || '').toLowerCase();
+    if(/refr|coro|chorus/.test(l)) return 'mk-ref';
+    if(/ponte|bridge/.test(l)) return 'mk-ponte';
+    if(/intro|solo|interl|instrum|outro|tag/.test(l)) return 'mk-inst';
+    return 'mk-parte';
+  }
+  function boxModules(frag){
+    const groups = []; let cur = null;
+    Array.from(frag.children).forEach(el => {
+      const blank = isBlankCifraLineWrap(el);
+      const secEl = el.classList.contains('section-line') ? el : (el.querySelector && el.querySelector('.section-line'));
+      const tm = secEl ? secEl.textContent.match(/^\s*\[([^\]]{1,40})\]/) : null;
+      const tag = tm ? tm[1].trim() : '';
+      if(tag && !/^Final\b/.test(tag)){ cur = { kind: modKind(tag), labeled: true, els: [] }; groups.push(cur); }
+      else if(!cur || !cur.labeled){ // sem rótulo: cada estrofe é um módulo
+        if(blank){ cur = null; return; }
+        if(!cur){ cur = { kind: 'mk-estrofe', labeled: false, els: [] }; groups.push(cur); }
+      }
+      cur.els.push({ el, blank, fin: /^Final\b/.test(tag) });
+    });
+    groups.forEach(g => {
+      while(g.els.length && g.els[g.els.length - 1].blank) g.els.pop();
+      // classes em cada LINHA (a montagem das colunas desfaz os blocos de estrofe)
+      const lines = [];
+      g.els.forEach(x => { const ls = x.el.classList.contains('cifra-line') ? [x.el] : Array.from(x.el.querySelectorAll('.cifra-line')); ls.forEach((l, j) => lines.push({ l, fin: x.fin && j === 0 })); });
+      lines.forEach((x, i) => {
+        x.l.classList.add('mod-box', g.kind);
+        if(i === 0) x.l.classList.add('mod-top');
+        if(i === lines.length - 1) x.l.classList.add('mod-bot');
+        if(x.fin) x.l.classList.add('mod-fin');
+      });
+    });
+  }
+  // Módulo dividido entre colunas: fecha a moldura no fim da coluna e reabre na próxima (tracejado).
+  function markModCuts(){
+    cifraBody.querySelectorAll('.mod-cut-b,.mod-cut-t').forEach(x => x.classList.remove('mod-cut-b', 'mod-cut-t'));
+    cifraBody.querySelectorAll(':scope > .cifra-col').forEach(col => {
+      const items = Array.from(col.querySelectorAll('.cifra-line')).filter(x => !isBlankCifraLineWrap(x));
+      const f = items[0], l = items[items.length - 1];
+      if(f && f.classList.contains('mod-box') && !f.classList.contains('mod-top')) f.classList.add('mod-cut-t');
+      if(l && l.classList.contains('mod-box') && !l.classList.contains('mod-bot')) l.classList.add('mod-cut-b');
+    });
+  }
   function setModulesMode(on){
     if(fullscreenEditing) return;
     modulesOn = !!on; modulesPausedSong = null;
@@ -6491,9 +6551,11 @@
     if(!isFitPass) fitShrink = 0;
     const shift = liveShift;
     let srcBody = getEffectiveBody(song);
-    modRoad = null;
-    if(modulesActive(song)){ try{ const md = modularizeBody(srcBody); if(md){ srcBody = md.text; modRoad = md.road; } }catch(e){ modRoad = null; } }
+    modRoad = null; modBoxed = false;
+    const modOn = modulesActive(song);
+    if(modOn){ try{ const md = modularizeBody(srcBody); if(md){ srcBody = md.text; modRoad = md.road; } }catch(e){ modRoad = null; } }
     const frag = buildCifraLines(expandColorMarkupAcrossLines(srcBody), shift);
+    if(modOn){ try{ boxModules(frag); modBoxed = true; }catch(e){} }
     if(modRoad) frag.insertBefore(buildRoadLine(modRoad), frag.firstChild);
     // Partes da música ([Refrão], [Ponte]…) viram etiquetas — o padding de 1
     // caractere de cada lado ocupa o lugar dos colchetes (alinhamento igual).
@@ -6566,6 +6628,7 @@
         if(cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){ try{ distributeEditCols(cifraBody, before, true); }catch(e){} }
       }
       try{ markLeadBlanks(cifraBody); }catch(e){}
+      if(modBoxed){ try{ markModCuts(); }catch(e){} }
       if(!keptCols && !singleColumn && cifraBody.offsetParent){
         const vp = cifraViewport;
         const minFs = Math.max(10, Math.round(fontSize * 0.7));

@@ -184,6 +184,7 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     const md = await p8.evaluate(() => ({ chips: [...document.querySelectorAll('#cifraBody .rot-chip')].map(x => x.innerText.trim()), tags: [...document.querySelectorAll('#cifraBody .cifra-sec')].map(x => x.textContent.trim()), n: document.querySelectorAll('#cifraBody .cifra-line').length }));
     check(md.chips.join('|') === 'Intro|Primeira Parte|Refrão|Segunda Parte|Refrão ×2 + final|Ponte ×2', 'módulos: roteiro na ordem (' + md.chips.join(' › ') + ')');
     check(md.tags.filter(t => /^Refrão/.test(t)).length === 1 && md.tags.includes('Refrão · 3×') && md.tags.includes('Ponte · 2×') && md.n < linesFull, 'módulos: cada parte aparece uma vez (' + linesFull + ' → ' + md.n + ' linhas)');
+    check(await p8.evaluate(() => document.querySelectorAll('#cifraBody .mod-box.mod-top').length === 5 && document.querySelectorAll('#cifraBody .mod-box.mod-bot').length === 5), 'módulos: cada parte tem a sua moldura');
     await p8.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/modulos.png' : '/dev/null' }).catch(() => {});
     await p8.evaluate(() => document.querySelectorAll('#cifraBody .rot-chip')[4].click()); await p8.waitForTimeout(300);
     check(await p8.evaluate(() => document.querySelectorAll('#cifraBody .mod-flash').length === 2), 'módulos: tocar no roteiro destaca o refrão e o final');
@@ -191,6 +192,11 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     const pl = await p8.evaluate(() => ({ rot: document.querySelectorAll('#cifraBody .rot-chip').length, n: document.querySelectorAll('#cifraBody .cifra-line').length }));
     await p8.click('#btnPlay');
     check(pl.rot === 0 && pl.n === linesFull, 'módulos: ▶ rolagem passa para a cifra completa');
+    await p8.evaluate(() => { const s = JSON.parse(localStorage['cifraset:songs']); s.unshift({ id: 'mod-est', title: 'AAA Estrofes Teste', artist: 'Teste', key: 'C', body: 'C\nLinha um\nG\nLinha dois\n\nAm\nLinha tres\n\nF\nLinha quatro\nC\nLinha cinco' }); localStorage['cifraset:songs'] = JSON.stringify(s); });
+    await p8.reload(); await p8.waitForTimeout(1300); await openSongById(p8, 'mod-est'); await p8.waitForTimeout(900);
+    const est = await p8.evaluate(() => ({ on: document.getElementById('btnModules').classList.contains('on'), tops: document.querySelectorAll('#cifraBody .mod-box.mk-estrofe.mod-top').length, rot: document.querySelectorAll('#cifraBody .rot-chip').length }));
+    check(est.on && est.tops === 3 && est.rot === 0, 'módulos: música sem rótulos ganha uma moldura por estrofe (' + est.tops + ')');
+    await p8.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/estrofes.png' : '/dev/null' }).catch(() => {});
     await c8.close();
 
     // 3) LÍDER — tom do ministro na playlist do culto
