@@ -213,8 +213,14 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     check(edm.box > 0 && edm.n === rdN, 'módulos: a edição em tela cheia mostra o mesmo que a leitura (' + rdN + ' → ' + edm.n + ' linhas)');
     await p8.evaluate(() => { const r = [...document.querySelectorAll('#cifraBodyEditCols [contenteditable]')].find(x => /fiel em todo tempo/.test(x.textContent)); r.textContent = r.textContent.replace('És fiel', 'ÉS FIEL'); });
     await p8.evaluate(() => document.getElementById('btnFullscreenEditSave').click()); await p8.waitForTimeout(1200);
-    const mb = await p8.evaluate(() => { const x = JSON.parse(localStorage['cifraset:songs']).find(x => x.id === 'mod-test'); return x.bodyFs || x.body; });
+    const mb = await p8.evaluate(() => { const x = JSON.parse(localStorage['cifraset:songs']).find(x => x.id === 'mod-test'); return typeof x.bodyFs === 'string' ? 'TEM CÓPIA DA TELA CHEIA' : x.body; });
     check((mb.match(/ÉS FIEL/g) || []).length === 3 && !/És fiel/.test(mb) && /Tua doce voz/.test(mb), 'módulos: salvar a edição muda o refrão nas 3 vezes em que ele aparece');
+    // tela cheia e tela normal mostram a MESMA letra (cópia antiga da tela cheia é ignorada)
+    await p8.evaluate(() => { const s = JSON.parse(localStorage['cifraset:songs']); const x = s.find(x => x.id === 'mod-est'); x.bodyFs = 'Letra antiga da tela cheia'; localStorage['cifraset:songs'] = JSON.stringify(s); });
+    await p8.reload(); await p8.waitForTimeout(1300); await openSongById(p8, 'mod-est'); await p8.waitForTimeout(800);
+    await p8.evaluate(() => document.getElementById('btnFullscreen').click()); await p8.waitForTimeout(800);
+    await p8.evaluate(() => { if(document.getElementById('confirmModalOverlay').classList.contains('open')) document.getElementById('confirmModalOk').click(); }); await p8.waitForTimeout(1000);
+    check(await p8.evaluate(() => /Linha um/.test(document.getElementById('cifraBody').innerText) && !/Letra antiga/.test(document.getElementById('cifraBody').innerText)), 'tela cheia mostra a mesma letra da tela normal');
     await c8.close();
 
     // 3) LÍDER — tom do ministro na playlist do culto

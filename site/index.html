@@ -3492,7 +3492,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v366 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v367 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7502,6 +7502,7 @@
     return cleanInvisible(song.body);
   }
   function getFsBodyOwn(song){
+    return null; // v367: a letra/cifra é UMA só (tela normal = tela cheia); só a formatação é separada
     const pl = getOverridePlaylist();
     const o = pl && pl.overrides && pl.overrides[song.id];
     if(o && typeof o.bodyFs === 'string') return cleanInvisible(o.bodyFs);
@@ -7514,16 +7515,18 @@
     return getNormalBody(song);
   }
   function setEffectiveBody(song, newBody){
-    const key = isFsMode() ? 'bodyFs' : 'body';
+    const key = 'body'; // v367: editar na tela cheia muda a mesma cifra da tela normal
     const pl = getOverridePlaylist();
     if(pl){
       pl.overrides = pl.overrides || {};
       pl.overrides[song.id] = pl.overrides[song.id] || {};
       pl.overrides[song.id][key] = newBody;
+      delete pl.overrides[song.id].bodyFs;
       savePlaylists();
       return;
     }
     song[key] = newBody;
+    delete song.bodyFs; // a cópia antiga da tela cheia (não usada mais) sai
     saveSongs();
   }
   // Descarta a cópia da tela cheia: ela volta a mostrar a cifra da tela normal.
