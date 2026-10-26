@@ -2782,7 +2782,7 @@
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsPrev" type="button">◀</button>
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsNext" type="button">▶</button>
       <select id="selChordModeFs" class="chord-mode-select fs-cmode" title="Como mostrar os acordes (a cifra salva não muda)"><option value="full">Cifra completa</option><option value="simple">Simplificada</option><option value="bass">Contrabaixo</option></select>
-      <button class="chord-mode-select mod-btn" id="btnModulesFs" type="button" aria-pressed="false">▦ Módulos</button>
+      <select class="chord-mode-select mod-btn" id="btnModulesFs" title="Módulos: Completo = a música inteira, com moldura em cada parte · Resumido = cada parte aparece uma vez"><option value="completo">▦ Completo</option><option value="resumido">▦ Resumido</option></select>
       <button class="fullscreen-exit-fixed fs-scroll-btn" id="btnFsScroll" type="button" title="Rolagem automática (Espaço)">▶</button>
       <span class="fs-speed-ctl" id="fsSpeedCtl" title="Velocidade da rolagem"><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedDown" aria-label="Rolagem mais devagar">−</button><span id="fsSpeedVal">0.8×</span><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedUp" aria-label="Rolagem mais rápida">+</button></span>
       <button class="fullscreen-exit-fixed metro-chip metro-fs-btn" id="btnFsMetro" type="button" title="Metrônomo (atalho: M liga/desliga)">🥁 <span class="metro-chip-bpm" id="metroFsBpm"></span></button>
@@ -2881,7 +2881,7 @@
           <option value="simple">Simplificada</option>
           <option value="bass">Contrabaixo</option>
         </select>
-        <button class="chord-mode-select mod-btn" id="btnModules" type="button" aria-pressed="false">▦ Módulos</button>
+        <select class="chord-mode-select mod-btn" id="btnModules" title="Módulos: Completo = a música inteira, com moldura em cada parte · Resumido = cada parte aparece uma vez"><option value="completo">▦ Completo</option><option value="resumido">▦ Resumido</option></select>
       </div>
 
       <div class="control-group resumo-hide-group">
@@ -3476,7 +3476,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v364 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v365 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6602,7 +6602,7 @@
   function updateModulesButtons(){
     const song = currentSong();
     const act = song ? modulesActive(song) : modulesOn;
-    ['btnModules', 'btnModulesFs'].forEach(id => { const b = document.getElementById(id); if(b){ b.classList.toggle('on', act); b.setAttribute('aria-pressed', act ? 'true' : 'false'); b.title = act ? 'Cifra por módulos: cada parte aparece uma vez, com o roteiro no topo (toque para ver a cifra completa)' : 'Cifra por módulos: mostra cada parte uma vez, com o roteiro de execução no topo'; } });
+    ['btnModules', 'btnModulesFs'].forEach(id => { const b = document.getElementById(id); if(b){ b.value = act ? 'resumido' : 'completo'; b.classList.toggle('on', act); } });
   }
 
   // AJUSTE À TELA: em colunas, se a música não cabe na largura da tela, a
@@ -6620,8 +6620,8 @@
     const modOn = modulesActive(song);
     if(modOn){ try{ const md = modularizeBody(srcBody); if(md){ srcBody = md.text; modRoad = md.road; } }catch(e){ modRoad = null; } }
     const frag = buildCifraLines(expandColorMarkupAcrossLines(srcBody), shift);
-    if(modOn){ try{ boxModules(frag); modBoxed = true; }catch(e){} }
-    if(modRoad) frag.insertBefore(buildRoadLine(modRoad), frag.firstChild);
+    // v365: moldura em cada parte nos dois modos (Completo e Resumido); o roteiro saiu
+    try{ boxModules(frag); modBoxed = true; }catch(e){}
     // Partes da música ([Refrão], [Ponte]…) viram etiquetas — o padding de 1
     // caractere de cada lado ocupa o lugar dos colchetes (alinhamento igual).
     frag.querySelectorAll('.section-line').forEach(el => {
@@ -6692,7 +6692,7 @@
         try{ rebalanceAdaptiveCols(cifraBody, true); tidyColumnEnds(cifraBody); }catch(e){}
         if(cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){ try{ distributeEditCols(cifraBody, before, true); }catch(e){} }
       }
-      if(modBoxed && !singleColumn && cifraBody.classList.contains('adaptive-cols')){ try{ keepModulesWhole(cifraBody); }catch(e){} }
+      if(modBoxed && !keptCols && !singleColumn && cifraBody.classList.contains('adaptive-cols')){ try{ keepModulesWhole(cifraBody); }catch(e){} }
       try{ markLeadBlanks(cifraBody); }catch(e){}
       if(modBoxed){ try{ markModCuts(); }catch(e){} }
       if(!keptCols && !singleColumn && cifraBody.offsetParent){
@@ -8912,20 +8912,18 @@
     wrap.style.fontSize = readFs + 'px';
     wrap.style.display = 'block';
     cifraBody.style.display = 'none';
-    if(editMod){
-      const ef = buildEditUnitsFragment(editMod.editText);
+    {
+      const ef = buildEditUnitsFragment(editMod ? editMod.editText : inlineChordsToAbove(getEffectiveBody(song)));
       try{ boxModules(ef, isBlankEditUnit); }catch(e){}
-      const rl = buildRoadLine(editMod.md.road); rl.setAttribute('contenteditable', 'false'); rl.classList.add('edit-rot');
-      ef.insertBefore(rl, ef.firstChild);
       wrap.appendChild(ef);
-    } else wrap.appendChild(buildEditUnitsFragment(inlineChordsToAbove(getEffectiveBody(song))));
+    }
     if(readCols) requestAnimationFrame(() => { try{ markEditColHeights(wrap); }catch(e){} });
     if(!(readCols && distributeEditCols(wrap, readCols, true))){
       wrap.classList.remove('adaptive-cols');
       // Só agora (visível e com o conteúdo) dá pra medir a largura certa.
       applyFullscreenEditColumns(wrap, { matchRead: true });
     }
-    if(editMod){ try{ markModCuts(wrap); }catch(e){} }
+    try{ markModCuts(wrap); }catch(e){}
     resetEditUndoHistory();
     // Mesma rede de segurança contra linha larga vazando pra coluna
     // vizinha que a leitura já tem — precisa rodar aqui também na
@@ -13290,7 +13288,8 @@
   document.getElementById('selChordMode').addEventListener('change', (e) => setChordMode(e.target.value));
   { const fsSel = document.getElementById('selChordModeFs'); fsSel.value = simplifyOn || 'full'; fsSel.classList.toggle('on', !!simplifyOn); fsSel.addEventListener('change', (e) => setChordMode(e.target.value)); }
   document.getElementById('btnFontDown').addEventListener('click', () => changeFont(-1));
-  ['btnModules', 'btnModulesFs'].forEach(id => { const b = document.getElementById(id); if(b) b.addEventListener('click', () => { const sg = currentSong(); setModulesMode(!(sg ? modulesActive(sg) : modulesOn)); }); });
+  ['btnModules', 'btnModulesFs'].forEach(id => { const b = document.getElementById(id); if(b) b.addEventListener('change', () => { if(fullscreenEditing){ updateModulesButtons(); showImportFeedback('Salve ou cancele a edição antes de trocar Completo/Resumido.', false); return; } setModulesMode(b.value === 'resumido'); }); });
+  try{ updateModulesButtons(); }catch(e){}
   updateModulesButtons();
   cifraBody.addEventListener('click', (e) => { const c = e.target.closest && e.target.closest('.rot-chip'); if(c){ e.preventDefault(); e.stopPropagation(); flashModule(c.dataset.tag, c.dataset.tail); } });
 

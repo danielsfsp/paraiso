@@ -168,7 +168,7 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     check(rl === ed, 'colunas continuam iguais depois de recarregar (' + rl + ')');
     await c7.close();
 
-    // 2c) CIFRA POR MÓDULOS — cada parte uma vez + roteiro; ▶ volta para a completa
+    // 2c) CIFRA POR MÓDULOS — Completo (molduras) e Resumido (cada parte uma vez); ▶ volta para a completa
     console.log('\n▶ Cifra por módulos');
     db = freshDb();
     const c8 = await newCtx(b, { viewport: { width: 1366, height: 767 } }), p8 = await page(c8, errs, 'modulos');
@@ -180,22 +180,22 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
       const s = JSON.parse(localStorage['cifraset:songs']); s.unshift({ id: 'mod-test', title: 'AAA Módulos Teste', artist: 'Teste', key: 'D', body }); localStorage['cifraset:songs'] = JSON.stringify(s); });
     await p8.reload(); await p8.waitForTimeout(1300); await openSongById(p8, 'mod-test'); await p8.waitForTimeout(900);
     const linesFull = await p8.evaluate(() => document.querySelectorAll('#cifraBody .cifra-line').length);
-    await p8.click('#btnModules'); await p8.waitForTimeout(900);
-    const md = await p8.evaluate(() => ({ chips: [...document.querySelectorAll('#cifraBody .rot-chip')].map(x => x.innerText.trim()), tags: [...document.querySelectorAll('#cifraBody .cifra-sec')].map(x => x.textContent.trim()), n: document.querySelectorAll('#cifraBody .cifra-line').length }));
-    check(md.chips.join('|') === 'Intro|Primeira Parte|Refrão|Segunda Parte|Refrão ×2 + final|Ponte ×2', 'módulos: roteiro na ordem (' + md.chips.join(' › ') + ')');
+    const cpl = await p8.evaluate(() => ({ v: document.getElementById('btnModules').value, tops: document.querySelectorAll('#cifraBody .mod-box.mod-top').length }));
+    check(cpl.v === 'completo' && cpl.tops === 6, 'módulos Completo: música inteira com moldura em cada parte (' + cpl.tops + ')');
+    await p8.selectOption('#btnModules', 'resumido'); await p8.waitForTimeout(900);
+    const md = await p8.evaluate(() => ({ rot: document.querySelectorAll('#cifraBody .rot-chip').length, tags: [...document.querySelectorAll('#cifraBody .cifra-sec')].map(x => x.textContent.trim()), n: document.querySelectorAll('#cifraBody .cifra-line').length }));
+    check(md.rot === 0, 'módulos Resumido: sem roteiro');
     check(md.tags.filter(t => /^Refrão/.test(t)).length === 1 && md.tags.includes('Refrão · 3×') && md.tags.includes('Ponte · 2×') && md.n < linesFull, 'módulos: cada parte aparece uma vez (' + linesFull + ' → ' + md.n + ' linhas)');
     check(await p8.evaluate(() => document.querySelectorAll('#cifraBody .mod-box.mod-top').length === 5 && document.querySelectorAll('#cifraBody .mod-box.mod-bot').length === 5), 'módulos: cada parte tem a sua moldura');
     await p8.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/modulos.png' : '/dev/null' }).catch(() => {});
-    await p8.evaluate(() => document.querySelectorAll('#cifraBody .rot-chip')[4].click()); await p8.waitForTimeout(300);
-    check(await p8.evaluate(() => document.querySelectorAll('#cifraBody .mod-flash').length === 2), 'módulos: tocar no roteiro destaca o refrão e o final');
     await p8.click('#btnPlay'); await p8.waitForTimeout(700);
     const pl = await p8.evaluate(() => ({ rot: document.querySelectorAll('#cifraBody .rot-chip').length, n: document.querySelectorAll('#cifraBody .cifra-line').length }));
     await p8.click('#btnPlay');
-    check(pl.rot === 0 && pl.n === linesFull, 'módulos: ▶ rolagem passa para a cifra completa');
+    check(pl.n === linesFull, 'módulos: ▶ rolagem passa para a cifra completa');
     await p8.evaluate(() => { const s = JSON.parse(localStorage['cifraset:songs']); s.unshift({ id: 'mod-est', title: 'AAA Estrofes Teste', artist: 'Teste', key: 'C', body: 'C\nLinha um\nG\nLinha dois\n\nAm\nLinha tres\n\nF\nLinha quatro\nC\nLinha cinco' }); localStorage['cifraset:songs'] = JSON.stringify(s); });
     await p8.reload(); await p8.waitForTimeout(1300); await openSongById(p8, 'mod-est'); await p8.waitForTimeout(900);
     const est = await p8.evaluate(() => ({ on: document.getElementById('btnModules').classList.contains('on'), tops: document.querySelectorAll('#cifraBody .mod-box.mk-estrofe.mod-top').length, rot: document.querySelectorAll('#cifraBody .rot-chip').length }));
-    check(est.on && est.tops === 3 && est.rot === 0, 'módulos: música sem rótulos ganha uma moldura por estrofe (' + est.tops + ')');
+    check(est.on && est.tops === 3, 'módulos: música sem rótulos ganha uma moldura por estrofe (' + est.tops + ')');
     await p8.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/estrofes.png' : '/dev/null' }).catch(() => {});
     // texto colado com caracteres invisíveis (espaço de largura zero no começo das linhas)
     await p8.evaluate(() => { const z = '\u200B'; const s = JSON.parse(localStorage['cifraset:songs']); s.unshift({ id: 'mod-zw', title: 'AAA Invisivel Teste', artist: 'Teste', key: 'E', body: [z + '[Intro] C  D  Em7  D', z + '\u00A0', z + '[Primeira Parte]', z + 'E          A', z + 'Ele é exaltado'].join('\n') }); localStorage['cifraset:songs'] = JSON.stringify(s); });
@@ -209,8 +209,8 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p8.evaluate(() => { if(document.getElementById('confirmModalOverlay').classList.contains('open')) document.getElementById('confirmModalOk').click(); }); await p8.waitForTimeout(1200);
     const rdN = await p8.evaluate(() => [...document.querySelectorAll('#cifraBody .cifra-line')].filter(x => x.textContent.trim()).length);
     await p8.evaluate(() => document.getElementById('btnFullscreenEdit').click()); await p8.waitForTimeout(1200);
-    const edm = await p8.evaluate(() => ({ n: [...document.querySelectorAll('#cifraBodyEditCols .cifra-line')].filter(x => x.textContent.trim()).length, rot: !!document.querySelector('#cifraBodyEditCols .roteiro-line') }));
-    check(edm.rot && edm.n === rdN, 'módulos: a edição em tela cheia mostra o mesmo que a leitura (' + rdN + ' → ' + edm.n + ' linhas)');
+    const edm = await p8.evaluate(() => ({ n: [...document.querySelectorAll('#cifraBodyEditCols .cifra-line')].filter(x => x.textContent.trim()).length, box: document.querySelectorAll('#cifraBodyEditCols .mod-top').length }));
+    check(edm.box > 0 && edm.n === rdN, 'módulos: a edição em tela cheia mostra o mesmo que a leitura (' + rdN + ' → ' + edm.n + ' linhas)');
     await p8.evaluate(() => { const r = [...document.querySelectorAll('#cifraBodyEditCols [contenteditable]')].find(x => /fiel em todo tempo/.test(x.textContent)); r.textContent = r.textContent.replace('És fiel', 'ÉS FIEL'); });
     await p8.evaluate(() => document.getElementById('btnFullscreenEditSave').click()); await p8.waitForTimeout(1200);
     const mb = await p8.evaluate(() => { const x = JSON.parse(localStorage['cifraset:songs']).find(x => x.id === 'mod-test'); return x.bodyFs || x.body; });
