@@ -202,6 +202,19 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p8.reload(); await p8.waitForTimeout(1300); await openSongById(p8, 'mod-zw'); await p8.waitForTimeout(900);
     const zw = await p8.evaluate(() => ({ tops: document.querySelectorAll('#cifraBody .mod-top').length, tags: document.querySelectorAll('#cifraBody .cifra-sec').length, chords: document.querySelectorAll('#cifraBody .chord-row').length }));
     check(zw.tags === 2 && zw.chords >= 1 && zw.tops === 2, 'texto com caracteres invisíveis: reconhece rótulos e acordes (' + zw.tags + ' rótulos, ' + zw.chords + ' acorde)');
+    // edição em tela cheia com módulos: mesma coisa que a leitura; mudar o refrão muda todas as vezes
+    await openSongById(p8, 'mod-test'); await p8.waitForTimeout(900);
+    await p8.evaluate(() => { const c = document.getElementById('chkSingleColumn'); if(c.checked) c.click(); }); await p8.waitForTimeout(400);
+    await p8.evaluate(() => document.getElementById('btnFullscreen').click()); await p8.waitForTimeout(800);
+    await p8.evaluate(() => { if(document.getElementById('confirmModalOverlay').classList.contains('open')) document.getElementById('confirmModalOk').click(); }); await p8.waitForTimeout(1200);
+    const rdN = await p8.evaluate(() => [...document.querySelectorAll('#cifraBody .cifra-line')].filter(x => x.textContent.trim()).length);
+    await p8.evaluate(() => document.getElementById('btnFullscreenEdit').click()); await p8.waitForTimeout(1200);
+    const edm = await p8.evaluate(() => ({ n: [...document.querySelectorAll('#cifraBodyEditCols .cifra-line')].filter(x => x.textContent.trim()).length, rot: !!document.querySelector('#cifraBodyEditCols .roteiro-line') }));
+    check(edm.rot && edm.n === rdN, 'módulos: a edição em tela cheia mostra o mesmo que a leitura (' + rdN + ' → ' + edm.n + ' linhas)');
+    await p8.evaluate(() => { const r = [...document.querySelectorAll('#cifraBodyEditCols [contenteditable]')].find(x => /fiel em todo tempo/.test(x.textContent)); r.textContent = r.textContent.replace('És fiel', 'ÉS FIEL'); });
+    await p8.evaluate(() => document.getElementById('btnFullscreenEditSave').click()); await p8.waitForTimeout(1200);
+    const mb = await p8.evaluate(() => { const x = JSON.parse(localStorage['cifraset:songs']).find(x => x.id === 'mod-test'); return x.bodyFs || x.body; });
+    check((mb.match(/ÉS FIEL/g) || []).length === 3 && !/És fiel/.test(mb) && /Tua doce voz/.test(mb), 'módulos: salvar a edição muda o refrão nas 3 vezes em que ele aparece');
     await c8.close();
 
     // 3) LÍDER — tom do ministro na playlist do culto

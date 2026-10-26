@@ -2692,6 +2692,10 @@
   .pl-ag-when{color:var(--text-dim); font-size:12px; min-width:92px;}
   .pl-ag-t{font-weight:600;}
   .pl-ag-pl{font-size:11px; color:var(--text-dim); margin-left:auto;}
+
+  /* v364 roteiro na edição por módulos */
+  .edit-rot{user-select:none; opacity:.85;}
+  .mod-box.mod-edge{border-color:transparent !important;}
 </style>
 </head>
 <body>
@@ -3472,7 +3476,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v363 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v364 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6431,7 +6435,7 @@
     secs.push(cur);
     const real = secs.filter(s => s.label !== null || modTrimBlank(s.lines).length);
     if(real.filter(s => s.label !== null).length < 2) return null;
-    const mods = [], byKey = {}, road = [];
+    const mods = [], byKey = {}, road = [], info = [];
     real.forEach(s => {
       const r = modFindRepeat(modTrimBlank(s.lines));
       const key = modNorm(s.rest) + '\n' + r.unit.map(modNorm).filter(Boolean).join('\n');
@@ -6445,6 +6449,7 @@
         if(!t){ t = { key: tk, lines: r.tail }; mod.tails.push(t); }
         tailNo = mod.tails.indexOf(t) + 1;
       }
+      info.push({ s, r, mod, tailNo });
       const last = road[road.length - 1];
       if(last && last.mod === mod && !last.tail && !tailNo) last.k += r.k;
       else road.push({ mod, k: r.k, tail: tailNo });
@@ -6465,7 +6470,7 @@
       out.push(...m.unit);
       m.tails.forEach(t => { out.push('', '[' + t.tag + ']', ...t.lines); });
     });
-    return { text: out.join('\n'), road: road.map(e => ({ name: e.mod.name, tag: e.mod.tag, k: e.k, tail: e.tail ? e.mod.tails[e.tail - 1].tag : '' })) };
+    return { mods, info, text: out.join('\n'), road: road.map(e => ({ name: e.mod.name, tag: e.mod.tag, k: e.k, tail: e.tail ? e.mod.tails[e.tail - 1].tag : '' })) };
   }
   function modulesActive(song){
     if(!modulesOn || fullscreenEditing) return false;
@@ -6500,10 +6505,10 @@
     if(/intro|solo|interl|instrum|outro|final|tag/.test(l)) return 'mk-inst';
     return 'mk-parte';
   }
-  function boxModules(frag){
+  function boxModules(frag, isBlankFn){
     const groups = []; let cur = null;
     Array.from(frag.children).forEach(el => {
-      const blank = isBlankCifraLineWrap(el);
+      const blank = (isBlankFn || isBlankCifraLineWrap)(el);
       const secEl = el.classList.contains('section-line') ? el : (el.querySelector && el.querySelector('.section-line'));
       const tm = secEl ? secEl.textContent.match(/^\s*\[([^\]]{1,40})\]/) : null;
       const tag = tm ? tm[1].trim() : '';
@@ -6528,10 +6533,14 @@
     });
   }
   // Módulo dividido entre colunas: fecha a moldura no fim da coluna e reabre na próxima (tracejado).
-  function markModCuts(){
-    cifraBody.querySelectorAll('.mod-cut-b,.mod-cut-t').forEach(x => x.classList.remove('mod-cut-b', 'mod-cut-t'));
-    cifraBody.querySelectorAll(':scope > .cifra-col').forEach(col => {
-      const items = Array.from(col.querySelectorAll('.cifra-line')).filter(x => !isBlankCifraLineWrap(x));
+  function markModCuts(wrap){
+    wrap = wrap || cifraBody;
+    wrap.querySelectorAll('.mod-cut-b,.mod-cut-t,.mod-edge').forEach(x => x.classList.remove('mod-cut-b', 'mod-cut-t', 'mod-edge'));
+    wrap.querySelectorAll(':scope > .cifra-col').forEach(col => {
+      const all = Array.from(col.querySelectorAll('.cifra-line'));
+      const items = all.filter(x => !!x.textContent.trim());
+      // linhas em branco no topo/fim da coluna não desenham a moldura
+      if(items.length){ const a = all.indexOf(items[0]), z = all.indexOf(items[items.length - 1]); all.forEach((x, i) => { if(i < a || i > z) x.classList.add('mod-edge'); }); }
       const f = items[0], l = items[items.length - 1];
       if(f && f.classList.contains('mod-box') && !f.classList.contains('mod-top')) f.classList.add('mod-cut-t');
       if(l && l.classList.contains('mod-box') && !l.classList.contains('mod-bot')) l.classList.add('mod-cut-b');
@@ -6561,19 +6570,21 @@
       const L = kids[li];
       if(!L.classList.contains('mod-box') || L.classList.contains('mod-bot')) continue; // termina no fim do módulo
       let fi = 0; while(fi < kids.length && isBlank(kids[fi])) fi++;
-      // procura, de baixo para cima, onde o módulo pode ser cortado
-      let cut = -1;
+      // v364: o módulo passa INTEIRO para a próxima coluna; só é dividido se
+      // não couber numa coluna sozinho — aí corta numa linha em branco (entre estrofes)
+      let cut = -1, stanzaCut = -1;
       for(let j = li; j >= 0; j--){
         const k = kids[j];
         if(!k.classList.contains('mod-box')){ cut = j + 1; break; }
         if(k.classList.contains('mod-top')){ cut = j; break; }
-        if(isBlank(k)){
+        if(isBlank(k) && stanzaCut < 0){
           let p = j - 1; while(p >= 0 && isBlank(kids[p])) p--;
-          if(p >= 0 && !labelOnly(kids[p]) && kids[p].classList.contains('mod-box')){ cut = p + 1; break; } // fim de uma estrofe (a linha em branco vai junto e some no topo da próxima)
+          if(p >= 0 && !labelOnly(kids[p]) && kids[p].classList.contains('mod-box')) stanzaCut = p + 1; // fim de uma estrofe
         }
       }
-      if(cut < 0) cut = fi; // o módulo começou numa coluna anterior: corta no topo desta
-      if(cut <= fi) continue; // módulo maior que a coluna: não há como evitar o corte
+      if(cut < 0) cut = fi; // o módulo começou numa coluna anterior
+      if(cut <= fi) cut = stanzaCut; // não cabe inteiro numa coluna: divide entre estrofes
+      if(cut <= fi) continue;
       const next = cols[i + 1] || newCol();
       const first = next.firstChild;
       kids.slice(cut).forEach(k => next.insertBefore(k, first));
@@ -8857,9 +8868,12 @@
     forceEditReflow(document.getElementById('cifraBodyEditCols'));
     focusRowAt(lastRow, lastOwnText.length);
   }
+  let editMod = null; // v364: edição por módulos { orig, md, blocks }
   function enterFullscreenInlineEdit(){
     const song = currentSong();
     if(!song) return;
+    editMod = null;
+    try{ if(modulesActive(song)){ const orig = getEffectiveBody(song); const md = modularizeBody(orig); if(md) editMod = { orig, md, editText: inlineChordsToAbove(md.text) }; } }catch(e){ editMod = null; }
     fullscreenEditing = true;
     // A barra de TOM/LARGURA/ALTURA/1 coluna/FONTE/ROLAGEM agora mora
     // AQUI, na tela de edição (antes ficava só na leitura, e era
@@ -8898,13 +8912,20 @@
     wrap.style.fontSize = readFs + 'px';
     wrap.style.display = 'block';
     cifraBody.style.display = 'none';
-    wrap.appendChild(buildEditUnitsFragment(inlineChordsToAbove(getEffectiveBody(song))));
+    if(editMod){
+      const ef = buildEditUnitsFragment(editMod.editText);
+      try{ boxModules(ef, isBlankEditUnit); }catch(e){}
+      const rl = buildRoadLine(editMod.md.road); rl.setAttribute('contenteditable', 'false'); rl.classList.add('edit-rot');
+      ef.insertBefore(rl, ef.firstChild);
+      wrap.appendChild(ef);
+    } else wrap.appendChild(buildEditUnitsFragment(inlineChordsToAbove(getEffectiveBody(song))));
     if(readCols) requestAnimationFrame(() => { try{ markEditColHeights(wrap); }catch(e){} });
     if(!(readCols && distributeEditCols(wrap, readCols, true))){
       wrap.classList.remove('adaptive-cols');
       // Só agora (visível e com o conteúdo) dá pra medir a largura certa.
       applyFullscreenEditColumns(wrap, { matchRead: true });
     }
+    if(editMod){ try{ markModCuts(wrap); }catch(e){} }
     resetEditUndoHistory();
     // Mesma rede de segurança contra linha larga vazando pra coluna
     // vizinha que a leitura já tem — precisa rodar aqui também na
@@ -8953,7 +8974,7 @@
     return out.join('\n');
   }
   function exitFullscreenInlineEdit(){
-    fullscreenEditing = false;
+    fullscreenEditing = false; editMod = null;
     setFullscreenHeaderLocked(false);
     editUndoStack = [];
     editRedoStack = [];
@@ -8981,7 +9002,17 @@
     if(!song){ exitFullscreenInlineEdit(); return; }
     const wrap = document.getElementById('cifraBodyEditCols');
     const lines = getEditRows(wrap).map(div => div.textContent);
-    const newBody = lines.join('\n').replace(/\n+$/, '');
+    let newBody = lines.join('\n').replace(/\n+$/, '');
+    if(editMod){
+      const rb = modRebuild(editMod, newBody);
+      if(rb === null){ showAlert('Módulos', 'Com ▦ Módulos ligado não dá para criar, apagar ou juntar partes ([Refrão], [Ponte]…). Desfaça essa mudança, ou cancele, desligue ▦ Módulos e edite a cifra completa.'); return; }
+      newBody = rb;
+      setEffectiveBody(song, newBody);
+      if(displayPrefsDirty) saveDisplayPrefsForCurrentSong();
+      exitFullscreenInlineEdit();
+      renderViewer();
+      return;
+    }
     // v350: a leitura volta com as MESMAS colunas que estavam na edição
     // (o navegador reequilibrava as colunas e uma linha pulava para a seguinte)
     // v354: também quando a edição está em colunas "normais" (ex.: depois de
@@ -15563,6 +15594,56 @@ function rebalanceAdaptiveCols(wrap, repack, fromCol){
     renderEscala();
     setTimeout(() => { const w = document.querySelector('.ag-arch-wrap.open'); if(w) w.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
   });
+
+
+  // ================= EDIÇÃO POR MÓDULOS (v364) =================
+  // Com ▦ Módulos ligado, a edição mostra a mesma coisa que a leitura (cada
+  // parte uma vez). Ao salvar, o que mudou numa parte vale para TODAS as vezes
+  // que ela aparece na música; as partes que não mudaram ficam como estavam.
+  function modSplitBlocks(text){
+    const LABEL = /^\s*\[([^\]]{1,40})\]/;
+    const pre = [], blocks = []; let cur = null;
+    String(text).replace(/\r/g, '').split('\n').forEach(l => {
+      const m = l.match(LABEL);
+      if(m && !/^\s*\[(color:|\/color|b\]|\/b\])/.test(l)){ cur = { rest: l.slice(m[0].length), lines: [] }; blocks.push(cur); }
+      else (cur ? cur.lines : pre).push(l);
+    });
+    const clean = a => modTrimBlank(a.map(x => x.replace(/\s+$/, '')));
+    return { pre: clean(pre), blocks: blocks.map(b => ({ rest: b.rest.replace(/\s+$/, ''), lines: clean(b.lines) })) };
+  }
+  function modRebuild(em, editedText){
+    const md = em.md;
+    const A = modSplitBlocks(em.editText), B = modSplitBlocks(editedText);
+    if(A.blocks.length !== B.blocks.length) return null;
+    const headless = md.mods.length && md.mods[0].head === null ? md.mods[0] : null;
+    if(!headless && B.pre.length) return null;
+    // qual bloco é de qual parte (na ordem em que a edição mostrou)
+    const modNew = new Map(), tailNew = new Map(); let bi = 0;
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    md.mods.forEach(m => {
+      if(m.head === null){ modNew.set(m, { changed: !same(A.pre, B.pre), lines: B.pre, rest: null }); }
+      else { const a = A.blocks[bi], b = B.blocks[bi]; bi++; modNew.set(m, { changed: !same(a.lines, b.lines) || a.rest !== b.rest, lines: b.lines, rest: b.rest }); }
+      m.tails.forEach(t => { const a = A.blocks[bi], b = B.blocks[bi]; bi++; tailNew.set(t, { changed: !same(a.lines, b.lines) || a.rest !== b.rest, lines: b.lines }); });
+    });
+    const LABEL = /^\s*\[([^\]]{1,40})\]/;
+    const out = [];
+    md.info.forEach(({ s, r, mod, tailNo }) => {
+      const nm = modNew.get(mod), tl = tailNo ? mod.tails[tailNo - 1] : null, nt = tl ? tailNew.get(tl) : null;
+      if(!nm.changed && !(nt && nt.changed)){ if(s.head !== null) out.push(s.head); out.push(...s.lines); return; }
+      if(s.head !== null){ const m = s.head.match(LABEL); out.push(m ? m[0] + (nm.rest !== null ? nm.rest : s.head.slice(m[0].length)) : s.head); }
+      const L = s.lines; let a = 0, z = L.length; while(a < z && !L[a].trim()) a++; while(z > a && !L[z - 1].trim()) z--;
+      const T = L.slice(a, z), nb = []; T.forEach((l, i) => { if(l.trim()) nb.push(i); });
+      const n = r.unit.filter(l => l.trim()).length;
+      const sepBlank = r.k > 1 && nb[n] > 0 && !T[nb[n] - 1].trim();
+      const tailIdx = nb[r.k * n]; const tailBlank = tl && tailIdx > 0 && !T[tailIdx - 1].trim();
+      for(let i = 0; i < a; i++) out.push('');
+      const unit = nm.changed ? nm.lines : inlineChordsToAbove(r.unit.join('\n')).split('\n');
+      for(let k = 0; k < r.k; k++){ if(k && sepBlank) out.push(''); out.push(...unit); }
+      if(tl){ if(tailBlank) out.push(''); out.push(...(nt.changed ? nt.lines : inlineChordsToAbove(r.tail.join('\n')).split('\n'))); }
+      for(let i = z; i < L.length; i++) out.push('');
+    });
+    return out.join('\n').replace(/\n+$/, '');
+  }
 
 })();
 </script>
