@@ -197,6 +197,11 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     const est = await p8.evaluate(() => ({ on: document.getElementById('btnModules').classList.contains('on'), tops: document.querySelectorAll('#cifraBody .mod-box.mk-estrofe.mod-top').length, rot: document.querySelectorAll('#cifraBody .rot-chip').length }));
     check(est.on && est.tops === 3 && est.rot === 0, 'módulos: música sem rótulos ganha uma moldura por estrofe (' + est.tops + ')');
     await p8.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/estrofes.png' : '/dev/null' }).catch(() => {});
+    // texto colado com caracteres invisíveis (espaço de largura zero no começo das linhas)
+    await p8.evaluate(() => { const z = '\u200B'; const s = JSON.parse(localStorage['cifraset:songs']); s.unshift({ id: 'mod-zw', title: 'AAA Invisivel Teste', artist: 'Teste', key: 'E', body: [z + '[Intro] C  D  Em7  D', z + '\u00A0', z + '[Primeira Parte]', z + 'E          A', z + 'Ele é exaltado'].join('\n') }); localStorage['cifraset:songs'] = JSON.stringify(s); });
+    await p8.reload(); await p8.waitForTimeout(1300); await openSongById(p8, 'mod-zw'); await p8.waitForTimeout(900);
+    const zw = await p8.evaluate(() => ({ tops: document.querySelectorAll('#cifraBody .mod-top').length, tags: document.querySelectorAll('#cifraBody .cifra-sec').length, chords: document.querySelectorAll('#cifraBody .chord-row').length }));
+    check(zw.tags === 2 && zw.chords >= 1 && zw.tops === 2, 'texto com caracteres invisíveis: reconhece rótulos e acordes (' + zw.tags + ' rótulos, ' + zw.chords + ' acorde)');
     await c8.close();
 
     // 3) LÍDER — tom do ministro na playlist do culto

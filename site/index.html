@@ -3461,7 +3461,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v360 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v361 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6445,7 +6445,7 @@
       while(used[modNorm(name)]) name = base + ' ' + (n++);
       used[modNorm(name)] = 1; m.name = name;
       m.tag = name + (m.plays > 1 ? ' · ' + m.plays + '×' : '');
-      m.tails.forEach((t, i) => { t.tag = 'Final' + (mods.length > 1 ? ' — ' + name : '') + (m.tails.length > 1 ? ' ' + (i + 1) : ''); });
+      m.tails.forEach((t, i) => { t.tag = 'Final — ' + name + (m.tails.length > 1 ? ' ' + (i + 1) : ''); });
     });
     const out = [];
     mods.forEach((m, i) => {
@@ -6486,7 +6486,7 @@
     const l = String(label || '').toLowerCase();
     if(/refr|coro|chorus/.test(l)) return 'mk-ref';
     if(/ponte|bridge/.test(l)) return 'mk-ponte';
-    if(/intro|solo|interl|instrum|outro|tag/.test(l)) return 'mk-inst';
+    if(/intro|solo|interl|instrum|outro|final|tag/.test(l)) return 'mk-inst';
     return 'mk-parte';
   }
   function boxModules(frag){
@@ -6496,12 +6496,12 @@
       const secEl = el.classList.contains('section-line') ? el : (el.querySelector && el.querySelector('.section-line'));
       const tm = secEl ? secEl.textContent.match(/^\s*\[([^\]]{1,40})\]/) : null;
       const tag = tm ? tm[1].trim() : '';
-      if(tag && !/^Final\b/.test(tag)){ cur = { kind: modKind(tag), labeled: true, els: [] }; groups.push(cur); }
+      if(tag && !/^Final — /.test(tag)){ cur = { kind: modKind(tag), labeled: true, els: [] }; groups.push(cur); }
       else if(!cur || !cur.labeled){ // sem rótulo: cada estrofe é um módulo
         if(blank){ cur = null; return; }
         if(!cur){ cur = { kind: 'mk-estrofe', labeled: false, els: [] }; groups.push(cur); }
       }
-      cur.els.push({ el, blank, fin: /^Final\b/.test(tag) });
+      cur.els.push({ el, blank, fin: /^Final — /.test(tag) });
     });
     groups.forEach(g => {
       while(g.els.length && g.els[g.els.length - 1].blank) g.els.pop();
@@ -7404,19 +7404,26 @@
   // cheia cria uma cópia própria (bodyFs). Daí em diante, editar na tela
   // cheia não muda a tela normal, e vice-versa. Sem cópia, a tela cheia
   // mostra a mesma cifra da tela normal.
+  // v361: texto copiado de sites às vezes traz caracteres INVISÍVEIS (espaço de
+  // largura zero no começo de cada linha, BOM, hífen invisível, espaço que não
+  // quebra). Eles impediam reconhecer acordes e rótulos — saem na exibição,
+  // na edição e ao salvar.
+  function cleanInvisible(t){
+    return typeof t === 'string' ? t.replace(/\r\n?/g, '\n').replace(/[\u200B-\u200D\u2060\uFEFF\u00AD]/g, '').replace(/[\u00A0\u2007\u202F]/g, ' ').replace(/^[ \t]+$/gm, '') : t; // linha só com espaços = linha em branco
+  }
   function getNormalBody(song){
     const pl = getOverridePlaylist();
     if(pl && pl.overrides && pl.overrides[song.id] && typeof pl.overrides[song.id].body === 'string'){
-      return pl.overrides[song.id].body;
+      return cleanInvisible(pl.overrides[song.id].body);
     }
-    return song.body;
+    return cleanInvisible(song.body);
   }
   function getFsBodyOwn(song){
     const pl = getOverridePlaylist();
     const o = pl && pl.overrides && pl.overrides[song.id];
-    if(o && typeof o.bodyFs === 'string') return o.bodyFs;
+    if(o && typeof o.bodyFs === 'string') return cleanInvisible(o.bodyFs);
     if(o && typeof o.body === 'string') return null; // playlist tem cifra própria: ela vale
-    return typeof song.bodyFs === 'string' ? song.bodyFs : null;
+    return typeof song.bodyFs === 'string' ? cleanInvisible(song.bodyFs) : null;
   }
   function hasFsBody(song){ return getFsBodyOwn(song) !== null; }
   function getEffectiveBody(song){
@@ -9542,7 +9549,7 @@
       spotify: /^https:\/\/open\.spotify\.com\//i.test(inputSpotify.value.trim()) ? inputSpotify.value.trim() : '',
       youtube: youtubeIdFrom(inputYoutube.value.trim()) ? inputYoutube.value.trim() : '',
       notes: inputNotes.value.trim(),
-      body: inputBody.value
+      body: cleanInvisible(inputBody.value)
     };
     // BPM: o campo é o ORIGINAL. Mantém o andamento atual e o compasso; se o
     // original mudou, o atual volta a ser o original.
@@ -12943,7 +12950,7 @@
       songs.push(newSongDefaults({
         id, favorite: false, originalKey: meta.key,
         title: meta.title, artist: meta.artist, key: meta.key,
-        capo: '', link: '', notes: '', body: text
+        capo: '', link: '', notes: '', body: cleanInvisible(text)
       }));
       shifts[id] = 0;
       ok.push(meta.title + ' — ' + meta.artist);
