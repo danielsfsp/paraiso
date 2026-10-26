@@ -3461,7 +3461,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v361 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v362 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6526,6 +6526,49 @@
       if(l && l.classList.contains('mod-box') && !l.classList.contains('mod-bot')) l.classList.add('mod-cut-b');
     });
   }
+  // v362: em colunas, um módulo não é dividido entre duas colunas — ele passa
+  // inteiro para a coluna seguinte. Só pode ser dividido onde a estrofe é
+  // separada por linha em branco (e nunca logo depois do nome da parte). Se o
+  // módulo sozinho não cabe numa coluna, aí sim divide.
+  function keepModulesWhole(wrap){
+    const maxH = computeColumnHeightPx();
+    const cols = Array.from(wrap.querySelectorAll(':scope > .cifra-col'));
+    if(cols.length < 2) return;
+    const isBlank = el => !el.textContent.trim();
+    const labelOnly = el => !!(el.classList.contains('section-line') || el.querySelector('.section-line')) && !el.querySelector('.chord-token-inline');
+    const newCol = () => { const c = document.createElement('div'); c.className = 'cifra-col'; wrap.appendChild(c); cols.push(c); return c; };
+    for(let i = 0; i < cols.length && i < 80; i++){
+      const col = cols[i];
+      // o que passou da altura (por ter recebido um módulo) desce para a próxima
+      while(col.children.length > 1 && col.scrollHeight > maxH + 1){
+        const next = cols[i + 1] || newCol();
+        next.insertBefore(col.lastElementChild, next.firstChild);
+      }
+      const kids = Array.from(col.children);
+      let li = kids.length - 1; while(li >= 0 && isBlank(kids[li])) li--;
+      if(li < 0) continue;
+      const L = kids[li];
+      if(!L.classList.contains('mod-box') || L.classList.contains('mod-bot')) continue; // termina no fim do módulo
+      let fi = 0; while(fi < kids.length && isBlank(kids[fi])) fi++;
+      // procura, de baixo para cima, onde o módulo pode ser cortado
+      let cut = -1;
+      for(let j = li; j >= 0; j--){
+        const k = kids[j];
+        if(!k.classList.contains('mod-box')){ cut = j + 1; break; }
+        if(k.classList.contains('mod-top')){ cut = j; break; }
+        if(isBlank(k)){
+          let p = j - 1; while(p >= 0 && isBlank(kids[p])) p--;
+          if(p >= 0 && !labelOnly(kids[p]) && kids[p].classList.contains('mod-box')){ cut = p + 1; break; } // fim de uma estrofe (a linha em branco vai junto e some no topo da próxima)
+        }
+      }
+      if(cut < 0) cut = fi; // o módulo começou numa coluna anterior: corta no topo desta
+      if(cut <= fi) continue; // módulo maior que a coluna: não há como evitar o corte
+      const next = cols[i + 1] || newCol();
+      const first = next.firstChild;
+      kids.slice(cut).forEach(k => next.insertBefore(k, first));
+    }
+    cols.forEach(c => { if(!c.children.length && wrap.querySelectorAll(':scope > .cifra-col').length > 1) c.remove(); });
+  }
   function setModulesMode(on){
     if(fullscreenEditing) return;
     modulesOn = !!on; modulesPausedSong = null;
@@ -6627,6 +6670,7 @@
         try{ rebalanceAdaptiveCols(cifraBody, true); tidyColumnEnds(cifraBody); }catch(e){}
         if(cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){ try{ distributeEditCols(cifraBody, before, true); }catch(e){} }
       }
+      if(modBoxed && !singleColumn && cifraBody.classList.contains('adaptive-cols')){ try{ keepModulesWhole(cifraBody); }catch(e){} }
       try{ markLeadBlanks(cifraBody); }catch(e){}
       if(modBoxed){ try{ markModCuts(); }catch(e){} }
       if(!keptCols && !singleColumn && cifraBody.offsetParent){
