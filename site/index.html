@@ -2682,6 +2682,16 @@
 
   /* v356 */
   #cifraBody .cifra-line.col-lead-blank{display:none;}
+
+  /* v363 agenda na criação da playlist */
+  .pl-ag-list{display:flex; flex-direction:column; gap:6px; max-height:210px; overflow-y:auto;}
+  .pl-ag-ev{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:7px 10px; color:var(--text); font:inherit; font-size:13px; cursor:pointer;}
+  .pl-ag-ev:disabled{cursor:default; opacity:.85;}
+  .pl-ag-ev.on{border-color:var(--accent); background:var(--accent-dim);}
+  .pl-ag-ev.busy{opacity:.7;}
+  .pl-ag-when{color:var(--text-dim); font-size:12px; min-width:92px;}
+  .pl-ag-t{font-weight:600;}
+  .pl-ag-pl{font-size:11px; color:var(--text-dim); margin-left:auto;}
 </style>
 </head>
 <body>
@@ -3209,6 +3219,7 @@
       </div>
       <p class="hint pl-date-hint">Com data, as músicas desta playlist contam como <strong>tocadas</strong> a partir do dia do culto (📊 Estatísticas).</p>
     </div>
+    <div class="field pl-ag" id="plAgBox" hidden></div>
     <div class="modal-actions">
       <button class="btn-secondary" id="btnCancelPlaylistModal" type="button">Cancelar</button>
       <button class="btn-primary" id="btnSavePlaylistModal" type="button">Salvar</button>
@@ -3461,7 +3472,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v362 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v363 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -9739,6 +9750,7 @@
     document.getElementById('inputPlaylistMinister').value = plEdit.minister || '';
     refreshMinisterSuggestions();
     playlistDateTouched = !!id;
+    plAgPick = null; try{ plAgRender(); }catch(e){}
     playlistModalOverlay.classList.add('open');
     setTimeout(() => input.focus(), 50);
   }
@@ -9747,12 +9759,53 @@
     if(playlistDateTouched) return;
     const d = parseNameDate(e.target.value);
     document.getElementById('inputPlaylistDate').value = d || '';
+    try{ plAgRender(); }catch(err){}
   });
-  document.getElementById('inputPlaylistDate').addEventListener('input', () => { playlistDateTouched = true; });
+  document.getElementById('inputPlaylistDate').addEventListener('input', () => { playlistDateTouched = true; try{ plAgRender(); }catch(e){} });
   document.getElementById('btnClearPlaylistDate').addEventListener('click', () => {
     document.getElementById('inputPlaylistDate').value = '';
-    playlistDateTouched = true;
+    playlistDateTouched = true; plAgPick = null;
+    try{ plAgRender(); }catch(e){}
   });
+  // v363: o que já está na AGENDA aparece na criação da playlist — tocar num
+  // culto preenche nome e data e, ao salvar, liga a playlist a esse culto.
+  let plAgPick = null;
+  function plAgRender(){
+    const box = document.getElementById('plAgBox'); if(!box) return;
+    const evs = (typeof esc !== 'undefined' && esc.user && Array.isArray(esc.events)) ? esc.events : [];
+    if(!evs.length){ box.hidden = true; box.innerHTML = ''; return; }
+    const d = document.getElementById('inputPlaylistDate').value || '';
+    const today = todayIso();
+    const sortEv = (a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || ''));
+    let list, head;
+    if(d){ list = evs.filter(e => e.date === d).sort(sortEv); head = list.length ? '🗓️ Na Agenda neste dia' : '🗓️ Nada na Agenda neste dia'; }
+    else { list = evs.filter(e => e.date >= today).sort(sortEv).slice(0, 6); head = '🗓️ Próximos na Agenda'; }
+    if(!list.length && !d){ box.hidden = true; box.innerHTML = ''; return; }
+    if(plAgPick && !list.some(e => e.id === plAgPick)) plAgPick = null;
+    const canLink = !playlistModalEditingId && escCanSchedule();
+    box.innerHTML = '<label>' + head + (list.length && canLink ? ' <span class="label-opt">(toque para usar)</span>' : '') + '</label>' +
+      '<div class="pl-ag-list">' + list.map(e => {
+        const busy = !!e.playlist;
+        const wd = WEEKDAYS_PT[isoToDate(e.date).getDay()];
+        return '<button type="button" class="pl-ag-ev' + (plAgPick === e.id ? ' on' : '') + (busy ? ' busy' : '') + '" data-ag-ev="' + e.id + '"' + (canLink ? '' : ' disabled') + '>' +
+          '<span class="pl-ag-when">' + wd + ' ' + fmtDateBR(e.date).slice(0, 5) + (e.time ? ' · ' + escapeHtml(e.time) : '') + '</span>' +
+          '<span class="pl-ag-t">' + escapeHtml(e.title || 'Culto') + '</span>' +
+          (busy ? '<span class="pl-ag-pl">🎵 ' + escapeHtml(e.playlist.name || 'já tem playlist') + '</span>' : '') + '</button>';
+      }).join('') + '</div>' +
+      (plAgPick ? '<p class="hint">Ao salvar, esta playlist vira o repertório deste culto na Agenda.</p>' : '');
+    box.hidden = false;
+    box.querySelectorAll('[data-ag-ev]').forEach(b => b.onclick = () => {
+      const e = evs.find(x => x.id === b.dataset.agEv); if(!e) return;
+      if(plAgPick === e.id){ plAgPick = null; plAgRender(); return; }
+      if(e.playlist){ showImportFeedback('Esse culto já tem a playlist "' + (e.playlist.name || '') + '". Para trocar, use 🔁 Trocar playlist na Agenda.', false); return; }
+      plAgPick = e.id;
+      const nm = document.getElementById('inputPlaylistName');
+      const t = e.title || 'Culto';
+      nm.value = parseNameDate(t) ? t : t + ' ' + fmtDateBR(e.date).slice(0, 5);
+      document.getElementById('inputPlaylistDate').value = e.date; playlistDateTouched = true;
+      plAgRender();
+    });
+  }
   function closePlaylistModal(){ playlistModalOverlay.classList.remove('open'); }
   function savePlaylistModal(){
     const name = document.getElementById('inputPlaylistName').value.trim();
@@ -9767,6 +9820,7 @@
       pl.minister = minister;
       savePlaylists();
       openPlaylistId = pl.id;
+      const agEvId = plAgPick; plAgPick = null;
       if(pendingPlaylistSongs.length){
         pendingPlaylistSongs.forEach(id => addSongToPlaylist(pl.id, id));
         const n = pl.songIds.length;
@@ -9775,6 +9829,13 @@
         activeView = 'playlists';
         if(showingHome) renderHomeView();
         showImportFeedback('Playlist "' + pl.name + '" criada com ' + n + (n === 1 ? ' música.' : ' músicas.'), true);
+      }
+      if(agEvId && escCanSchedule()){
+        const ev = esc.events.find(x => x.id === agEvId);
+        if(ev && !ev.playlist){
+          if(ev.minister_id && !pl.minister){ try{ pl.minister = escName(ev.minister_id); savePlaylists(); }catch(e){} }
+          escLinkPlaylist(agEvId, pl).then(() => { try{ renderSidebar(); if(showingHome) renderHomeView(); }catch(e){} showImportFeedback('🗓️ Playlist ligada ao culto "' + (ev.title || 'Culto') + '" na Agenda.', true); });
+        }
       }
     }
     if(currentSong()) renderViewer();

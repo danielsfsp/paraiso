@@ -221,6 +221,19 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     check(db.minister_keys.some(x => x.profile_id === 'u1'), 'líder salva o próprio tom');
     await p4.click('[data-mk-del="u1"]'); await p4.waitForTimeout(300); await p4.click('#confirmModalOk'); await p4.waitForTimeout(600);
     check(!db.minister_keys.some(x => x.profile_id === 'u1') && !/Você ·/.test(await p4.evaluate(() => document.getElementById('mkRow').innerText)), 'tom salvo pode ser removido (✕)');
+    // nova playlist mostra o que está na Agenda e liga ao culto escolhido
+    db.events.push({ id: 'e2', date: db.events[0].date, time: '19:30', title: 'Culto Quinta', minister_id: null, playlist: null, dress_code: '', notes: '' });
+    await p4.reload(); await p4.waitForTimeout(2500);
+    await p4.evaluate(() => document.getElementById('confirmModalOverlay').classList.remove('open'));
+    await p4.click('.sidebar-tabs [data-view="playlists"]'); await p4.waitForTimeout(700);
+    await p4.click('#plpNew'); await p4.waitForTimeout(400);
+    const ag = await p4.evaluate(() => ({ vis: !document.getElementById('plAgBox').hidden, n: document.querySelectorAll('#plAgBox [data-ag-ev]').length, busy: document.querySelectorAll('#plAgBox .pl-ag-ev.busy').length }));
+    check(ag.vis && ag.n === 2 && ag.busy === 1, 'nova playlist mostra os cultos da Agenda (' + ag.n + ', ' + ag.busy + ' já com playlist)');
+    await p4.click('[data-ag-ev="e2"]'); await p4.waitForTimeout(200);
+    const nm = await p4.evaluate(() => [document.getElementById('inputPlaylistName').value, document.getElementById('inputPlaylistDate').value]);
+    await p4.click('#btnSavePlaylistModal'); await p4.waitForTimeout(1200);
+    const e2 = db.events.find(x => x.id === 'e2');
+    check(/^Culto Quinta \d\d\/\d\d$/.test(nm[0]) && nm[1] === e2.date && e2.playlist && e2.playlist.name === nm[0], 'escolher o culto preenche nome/data e liga a playlist a ele (' + nm[0] + ')');
     await c4.close();
 
     // 4) PARTICIPANTE — menus restritos (celular)
