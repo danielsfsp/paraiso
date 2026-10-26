@@ -2696,6 +2696,22 @@
   /* v364 roteiro na edição por módulos */
   .edit-rot{user-select:none; opacity:.85;}
   .mod-box.mod-edge{border-color:transparent !important;}
+
+  /* v366 cores dos módulos bem diferentes entre si (moldura + etiqueta) */
+  .mod-box{--mc:#4f8fe8; --mt:#6ea8ff; --mb:rgba(79,143,232,.18); border-left-width:2px; border-right-width:2px;}
+  .mod-box.mod-top,.mod-box.mod-cut-t{border-top-width:2px;} .mod-box.mod-bot,.mod-box.mod-cut-b{border-bottom-width:2px;}
+  .mod-box.mk-parte{--mc:#4f8fe8; --mt:#7cb2ff; --mb:rgba(79,143,232,.18);}
+  .mod-box.mk-pre{--mc:#e2b33c; --mt:#f2c95a; --mb:rgba(226,179,60,.18);}
+  .mod-box.mk-ref{--mc:#43b55a; --mt:#5fd476; --mb:rgba(67,181,90,.18);}
+  .mod-box.mk-ponte{--mc:#d75aa8; --mt:#f07cc4; --mb:rgba(215,90,168,.18);}
+  .mod-box.mk-inst{--mc:#2ab3a6; --mt:#45d1c3; --mb:rgba(42,179,166,.16);}
+  .mod-box.mk-estrofe{--mc:rgba(170,160,150,.5); --mt:#c9bfb5; --mb:rgba(170,160,150,.14);}
+  .mod-box .cifra-sec, .mod-box.mk-ref .cifra-sec, .mod-box.mk-ponte .cifra-sec{background:var(--mb); color:var(--mt);}
+  .mod-box.mod-fin .cifra-sec, .mod-box.mk-ref.mod-fin .cifra-sec, .mod-box.mk-ponte.mod-fin .cifra-sec{background:rgba(232,137,58,.16); color:#e8893a;}
+  html[data-theme="light"] .mod-box.mk-parte{--mt:#1f5fbf;} html[data-theme="light"] .mod-box.mk-pre{--mc:#c9951a; --mt:#8a6200;}
+  html[data-theme="light"] .mod-box.mk-ref{--mt:#23793a;} html[data-theme="light"] .mod-box.mk-ponte{--mt:#a3277a;}
+  html[data-theme="light"] .mod-box.mk-inst{--mt:#16766d;} html[data-theme="light"] .mod-box.mk-estrofe{--mt:#6b6058;}
+  html[data-theme="light"] .mod-box .cifra-sec{color:var(--mt);}
 </style>
 </head>
 <body>
@@ -3476,7 +3492,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v365 · 26/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v366 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6500,6 +6516,7 @@
   // dividido entre duas colunas.
   function modKind(label){
     const l = String(label || '').toLowerCase();
+    if(/pr[ée][\s-]*(refr|coro|chorus)|pre-?chorus/.test(l)) return 'mk-pre';
     if(/refr|coro|chorus/.test(l)) return 'mk-ref';
     if(/ponte|bridge/.test(l)) return 'mk-ponte';
     if(/intro|solo|interl|instrum|outro|final|tag/.test(l)) return 'mk-inst';
