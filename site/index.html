@@ -2656,6 +2656,15 @@
 
   /* v347: rótulo de parte da cifra ([Intro], [Refrão]) com fundo azul de novo — a etiqueta
      de seção do app (.sec-tag) tinha passado por cima do estilo da cifra */
+  .mod-btn{white-space:nowrap; margin-left:4px;}
+  .roteiro-line{display:flex !important; flex-wrap:wrap; contain:inline-size; min-width:0; align-items:center; gap:4px 6px; white-space:normal !important; max-width:100%; padding:4px 0 10px; font-family:inherit;}
+  .roteiro-line .rot-lbl{font-size:.72em; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.6; margin-right:2px;}
+  .roteiro-line .rot-arr{opacity:.45;}
+  .rot-chip{font:inherit; font-size:.85em; font-weight:700; line-height:1.3; padding:1px 9px; border-radius:999px; cursor:pointer; background:rgba(28,173,228,.13); color:#1CADE4; border:1px solid rgba(28,173,228,.45);}
+  .rot-chip small{font-size:.85em; font-weight:600; opacity:.85;}
+  html[data-theme="light"] .rot-chip{background:rgba(21,101,192,.08); color:#1565C0; border-color:rgba(21,101,192,.35);}
+  @keyframes modFlash{0%,60%{background:rgba(232,137,58,.22); box-shadow:0 0 0 2px rgba(232,137,58,.5);}100%{background:transparent; box-shadow:none;}}
+  .mod-flash{animation:modFlash 1.6s ease-out; border-radius:6px;}
   .sec-tag.cifra-sec{display:inline-block; padding:0 1ch; border-radius:6px; background:rgba(28,173,228,.16); color:#1CADE4; font-weight:700; line-height:1.35;
     font-size:inherit; letter-spacing:normal; text-transform:none; border:none; box-shadow:none; margin:0; width:auto; gap:0;}
   html[data-theme="light"] .sec-tag.cifra-sec{background:rgba(21,101,192,.10); color:#1565C0;}
@@ -2748,6 +2757,7 @@
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsPrev" type="button">◀</button>
       <button class="fullscreen-exit-fixed fs-nav-btn" id="btnFsNext" type="button">▶</button>
       <select id="selChordModeFs" class="chord-mode-select fs-cmode" title="Como mostrar os acordes (a cifra salva não muda)"><option value="full">Cifra completa</option><option value="simple">Simplificada</option><option value="bass">Contrabaixo</option></select>
+      <button class="chord-mode-select mod-btn" id="btnModulesFs" type="button" aria-pressed="false">▦ Módulos</button>
       <button class="fullscreen-exit-fixed fs-scroll-btn" id="btnFsScroll" type="button" title="Rolagem automática (Espaço)">▶</button>
       <span class="fs-speed-ctl" id="fsSpeedCtl" title="Velocidade da rolagem"><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedDown" aria-label="Rolagem mais devagar">−</button><span id="fsSpeedVal">0.8×</span><button type="button" class="fullscreen-exit-fixed" id="btnFsSpeedUp" aria-label="Rolagem mais rápida">+</button></span>
       <button class="fullscreen-exit-fixed metro-chip metro-fs-btn" id="btnFsMetro" type="button" title="Metrônomo (atalho: M liga/desliga)">🥁 <span class="metro-chip-bpm" id="metroFsBpm"></span></button>
@@ -2846,6 +2856,7 @@
           <option value="simple">Simplificada</option>
           <option value="bass">Contrabaixo</option>
         </select>
+        <button class="chord-mode-select mod-btn" id="btnModules" type="button" aria-pressed="false">▦ Módulos</button>
       </div>
 
       <div class="control-group resumo-hide-group">
@@ -3439,7 +3450,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v358 · 14/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v359 · 26/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6362,6 +6373,113 @@
     return child.classList.contains('lyric-row') && child.textContent === ' ';
   }
 
+  // ================= CIFRA POR MÓDULOS (v359) =================
+  // Só na EXIBIÇÃO (a cifra salva não muda): cada parte ([Refrão], [Ponte]…)
+  // aparece UMA vez; repetições viram "· 3×" e um ROTEIRO no topo mostra a
+  // ordem de execução. Repetição dentro da mesma parte (o refrão colado duas
+  // vezes) também é detectada; o que sobra no fim vira um bloco "[Final]".
+  let modulesOn = lsGetEarly('modulos') === '1';
+  let modulesPausedSong = null; // rolagem automática usa a cifra completa
+  let modRoad = null;
+  function modNorm(l){ return String(l).replace(/[_\s]+/g, ' ').trim().toLowerCase(); }
+  function modTrimBlank(arr){ let a = 0, b = arr.length; while(a < b && !arr[a].trim()) a++; while(b > a && !arr[b - 1].trim()) b--; return arr.slice(a, b); }
+  function modFindRepeat(lines){
+    const nb = []; lines.forEach((l, i) => { if(l.trim()) nb.push(i); });
+    const keys = nb.map(i => modNorm(lines[i]));
+    let best = null;
+    for(let n = 2; n <= Math.floor(keys.length / 2); n++){
+      let k = 1;
+      while((k + 1) * n <= keys.length){ let same = true; for(let j = 0; j < n; j++){ if(keys[k * n + j] !== keys[j]){ same = false; break; } } if(!same) break; k++; }
+      if(k < 2) continue;
+      const covered = k * n, tail = keys.length - covered;
+      if(tail >= n) continue;
+      if(!best || covered > best.covered) best = { n, k, covered };
+    }
+    if(!best) return { unit: lines, k: 1, tail: [] };
+    return { unit: modTrimBlank(lines.slice(0, nb[best.n - 1] + 1)), k: best.k, tail: best.covered < nb.length ? modTrimBlank(lines.slice(nb[best.covered])) : [] };
+  }
+  function modularizeBody(text){
+    const LABEL = /^\s*\[([^\]]{1,40})\]/;
+    const secs = []; let cur = { label: null, head: null, rest: '', lines: [] };
+    String(text || '').replace(/\r/g, '').split('\n').forEach(line => {
+      const m = line.match(LABEL);
+      if(m){ secs.push(cur); cur = { label: m[1].trim(), head: line, rest: line.slice(m[0].length), lines: [] }; }
+      else cur.lines.push(line);
+    });
+    secs.push(cur);
+    const real = secs.filter(s => s.label !== null || modTrimBlank(s.lines).length);
+    if(real.filter(s => s.label !== null).length < 2) return null;
+    const mods = [], byKey = {}, road = [];
+    real.forEach(s => {
+      const r = modFindRepeat(modTrimBlank(s.lines));
+      const key = modNorm(s.rest) + '\n' + r.unit.map(modNorm).filter(Boolean).join('\n');
+      let mod = byKey[key];
+      if(!mod){ mod = byKey[key] = { label: s.label, head: s.head, unit: r.unit, tails: [], plays: 0, idx: mods.length }; mods.push(mod); }
+      mod.plays += r.k;
+      let tailNo = 0;
+      if(r.tail.length){
+        const tk = r.tail.map(modNorm).join('\n');
+        let t = mod.tails.find(x => x.key === tk);
+        if(!t){ t = { key: tk, lines: r.tail }; mod.tails.push(t); }
+        tailNo = mod.tails.indexOf(t) + 1;
+      }
+      const last = road[road.length - 1];
+      if(last && last.mod === mod && !last.tail && !tailNo) last.k += r.k;
+      else road.push({ mod, k: r.k, tail: tailNo });
+    });
+    if(mods.length === real.length && road.every(e => e.k === 1 && !e.tail)) return null; // nada se repete
+    const used = {};
+    mods.forEach(m => {
+      let base = m.label || 'Início', name = base, n = 2;
+      while(used[modNorm(name)]) name = base + ' ' + (n++);
+      used[modNorm(name)] = 1; m.name = name;
+      m.tag = name + (m.plays > 1 ? ' · ' + m.plays + '×' : '');
+      m.tails.forEach((t, i) => { t.tag = 'Final' + (mods.length > 1 ? ' — ' + name : '') + (m.tails.length > 1 ? ' ' + (i + 1) : ''); });
+    });
+    const out = [];
+    mods.forEach((m, i) => {
+      if(i) out.push('');
+      if(m.head !== null) out.push(m.head.replace(LABEL, (all, lb) => all.replace(lb, m.tag)));
+      out.push(...m.unit);
+      m.tails.forEach(t => { out.push('', '[' + t.tag + ']', ...t.lines); });
+    });
+    return { text: out.join('\n'), road: road.map(e => ({ name: e.mod.name, tag: e.mod.tag, k: e.k, tail: e.tail ? e.mod.tails[e.tail - 1].tag : '' })) };
+  }
+  function modulesActive(song){
+    if(!modulesOn || fullscreenEditing) return false;
+    if(modulesPausedSong !== null){ if(song && song.id === modulesPausedSong) return false; modulesPausedSong = null; }
+    return true;
+  }
+  function buildRoadLine(road){
+    const wrap = document.createElement('div');
+    wrap.className = 'cifra-line roteiro-line';
+    wrap.innerHTML = '<span class="rot-lbl">Roteiro</span>' + road.map((e, i) =>
+      (i ? '<span class="rot-arr">›</span>' : '') + '<button type="button" class="rot-chip" data-tag="' + escapeHtml(e.tag) + '"' + (e.tail ? ' data-tail="' + escapeHtml(e.tail) + '"' : '') + '>' +
+      escapeHtml(e.name) + (e.k > 1 || e.tail ? '<small>' + (e.k > 1 ? ' ×' + e.k : '') + (e.tail ? ' + final' : '') + '</small>' : '') + '</button>').join('');
+    return wrap;
+  }
+  function flashModule(tag, tail){
+    const tags = Array.from(cifraBody.querySelectorAll('.cifra-sec'));
+    const hit = [tag, tail].filter(Boolean).map(t => tags.find(x => x.textContent.trim() === t)).filter(Boolean);
+    if(!hit.length) return;
+    cifraBody.querySelectorAll('.mod-flash').forEach(x => x.classList.remove('mod-flash'));
+    hit.forEach(h => { const ln = h.closest('.cifra-stanza') || h.closest('.cifra-line'); if(ln){ ln.classList.remove('mod-flash'); void ln.offsetWidth; ln.classList.add('mod-flash'); } });
+    try{ hit[0].scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); }catch(e){}
+  }
+  function setModulesMode(on){
+    if(fullscreenEditing) return;
+    modulesOn = !!on; modulesPausedSong = null;
+    lsSet('modulos', modulesOn ? '1' : '0');
+    updateModulesButtons();
+    keepColsOnce = null;
+    renderCifra();
+  }
+  function updateModulesButtons(){
+    const song = currentSong();
+    const act = song ? modulesActive(song) : modulesOn;
+    ['btnModules', 'btnModulesFs'].forEach(id => { const b = document.getElementById(id); if(b){ b.classList.toggle('on', act); b.setAttribute('aria-pressed', act ? 'true' : 'false'); b.title = act ? 'Cifra por módulos: cada parte aparece uma vez, com o roteiro no topo (toque para ver a cifra completa)' : 'Cifra por módulos: mostra cada parte uma vez, com o roteiro de execução no topo'; } });
+  }
+
   // AJUSTE À TELA: em colunas, se a música não cabe na largura da tela, a
   // fonte diminui 1 ponto por vez (até 70% do tamanho escolhido, mínimo 10)
   // até caber — o tamanho escolhido em FONTE vira o máximo.
@@ -6372,7 +6490,11 @@
     const isFitPass = fitPass; fitPass = false;
     if(!isFitPass) fitShrink = 0;
     const shift = liveShift;
-    const frag = buildCifraLines(expandColorMarkupAcrossLines(getEffectiveBody(song)), shift);
+    let srcBody = getEffectiveBody(song);
+    modRoad = null;
+    if(modulesActive(song)){ try{ const md = modularizeBody(srcBody); if(md){ srcBody = md.text; modRoad = md.road; } }catch(e){ modRoad = null; } }
+    const frag = buildCifraLines(expandColorMarkupAcrossLines(srcBody), shift);
+    if(modRoad) frag.insertBefore(buildRoadLine(modRoad), frag.firstChild);
     // Partes da música ([Refrão], [Ponte]…) viram etiquetas — o padding de 1
     // caractere de cada lado ocupa o lugar dos colchetes (alinhamento igual).
     frag.querySelectorAll('.section-line').forEach(el => {
@@ -6433,8 +6555,8 @@
       // v330: trocar a CIFRA (completa/simplificada/contrabaixo) mantém as mesmas linhas em cada coluna
       let keptCols = false;
       if(keepColsOnce && Date.now() > keepColsUntil) keepColsOnce = null; // v350: vale por ~1,5 s (a tela pode redesenhar mais de uma vez)
-      if(!singleColumn && keepColsOnce){ const kc = keepColsOnce; try{ keptCols = distributeEditCols(cifraBody, kc, true); }catch(e){} }
-      if(!keptCols && !singleColumn){ try{ const sg = currentSong(); const fc = sg && isFsMode() ? getFsCols(sg) : null; if(fsColsFits(fc)) keptCols = distributeEditCols(cifraBody, fc.n, true); }catch(e){} }
+      if(!singleColumn && keepColsOnce && !modRoad){ const kc = keepColsOnce; try{ keptCols = distributeEditCols(cifraBody, kc, true); }catch(e){} }
+      if(!keptCols && !singleColumn && !modRoad){ try{ const sg = currentSong(); const fc = sg && isFsMode() ? getFsCols(sg) : null; if(fsColsFits(fc)) keptCols = distributeEditCols(cifraBody, fc.n, true); }catch(e){} }
       // v355: se sobrou espaço embaixo das colunas mas a música passou da largura da
       // tela (barra de rolagem lateral), sobe as linhas para encher as colunas até a ALTURA
       if(!singleColumn && cifraBody.offsetParent && cifraBody.classList.contains('adaptive-cols') && cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){
@@ -8829,6 +8951,8 @@
   }
   function startScroll(){
     if(scrolling) return;
+    // v359: a rolagem segue a música na ordem — com módulos ligados, passa para a cifra completa
+    { const sg = currentSong(); if(sg && modRoad && modulesActive(sg)){ modulesPausedSong = sg.id; renderCifra(); updateModulesButtons(); setTimeout(startScroll, 160); return; } }
     scrolling = true;
     updateScrollButtons();
     const vertical = cifraViewport.scrollHeight > cifraViewport.clientHeight + 1;
@@ -12960,6 +13084,9 @@
   document.getElementById('selChordMode').addEventListener('change', (e) => setChordMode(e.target.value));
   { const fsSel = document.getElementById('selChordModeFs'); fsSel.value = simplifyOn || 'full'; fsSel.classList.toggle('on', !!simplifyOn); fsSel.addEventListener('change', (e) => setChordMode(e.target.value)); }
   document.getElementById('btnFontDown').addEventListener('click', () => changeFont(-1));
+  ['btnModules', 'btnModulesFs'].forEach(id => { const b = document.getElementById(id); if(b) b.addEventListener('click', () => { const sg = currentSong(); setModulesMode(!(sg ? modulesActive(sg) : modulesOn)); }); });
+  updateModulesButtons();
+  cifraBody.addEventListener('click', (e) => { const c = e.target.closest && e.target.closest('.rot-chip'); if(c){ e.preventDefault(); e.stopPropagation(); flashModule(c.dataset.tag, c.dataset.tail); } });
 
   document.getElementById('btnPlay').addEventListener('click', toggleScroll);
   // Velocidade da rolagem: o mesmo valor no slider (Ajustes) e no

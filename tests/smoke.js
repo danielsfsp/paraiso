@@ -168,6 +168,31 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     check(rl === ed, 'colunas continuam iguais depois de recarregar (' + rl + ')');
     await c7.close();
 
+    // 2c) CIFRA POR MÓDULOS — cada parte uma vez + roteiro; ▶ volta para a completa
+    console.log('\n▶ Cifra por módulos');
+    db = freshDb();
+    const c8 = await newCtx(b, { viewport: { width: 1366, height: 767 } }), p8 = await page(c8, errs, 'modulos');
+    await p8.goto(BASE); await p8.waitForTimeout(800);
+    await p8.evaluate(() => { localStorage['cifraset:visitor'] = '1'; localStorage['cifraset:tourV1'] = '1';
+      const R = 'G7M/D                D\n     És fiel em todo tempo\nG7M/D                D        A6\n     Em todo tempo Tu és tão, tão bom\n       G7M/D     A6      D\nEu cantarei da bondade de Deus';
+      const P = 'D/F#              G7M/D\n    Tua bondade me seguirá\n    A6       D\nMe seguirá Senhor\n\n      D/F#           G7M/D\nEu me rendo a Ti, te dou o meu ser';
+      const body = '[Intro] D  D4  D  D4\n\n[Primeira Parte]\n         D\nTe amo, Deus\n\n[Refrão]\n' + R + '\n\n[Segunda Parte]\n          D\nTua doce voz\n\n[Refrão]\n' + R + '\n\n' + R + '\n\n( D9  D  D4 )\n\n[Ponte]\n' + P + '\n\n' + P;
+      const s = JSON.parse(localStorage['cifraset:songs']); s.unshift({ id: 'mod-test', title: 'AAA Módulos Teste', artist: 'Teste', key: 'D', body }); localStorage['cifraset:songs'] = JSON.stringify(s); });
+    await p8.reload(); await p8.waitForTimeout(1300); await openSongById(p8, 'mod-test'); await p8.waitForTimeout(900);
+    const linesFull = await p8.evaluate(() => document.querySelectorAll('#cifraBody .cifra-line').length);
+    await p8.click('#btnModules'); await p8.waitForTimeout(900);
+    const md = await p8.evaluate(() => ({ chips: [...document.querySelectorAll('#cifraBody .rot-chip')].map(x => x.innerText.trim()), tags: [...document.querySelectorAll('#cifraBody .cifra-sec')].map(x => x.textContent.trim()), n: document.querySelectorAll('#cifraBody .cifra-line').length }));
+    check(md.chips.join('|') === 'Intro|Primeira Parte|Refrão|Segunda Parte|Refrão ×2 + final|Ponte ×2', 'módulos: roteiro na ordem (' + md.chips.join(' › ') + ')');
+    check(md.tags.filter(t => /^Refrão/.test(t)).length === 1 && md.tags.includes('Refrão · 3×') && md.tags.includes('Ponte · 2×') && md.n < linesFull, 'módulos: cada parte aparece uma vez (' + linesFull + ' → ' + md.n + ' linhas)');
+    await p8.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/modulos.png' : '/dev/null' }).catch(() => {});
+    await p8.evaluate(() => document.querySelectorAll('#cifraBody .rot-chip')[4].click()); await p8.waitForTimeout(300);
+    check(await p8.evaluate(() => document.querySelectorAll('#cifraBody .mod-flash').length === 2), 'módulos: tocar no roteiro destaca o refrão e o final');
+    await p8.click('#btnPlay'); await p8.waitForTimeout(700);
+    const pl = await p8.evaluate(() => ({ rot: document.querySelectorAll('#cifraBody .rot-chip').length, n: document.querySelectorAll('#cifraBody .cifra-line').length }));
+    await p8.click('#btnPlay');
+    check(pl.rot === 0 && pl.n === linesFull, 'módulos: ▶ rolagem passa para a cifra completa');
+    await c8.close();
+
     // 3) LÍDER — tom do ministro na playlist do culto
     console.log('\n▶ Líder: tom por ministro');
     db = freshDb();
