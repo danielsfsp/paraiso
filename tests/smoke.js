@@ -253,6 +253,10 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p4.click('#btnSavePlaylistModal'); await p4.waitForTimeout(1200);
     const e2 = db.events.find(x => x.id === 'e2');
     check(/^Culto Quinta \d\d\/\d\d$/.test(nm[0]) && nm[1] === e2.date && e2.playlist && e2.playlist.name === nm[0], 'escolher o culto preenche nome/data e liga a playlist a ele (' + nm[0] + ')');
+    // comentário livre no fim da playlist: o líder escreve e vai para a escala (todos veem)
+    await p4.waitForTimeout(500);
+    await p4.fill('[data-plp-note]', 'Chegar 18h para passagem de som'); await p4.evaluate(() => document.querySelector('[data-plp-note]').blur()); await p4.waitForTimeout(1500);
+    check(db.events.find(x => x.id === 'e2').playlist.note === 'Chegar 18h para passagem de som', 'comentário da playlist é salvo e vai para a escala');
     await c4.close();
 
     // 4) PARTICIPANTE — menus restritos (celular)
