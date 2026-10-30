@@ -1,8 +1,7 @@
+# PRODUÇÃO DESATIVADA (30/10/2026): o site só redireciona para o TH.
 # PRODUÇÃO do Paraíso (Netlify).
 # O Netlify só publica o ramo "producao". O ramo "master" é o TH (Cloudflare).
 [build]
   publish = "site"
   command = ""
 
-[functions]
-  directory = "netlify/functions"
