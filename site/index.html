@@ -3501,7 +3501,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v369 · 28/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v370 · 30/10/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -10857,7 +10857,7 @@
     tabsEl.style.display = 'none'; userEl.innerHTML = '';
     document.getElementById('escalaTitle').textContent = '📅 Escala';
     if(!escCanOnline()){
-      body.innerHTML = '<div class="esc-empty">A <strong>Escala</strong> funciona no <strong>site do CEP Louvor</strong> (cep-minist-louvor.netlify.app), com login pelo Google — aqui dentro do Claude o login não é permitido.</div>';
+      body.innerHTML = '<div class="esc-empty">A <strong>Escala</strong> funciona no <strong>site do CEP Louvor</strong> (paraiso-teste.danielsf-sp.workers.dev), com login pelo Google — aqui dentro do Claude o login não é permitido.</div>';
       return;
     }
     const cfg = escCfg();
@@ -11919,7 +11919,7 @@
       const b = document.createElement('div');
       b.className = 'env-badge';
       b.textContent = 'TH · ambiente de teste';
-      b.title = 'Este é o ambiente de TESTE (TH). A PRODUÇÃO é cep-minist-louvor.netlify.app';
+      b.title = 'CEP Louvor (TH) — o antigo endereço de produção foi desativado';
       document.body.appendChild(b);
       document.title = '[TH] ' + document.title;
       document.body.classList.add('env-th');
@@ -11931,7 +11931,7 @@
   })();
 
   // ================= COMPARTILHAR O APP =================
-  const APP_PUBLIC_URL = 'https://cep-minist-louvor.netlify.app/';
+  const APP_PUBLIC_URL = 'https://paraiso-teste.danielsf-sp.workers.dev/'; // v370: produção (Netlify) desativada — o app é só este
   function appShareUrl(){
     try{
       if(/^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent|anthropic/.test(location.hostname) && !/^(localhost|127\.)/.test(location.hostname)) return location.origin + '/';

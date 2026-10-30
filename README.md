@@ -3,12 +3,12 @@
 Letras, cifras, playlists e escala do ministério de louvor.
 
 - `site/` — o aplicativo (um único `index.html` + PWA).
-- **TH** (teste, automático a cada envio): https://paraiso-teste.danielsf-sp.workers.dev
-- **PRODUÇÃO** (publicação manual no Netlify): https://cep-minist-louvor.netlify.app
+- **App (TH)** — publicado automaticamente a cada envio: https://paraiso-teste.danielsf-sp.workers.dev
+- ~~PRODUÇÃO (Netlify)~~ — **desativada em 30/10/2026**: o ramo `producao` só tem uma página que redireciona para o TH.
 
 ## Como funciona a publicação
 - Envio para o ramo `master` → publica sozinho no **TH** (Cloudflare).
-- Quando a versão for aprovada, `master` é levado para o ramo `producao` → o Netlify publica sozinho na **PRODUÇÃO**.
+- O ramo `producao` não recebe mais versões do app (produção desativada).
 
 ## Antes de publicar: roteiro de testes
 `node tests/smoke.js` — abre o `site/` num servidor local com um banco de dados **falso**
