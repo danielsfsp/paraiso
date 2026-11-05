@@ -1825,7 +1825,7 @@
   .plp-btn{font:inherit; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:11px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer; white-space:nowrap;}
   .plp-btn:hover{border-color:var(--accent);}
   .plp-btn.pri{background:var(--accent); border-color:var(--accent); color:#1A1206;}
-  .plp-btn.sp{color:#1DB954; border-color:#1DB95466; background:#1DB95414;}
+  .plp-btn.sp{color:#1DB954; border-color:#1DB95466; background:#1DB95414;} a.plp-btn{text-decoration:none; display:inline-flex; align-items:center; gap:5px;}
   .plp-songs{display:flex; flex-direction:column; margin-top:14px; border:1px solid var(--border-soft); border-radius:14px; overflow:hidden; background:var(--bg);}
   .plp-song{display:flex; align-items:center; gap:12px; padding:11px 14px; border:none; border-bottom:1px solid var(--border-soft); background:transparent; font:inherit; text-align:left; cursor:pointer; color:var(--text);}
   .plp-song:last-child{border-bottom:none;}
@@ -3501,7 +3501,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v370 · 30/10/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v371 · 05/11/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4676,6 +4676,7 @@
         (sel.fromEvent && items.length ? '<button type="button" class="plp-btn chg" data-plp-chg title="Enviar suas alterações (tom, formatação, cifra) para a equipe do culto">📣 Compartilhar alterações</button>' : '') +
         '<button type="button" class="plp-btn" data-plp-share title="Compartilhar playlist"' + (items.length ? '' : ' disabled') + '><i class="fa-solid fa-share-nodes ic-share" aria-hidden="true"></i> Compartilhar</button>' +
         (spCanUse() && items.length ? '<button type="button" class="plp-btn sp" data-plp-sp><i class="fa-brands fa-spotify" aria-hidden="true"></i> ' + (sel.spotifyId ? 'Atualizar no Spotify' : 'Criar playlist') + '</button>' : '') +
+        (sel.spotifyId ? '<a class="plp-btn sp" href="https://open.spotify.com/playlist/' + encodeURIComponent(sel.spotifyId) + '" target="_blank" rel="noopener noreferrer" title="Abre esta playlist no Spotify (app ou site)"><i class="fa-brands fa-spotify" aria-hidden="true"></i> Abrir no Spotify ↗</a>' : '') +
         '<button type="button" class="plp-btn" data-plp-edit title="Editar nome e data">✎</button>' +
         '<button type="button" class="plp-btn" data-plp-arch title="' + (sel.archived ? 'Desarquivar' : 'Arquivar (sai da lista, mas continua nas estatísticas)') + '">' + (sel.archived ? '↩️ Desarquivar' : '🗄️ Arquivar') + '</button>' +
         '<button type="button" class="plp-btn danger" data-plp-del title="Excluir playlist">🗑️ Excluir</button></div></div>';
@@ -4697,7 +4698,7 @@
       const ad = q('[data-plp-add]'); if(ad) ad.onclick = () => openPickSongs(sel.id);
       const sh = q('[data-plp-share]'); if(sh) sh.onclick = () => openSharePlaylist(sel.id);
       const chg = q('[data-plp-chg]'); if(chg) chg.onclick = () => plShareChanges(sel);
-      const sp = q('[data-plp-sp]'); if(sp) sp.onclick = () => spSyncPlaylist(sel, sp);
+      const sp = q('[data-plp-sp]'); if(sp) sp.onclick = () => spSyncPlaylist(sel, sp).then(() => { try{ renderPlaylistsPage(); }catch(e){} }).catch(() => {});
       const ed = q('[data-plp-edit]'); if(ed) ed.onclick = () => openPlaylistModal(sel.id);
       try{ bindPlEscalaCard(box, sel); }catch(e){}
       const ar = q('[data-plp-arch]'); if(ar) ar.onclick = () => { setPlaylistArchived(sel, !sel.archived); renderPlaylistsPage(); };
