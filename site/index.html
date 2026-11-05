@@ -3501,7 +3501,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v371 · 05/11/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v372 · 05/11/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8201,7 +8201,15 @@
       if(singleColumn) return;
       // v326: na tela cheia (ex.: F11 liga/desliga), mantém a formatação como
       // está — se não couber, aparece a barra de rolagem.
-      if(isFsMode() && !fullscreenEditing) return;
+      // v372: mas se a tela voltou ao tamanho em que a formatação foi salva
+      // (ex.: saiu e voltou do F11), redesenha para usar as colunas salvas.
+      if(isFsMode() && !fullscreenEditing){
+        try{
+          const sg = currentSong(), fc = sg ? getFsCols(sg) : null;
+          if(fsColsFits(fc) && cifraBody.offsetParent){ const vp = cifraViewport, st = vp.scrollTop, sl = vp.scrollLeft; renderCifra(); vp.scrollTop = st; vp.scrollLeft = sl; }
+        }catch(e){}
+        return;
+      }
       if(cifraBody.offsetParent && cifraBody.classList.contains('adaptive-cols')){
         const vp = cifraViewport, st = vp.scrollTop, sl = vp.scrollLeft;
         renderCifra(); vp.scrollTop = st; vp.scrollLeft = sl;

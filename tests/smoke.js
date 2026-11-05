@@ -166,6 +166,13 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p7.evaluate(() => document.getElementById('btnFullscreen').click()); await p7.waitForTimeout(1500);
     const rl = await byPos('#cifraBody');
     check(rl === ed, 'colunas continuam iguais depois de recarregar (' + rl + ')');
+    // F11: sair da tela cheia do navegador e voltar — a formatação salva volta
+    await p7.setViewportSize({ width: 1366, height: 620 }); await p7.waitForTimeout(800);
+    await p7.evaluate(() => document.getElementById('btnFullscreenExit').click()); await p7.waitForTimeout(600);
+    await p7.evaluate(() => document.getElementById('btnFullscreen').click()); await p7.waitForTimeout(1200);
+    await p7.setViewportSize({ width: 1366, height: 767 }); await p7.waitForTimeout(1000);
+    const f11 = await byPos('#cifraBody');
+    check(f11 === ed, 'F11 (sai e volta da tela cheia do navegador): as colunas salvas voltam (' + f11 + ')');
     await c7.close();
 
     // 2c) CIFRA POR MÓDULOS — Completo (molduras) e Resumido (cada parte uma vez); ▶ volta para a completa
