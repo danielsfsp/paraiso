@@ -3504,7 +3504,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v375 · 09/11/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v376 · 09/11/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6718,7 +6718,12 @@
       let keptCols = false;
       if(keepColsOnce && Date.now() > keepColsUntil) keepColsOnce = null; // v350: vale por ~1,5 s (a tela pode redesenhar mais de uma vez)
       if(!singleColumn && keepColsOnce && !modRoad){ const kc = keepColsOnce; try{ keptCols = distributeEditCols(cifraBody, kc, true); }catch(e){} }
-      if(!keptCols && !singleColumn && !modRoad){ try{ const sg = currentSong(); const fc = sg && isFsMode() ? getFsCols(sg) : null; if(fsColsFits(fc)) keptCols = distributeEditCols(cifraBody, fc.n, true); }catch(e){} }
+      if(!keptCols && !singleColumn && !modRoad){ try{ const sg = currentSong(); const fc = sg && isFsMode() ? getFsCols(sg) : null; if(fsColsFits(fc)) keptCols = distributeEditCols(cifraBody, fc.n, true);
+        // v376: colunas guardadas que deixam espaço sobrando (ex.: salvas quando cada parte ia
+        // inteira para a próxima coluna) dão lugar ao preenchimento até a ALTURA
+        if(keptCols){ const before = fc.n.slice(); rebalanceAdaptiveCols(cifraBody, true); tidyColumnEnds(cifraBody);
+          if(cifraBody.querySelectorAll(':scope > .cifra-col').length >= before.length) distributeEditCols(cifraBody, before, true); }
+      }catch(e){} }
       // v355: se sobrou espaço embaixo das colunas mas a música passou da largura da
       // tela (barra de rolagem lateral), sobe as linhas para encher as colunas até a ALTURA
       if(!singleColumn && cifraBody.offsetParent && cifraBody.classList.contains('adaptive-cols') && cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){
@@ -6727,7 +6732,10 @@
         try{ rebalanceAdaptiveCols(cifraBody, true); tidyColumnEnds(cifraBody); }catch(e){}
         if(cifraViewport.scrollWidth > cifraViewport.clientWidth + 2){ try{ distributeEditCols(cifraBody, before, true); }catch(e){} }
       }
-      if(modBoxed && !keptCols && !singleColumn && cifraBody.classList.contains('adaptive-cols')){ try{ keepModulesWhole(cifraBody); }catch(e){} }
+      // v376: as colunas enchem até a ALTURA também com módulos — uma parte que não cabe
+      // continua na coluna seguinte (moldura tracejada), sem deixar espaço vazio embaixo.
+      // Só o nome de uma parte sozinho no fim da coluna passa para a próxima.
+      if(modBoxed && !keptCols && !singleColumn && cifraBody.classList.contains('adaptive-cols')){ try{ tidyColumnEnds(cifraBody); }catch(e){} }
       try{ markLeadBlanks(cifraBody); }catch(e){}
       if(modBoxed){ try{ markModCuts(); }catch(e){} }
       if(!keptCols && !singleColumn && cifraBody.offsetParent){

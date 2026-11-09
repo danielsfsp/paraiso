@@ -205,6 +205,15 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p9.evaluate(() => document.getElementById('btnFullscreen').click()); await p9.waitForTimeout(1500);
     const fsTxt = await p9.evaluate(() => document.getElementById('fontSizeDisplay').textContent);
     check(fsTxt === '14', 'tela cheia: FONTE fica 14 fixa, sem reduzir sozinha (' + fsTxt + ')');
+    // v376: com módulos (Resumido), as colunas enchem até a ALTURA — sem espaço vazio embaixo
+    await p9.evaluate(() => document.getElementById('btnFullscreenExit').click()); await p9.waitForTimeout(600);
+    const sidE = await p9.evaluate(() => JSON.parse(localStorage['cifraset:songs']).find(x => /^Escape \//.test(x.title)).id);
+    await openSongById(p9, sidE); await p9.waitForTimeout(900);
+    await p9.evaluate(() => { const s = document.getElementById('btnModules'); s.value = 'resumido'; s.dispatchEvent(new Event('change', { bubbles: true })); }); await p9.waitForTimeout(700);
+    await p9.evaluate(() => document.getElementById('btnFullscreen').click()); await p9.waitForTimeout(1500);
+    const colsH = await p9.evaluate(() => Array.from(document.querySelectorAll('#cifraBody > .cifra-col')).map(c => Math.round(c.getBoundingClientRect().height)));
+    const fullH = Math.max(...colsH);
+    check(colsH.length > 1 && colsH.slice(0, -1).every(h => h >= fullH * 0.88), 'módulos: as colunas enchem até a ALTURA, sem sobrar espaço embaixo (' + colsH.join(' ') + ')');
     await c9.close();
 
     // 2c) CIFRA POR MÓDULOS — Completo (molduras) e Resumido (cada parte uma vez); ▶ volta para a completa
