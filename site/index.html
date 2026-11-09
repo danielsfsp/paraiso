@@ -2896,7 +2896,10 @@
 
       <div class="control-group resumo-hide-group" id="colHeightGroup">
         <span class="control-label">ALTURA</span>
-        <input type="range" class="colheight-slider" id="colHeightSlider" min="50" max="150" step="5" value="100">
+        <button class="step-btn" id="btnHeightDown" title="Diminuir altura das colunas">−</button>
+        <span class="key-display" id="colHeightDisplay" title="Altura das colunas (%)">100</span>
+        <button class="step-btn" id="btnHeightUp" title="Aumentar altura das colunas">+</button>
+        <input type="range" class="colheight-slider" id="colHeightSlider" min="50" max="150" step="5" value="100" hidden style="display:none;">
       </div>
 
       <div class="control-group cifra-mode-group">
@@ -3501,7 +3504,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v372 · 05/11/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v373 · 09/11/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -7781,6 +7784,7 @@
 
     document.getElementById('colWidthSlider').value = colWidth;
     document.getElementById('colHeightSlider').value = colHeightPct;
+    updateColHeightDisplay();
     updateFontSizeDisplay();
     document.getElementById('chkSingleColumn').checked = singleColumn;
     updateSingleColumnUiState();
@@ -7824,8 +7828,21 @@
     if(fullscreenEditing) reapplyEditColumnsIfEditing(); else renderCifra();
     markDisplayDirty();
   }
+  // v373: ALTURA com − / + e número (igual à FONTE), em passos de 5%.
+  function updateColHeightDisplay(){
+    const d = document.getElementById('colHeightDisplay');
+    if(d) d.textContent = String(colHeightPct);
+    const sl = document.getElementById('colHeightSlider');
+    if(sl) sl.value = colHeightPct;
+  }
+  function stepColHeight(dir){
+    const v = Math.max(50, Math.min(150, Number(colHeightPct) + dir * 5));
+    if(v === Number(colHeightPct)) return;
+    setColHeight(v);
+  }
   function setColHeight(val){
     colHeightPct = Math.max(50, Math.min(150, Number(val)));
+    updateColHeightDisplay();
     if(fullscreenEditing) reapplyEditColumnsIfEditing(); else renderCifra();
     markDisplayDirty();
   }
@@ -13314,6 +13331,8 @@
   document.getElementById('btnFontUp').addEventListener('click', () => changeFont(1));
   document.getElementById('colWidthSlider').addEventListener('input', (e) => setColWidth(e.target.value));
   document.getElementById('colHeightSlider').addEventListener('input', (e) => setColHeight(e.target.value));
+  document.getElementById('btnHeightDown').addEventListener('click', () => stepColHeight(-1));
+  document.getElementById('btnHeightUp').addEventListener('click', () => stepColHeight(1));
   document.getElementById('chkSingleColumn').addEventListener('change', (e) => toggleSingleColumn(e.target.checked));
   document.getElementById('selChordMode').value = simplifyOn || 'full';
   document.getElementById('selChordMode').classList.toggle('on', !!simplifyOn);

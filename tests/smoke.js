@@ -173,6 +173,15 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p7.setViewportSize({ width: 1366, height: 767 }); await p7.waitForTimeout(1000);
     const f11 = await byPos('#cifraBody');
     check(f11 === ed, 'F11 (sai e volta da tela cheia do navegador): as colunas salvas voltam (' + f11 + ')');
+    // v373: ALTURA com − / + e número (igual à FONTE)
+    const hv = await p7.evaluate(async () => {
+      const d = document.getElementById('colHeightDisplay'), a = +d.textContent;
+      document.getElementById('btnHeightUp').click(); await new Promise(r => setTimeout(r, 300));
+      const b = +d.textContent;
+      document.getElementById('btnHeightDown').click(); await new Promise(r => setTimeout(r, 300));
+      return [a, b, +d.textContent];
+    });
+    check(hv[1] === Math.min(150, hv[0] + 5) && hv[2] === hv[0], 'ALTURA: + e − mudam o número de 5 em 5 (' + hv.join(' → ') + ')');
     await c7.close();
 
     // 2c) CIFRA POR MÓDULOS — Completo (molduras) e Resumido (cada parte uma vez); ▶ volta para a completa
