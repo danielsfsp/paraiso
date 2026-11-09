@@ -184,6 +184,23 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     check(hv[1] === Math.min(150, hv[0] + 5) && hv[2] === hv[0], 'ALTURA: + e − mudam o número de 5 em 5 (' + hv.join(' → ') + ')');
     await c7.close();
 
+    // v374: formatação padrão — todas as músicas e playlists passam para FONTE 14 / ALTURA 100 (uma vez por aparelho)
+    console.log('\n▶ Formatação padrão 14 / 100');
+    db = freshDb();
+    const c9 = await newCtx(b, { viewport: { width: 1366, height: 767 } }), p9 = await page(c9, errs, 'fmt');
+    await p9.goto(BASE); await p9.waitForTimeout(800);
+    await p9.evaluate(() => { localStorage['cifraset:visitor'] = '1'; localStorage['cifraset:tourV1'] = '1';
+      const s = JSON.parse(localStorage['cifraset:songs']);
+      s[0].prefs = { fontSize: 18, colHeightPct: 120, colWidth: 300, fontLocked: true }; s[1].prefsFs = { fontSize: 11, colHeightPct: 80 };
+      localStorage['cifraset:songs'] = JSON.stringify(s);
+      localStorage['cifraset:playlists'] = JSON.stringify([{ id: 'pl-f', name: 'Fmt', songIds: [s[0].id], overrides: { [s[0].id]: { displayPrefs: { fontSize: 20, colHeightPct: 60 }, displayPrefsFs: { fontSize: 16, colHeightPct: 140 } } }, date: '', archived: false }]);
+      delete localStorage['cifraset:fmt14h100V1']; });
+    await p9.reload(); await p9.waitForTimeout(1500);
+    const fm = await p9.evaluate(() => { const s = JSON.parse(localStorage['cifraset:songs']), pl = JSON.parse(localStorage['cifraset:playlists'])[0], o = pl.overrides[s[0].id];
+      return [s[0].prefs.fontSize, s[0].prefs.colHeightPct, s[0].prefs.colWidth, s[1].prefsFs.fontSize, s[1].prefsFs.colHeightPct, o.displayPrefs.fontSize, o.displayPrefs.colHeightPct, o.displayPrefsFs.fontSize, o.displayPrefsFs.colHeightPct].join(','); });
+    check(fm === '14,100,300,14,100,14,100,14,100', 'músicas e playlists ficam com FONTE 14 e ALTURA 100 (largura mantida) (' + fm + ')');
+    await c9.close();
+
     // 2c) CIFRA POR MÓDULOS — Completo (molduras) e Resumido (cada parte uma vez); ▶ volta para a completa
     console.log('\n▶ Cifra por módulos');
     db = freshDb();
