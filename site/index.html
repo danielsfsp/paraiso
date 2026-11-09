@@ -1623,7 +1623,7 @@
     .main-panel:not(.fullscreen-mode) #controlsBar .step-btn{border:none; background:transparent; width:30px; height:30px; border-radius:9px; color:var(--text-dim); font-weight:700;}
     .main-panel:not(.fullscreen-mode) #controlsBar .step-btn:hover{background:var(--surface-3); color:var(--text);}
     .main-panel:not(.fullscreen-mode) #controlsBar .key-display{font-family:var(--font-display); font-size:17px; min-width:30px;}
-    .main-panel:not(.fullscreen-mode) #controlsBar #fontSizeDisplay{font-family:var(--font-ui, inherit); font-size:13.5px; color:var(--text);}
+    .main-panel:not(.fullscreen-mode) #controlsBar #fontSizeDisplay, .main-panel:not(.fullscreen-mode) #controlsBar #colHeightDisplay{font-family:var(--font-ui, inherit); font-size:13.5px; color:var(--text);}
     .main-panel:not(.fullscreen-mode) #controlsBar .chord-mode-select{border:none; background:transparent; font-weight:700; font-size:13px; padding:5px 4px;}
     .main-panel:not(.fullscreen-mode) #controlsBar .colors-toggle-btn{border:none; background:transparent; padding:6px 10px; border-radius:9px; font-weight:700;}
     .main-panel:not(.fullscreen-mode) #controlsBar .colors-toggle-btn:hover{background:var(--surface-3);}
@@ -3504,7 +3504,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v374 · 09/11/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v375 · 09/11/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -4166,7 +4166,7 @@
   let fontSize = 14;
   // v302: quando a pessoa escolhe a FONTE (A− / A+), o tamanho fica fixo —
   // a leitura não reduz mais sozinha para caber na tela.
-  let fontLocked = false;
+  let fontLocked = true;
   // Modo "📋 Resumo": mostra só a sequência de acordes por estrofe, sem a
   // letra. É um modo de visualização à parte (não mexe em tom/colunas/
   // fonte/edição) — reseta pra "letra normal" sempre que troca de música.
@@ -4237,7 +4237,7 @@
       lsSet('cifraLinksV1', String(Date.now()));
       lsSet('mediaLinksV1', String(Date.now()));
       lsSet('font14V1', String(Date.now()));
-      lsSet('fmt14h100V1', String(Date.now()));
+      lsSet('fmt14h100V2', String(Date.now()));
       lsSet('bpmV1', String(Date.now()));
       lsSet('bpmV2', String(Date.now()));
       lsSet('beatsV2', String(Date.now()));
@@ -7768,7 +7768,8 @@
     const plPrefs = (pl && pl.overrides && pl.overrides[song.id] && pl.overrides[song.id][plPrefsKey()]) || null;
     const p = plPrefs || song[songPrefsKey()] || {};
     fontSize = p.fontSize !== undefined ? p.fontSize : DEFAULT_DISPLAY_PREFS.fontSize;
-    fontLocked = !!p.fontLocked;
+    // v375: por padrão a fonte é FIXA (não diminui sozinha); só fica automática se a música salvou fontLocked:false
+    fontLocked = p.fontLocked !== undefined ? !!p.fontLocked : true;
     colWidth = p.colWidth !== undefined ? p.colWidth : DEFAULT_DISPLAY_PREFS.colWidth;
     colHeightPct = p.colHeightPct !== undefined ? p.colHeightPct : DEFAULT_DISPLAY_PREFS.colHeightPct;
     singleColumn = p.singleColumn !== undefined ? p.singleColumn : DEFAULT_DISPLAY_PREFS.singleColumn;
@@ -12487,20 +12488,20 @@
     if(n){ saveSongs(); savePlaylists(); }
     return n;
   }
-  // v374: formatação padrão FONTE 14 e ALTURA 100 em TODAS as músicas —
-  // uma vez por aparelho (marca 'fmt14h100V1'): na biblioteca e nas
+  // v374/v375: formatação padrão FONTE 14 (fixa) e ALTURA 100 em TODAS as músicas —
+  // uma vez por aparelho (marca 'fmt14h100V2'): na biblioteca e nas
   // playlists, tela normal e tela cheia. Músicas novas já nascem assim
   // (DEFAULT_DISPLAY_PREFS). O resto da formatação (largura, cores,
   // 1 coluna) não muda.
   function applyFmt14h100(){
-    if(lsGet('fmt14h100V1')) return 0;
+    if(lsGet('fmt14h100V2')) return 0;
     let n = 0, nPl = 0;
     const fix = (o) => {
       if(!o || typeof o !== 'object') return false;
       let ch = false;
       if(o.fontSize !== undefined && o.fontSize !== 14){ o.fontSize = 14; ch = true; }
       if(o.colHeightPct !== undefined && o.colHeightPct !== 100){ o.colHeightPct = 100; ch = true; }
-      if(o.fontLocked){ o.fontLocked = false; ch = true; }
+      if(o.fontLocked !== true){ o.fontLocked = true; ch = true; }
       return ch;
     };
     songs.forEach(song => {
@@ -12515,7 +12516,7 @@
         if(a || b) nPl++;
       });
     });
-    lsSet('fmt14h100V1', String(Date.now()));
+    lsSet('fmt14h100V2', String(Date.now()));
     if(n) saveSongs();
     if(nPl) savePlaylists();
     if(n || nPl) lastAppliedContextKey = null;

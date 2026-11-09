@@ -191,14 +191,20 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     await p9.goto(BASE); await p9.waitForTimeout(800);
     await p9.evaluate(() => { localStorage['cifraset:visitor'] = '1'; localStorage['cifraset:tourV1'] = '1';
       const s = JSON.parse(localStorage['cifraset:songs']);
-      s[0].prefs = { fontSize: 18, colHeightPct: 120, colWidth: 300, fontLocked: true }; s[1].prefsFs = { fontSize: 11, colHeightPct: 80 };
+      s[0].prefs = { fontSize: 18, colHeightPct: 120, colWidth: 300, fontLocked: false }; s[1].prefsFs = { fontSize: 11, colHeightPct: 80 };
       localStorage['cifraset:songs'] = JSON.stringify(s);
       localStorage['cifraset:playlists'] = JSON.stringify([{ id: 'pl-f', name: 'Fmt', songIds: [s[0].id], overrides: { [s[0].id]: { displayPrefs: { fontSize: 20, colHeightPct: 60 }, displayPrefsFs: { fontSize: 16, colHeightPct: 140 } } }, date: '', archived: false }]);
-      delete localStorage['cifraset:fmt14h100V1']; });
+      delete localStorage['cifraset:fmt14h100V2']; });
     await p9.reload(); await p9.waitForTimeout(1500);
     const fm = await p9.evaluate(() => { const s = JSON.parse(localStorage['cifraset:songs']), pl = JSON.parse(localStorage['cifraset:playlists'])[0], o = pl.overrides[s[0].id];
-      return [s[0].prefs.fontSize, s[0].prefs.colHeightPct, s[0].prefs.colWidth, s[1].prefsFs.fontSize, s[1].prefsFs.colHeightPct, o.displayPrefs.fontSize, o.displayPrefs.colHeightPct, o.displayPrefsFs.fontSize, o.displayPrefsFs.colHeightPct].join(','); });
-    check(fm === '14,100,300,14,100,14,100,14,100', 'músicas e playlists ficam com FONTE 14 e ALTURA 100 (largura mantida) (' + fm + ')');
+      return [s[0].prefs.fontSize, s[0].prefs.colHeightPct, s[0].prefs.colWidth, s[0].prefs.fontLocked, s[1].prefsFs.fontSize, s[1].prefsFs.colHeightPct, o.displayPrefs.fontSize, o.displayPrefs.colHeightPct, o.displayPrefsFs.fontSize, o.displayPrefsFs.colHeightPct].join(','); });
+    check(fm === '14,100,300,true,14,100,14,100,14,100', 'músicas e playlists ficam com FONTE 14 fixa e ALTURA 100 (largura mantida) (' + fm + ')');
+    // a fonte não diminui sozinha (sem "*"), nem em tela cheia com muitas colunas
+    const sidF = await p9.evaluate(() => JSON.parse(localStorage['cifraset:songs']).find(x => /^Até Chegar/i.test(x.title) || (x.body || '').length > 1500).id);
+    await openSongById(p9, sidF); await p9.waitForTimeout(900);
+    await p9.evaluate(() => document.getElementById('btnFullscreen').click()); await p9.waitForTimeout(1500);
+    const fsTxt = await p9.evaluate(() => document.getElementById('fontSizeDisplay').textContent);
+    check(fsTxt === '14', 'tela cheia: FONTE fica 14 fixa, sem reduzir sozinha (' + fsTxt + ')');
     await c9.close();
 
     // 2c) CIFRA POR MÓDULOS — Completo (molduras) e Resumido (cada parte uma vez); ▶ volta para a completa
