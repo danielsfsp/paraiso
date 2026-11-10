@@ -3504,7 +3504,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v376 · 09/11/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v377 · 10/11/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -8221,7 +8221,7 @@
   }
   window.addEventListener('resize', () => { if(fullscreenEditing) positionEditToolbar(); });
   // Mudou o tamanho da janela: recalcula quantas colunas de largura exata cabem.
-  let fitColsTimer = null;
+  let fitColsTimer = null, lastFitH = window.innerHeight;
   window.addEventListener('resize', () => {
     clearTimeout(fitColsTimer);
     fitColsTimer = setTimeout(() => {
@@ -8230,10 +8230,17 @@
       // está — se não couber, aparece a barra de rolagem.
       // v372: mas se a tela voltou ao tamanho em que a formatação foi salva
       // (ex.: saiu e voltou do F11), redesenha para usar as colunas salvas.
+      // v377: se a ALTURA da janela mudou (ex.: abriu a tela cheia e depois apertou F11),
+      // redesenha — ALTURA 100 é sempre a altura inteira da tela que está aparecendo.
+      const hNow = window.innerHeight, hChanged = Math.abs(hNow - (lastFitH || hNow)) > 8; lastFitH = hNow;
+      if(isFsMode() && fullscreenEditing){
+        if(hChanged){ try{ reapplyEditColumnsIfEditing(); }catch(e){} }
+        return;
+      }
       if(isFsMode() && !fullscreenEditing){
         try{
           const sg = currentSong(), fc = sg ? getFsCols(sg) : null;
-          if(fsColsFits(fc) && cifraBody.offsetParent){ const vp = cifraViewport, st = vp.scrollTop, sl = vp.scrollLeft; renderCifra(); vp.scrollTop = st; vp.scrollLeft = sl; }
+          if((hChanged || fsColsFits(fc)) && cifraBody.offsetParent){ const vp = cifraViewport, st = vp.scrollTop, sl = vp.scrollLeft; renderCifra(); vp.scrollTop = st; vp.scrollLeft = sl; }
         }catch(e){}
         return;
       }

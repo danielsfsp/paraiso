@@ -214,6 +214,13 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     const colsH = await p9.evaluate(() => Array.from(document.querySelectorAll('#cifraBody > .cifra-col')).map(c => Math.round(c.getBoundingClientRect().height)));
     const fullH = Math.max(...colsH);
     check(colsH.length > 1 && colsH.slice(0, -1).every(h => h >= fullH * 0.88), 'módulos: as colunas enchem até a ALTURA, sem sobrar espaço embaixo (' + colsH.join(' ') + ')');
+    // v377: abriu a tela cheia com a janela mais baixa e depois apertou F11 — as colunas crescem até a nova altura
+    await p9.evaluate(() => document.getElementById('btnFullscreenExit').click()); await p9.waitForTimeout(500);
+    await p9.setViewportSize({ width: 1366, height: 620 }); await p9.waitForTimeout(500);
+    await p9.evaluate(() => document.getElementById('btnFullscreen').click()); await p9.waitForTimeout(1300);
+    await p9.setViewportSize({ width: 1366, height: 767 }); await p9.waitForTimeout(1300);
+    const colsF = await p9.evaluate(() => Array.from(document.querySelectorAll('#cifraBody > .cifra-col')).map(c => Math.round(c.getBoundingClientRect().height)));
+    check(Math.max(...colsF) >= fullH * 0.93, 'F11 depois de abrir a tela cheia: ALTURA 100 usa a tela inteira (' + colsF.join(' ') + ' / antes ' + fullH + ')');
     await c9.close();
 
     // 2c) CIFRA POR MÓDULOS — Completo (molduras) e Resumido (cada parte uma vez); ▶ volta para a completa
