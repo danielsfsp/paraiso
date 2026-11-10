@@ -3504,7 +3504,7 @@
     </details>
 
     <div class="modal-actions help-actions">
-      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v377 · 10/11/2026</span>
+      <span class="app-version" id="appVersion" title="Versão do programa — confira se todos estão na mesma">CEP Louvor v378 · 10/11/2026</span>
       <button class="btn-primary" id="helpDoneBtn" type="button">Entendi</button>
     </div>
   </div>
@@ -6568,8 +6568,9 @@
     });
   }
   // Módulo dividido entre colunas: fecha a moldura no fim da coluna e reabre na próxima (tracejado).
-  function markModCuts(wrap){
+  function markModCuts(wrap, _pass){
     wrap = wrap || cifraBody;
+    _pass = _pass || 0;
     wrap.querySelectorAll('.mod-cut-b,.mod-cut-t,.mod-edge').forEach(x => x.classList.remove('mod-cut-b', 'mod-cut-t', 'mod-edge'));
     wrap.querySelectorAll(':scope > .cifra-col').forEach(col => {
       const all = Array.from(col.querySelectorAll('.cifra-line'));
@@ -6580,6 +6581,24 @@
       if(f && f.classList.contains('mod-box') && !f.classList.contains('mod-top')) f.classList.add('mod-cut-t');
       if(l && l.classList.contains('mod-box') && !l.classList.contains('mod-bot')) l.classList.add('mod-cut-b');
     });
+    // v378: a moldura tracejada (parte que continua na próxima coluna) ocupa uns pixels a mais;
+    // se com ela a coluna passou da ALTURA, a última linha desce para a coluna seguinte —
+    // assim não aparece barra de rolagem.
+    if(_pass < 6 && !singleColumn && wrap.classList.contains('adaptive-cols')){
+      const lim = computeColumnHeightPx() + 1;
+      const cols = Array.from(wrap.querySelectorAll(':scope > .cifra-col'));
+      let moved = false;
+      cols.forEach((col, i) => {
+        const own = (col.dataset.h0 && +col.dataset.h0max === Math.round(computeColumnHeightPx())) ? Math.max(lim, +col.dataset.h0 + 1) : lim;
+        let g = 0;
+        while(col.children.length > 1 && col.scrollHeight > own && g++ < 3){
+          let next = cols[i + 1];
+          if(!next){ next = document.createElement('div'); next.className = 'cifra-col'; wrap.appendChild(next); cols.push(next); }
+          next.insertBefore(col.lastElementChild, next.firstChild); moved = true;
+        }
+      });
+      if(moved){ try{ tidyColumnEnds(wrap); markLeadBlanks(wrap); }catch(e){} markModCuts(wrap, _pass + 1); }
+    }
   }
   // v362: em colunas, um módulo não é dividido entre duas colunas — ele passa
   // inteiro para a coluna seguinte. Só pode ser dividido onde a estrofe é

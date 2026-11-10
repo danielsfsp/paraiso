@@ -214,6 +214,15 @@ const openSongById = (p, id) => p.evaluate(id => document.querySelector('.home-s
     const colsH = await p9.evaluate(() => Array.from(document.querySelectorAll('#cifraBody > .cifra-col')).map(c => Math.round(c.getBoundingClientRect().height)));
     const fullH = Math.max(...colsH);
     check(colsH.length > 1 && colsH.slice(0, -1).every(h => h >= fullH * 0.88), 'módulos: as colunas enchem até a ALTURA, sem sobrar espaço embaixo (' + colsH.join(' ') + ')');
+    // v378: com ALTURA 100 não aparece barra de rolagem para baixo (moldura tracejada não estoura a altura)
+    for(const re of ['^1000 Graus', '^Escape \\/', '^Santo Esp']){
+      await p9.evaluate(() => document.getElementById('btnFullscreenExit').click()); await p9.waitForTimeout(400);
+      const sidX = await p9.evaluate(r => JSON.parse(localStorage['cifraset:songs']).find(x => new RegExp(r).test(x.title)).id, re);
+      await openSongById(p9, sidX); await p9.waitForTimeout(700);
+      await p9.evaluate(() => document.getElementById('btnFullscreen').click()); await p9.waitForTimeout(1300);
+      const sc = await p9.evaluate(() => { const v = document.getElementById('cifraViewport'); return v.scrollHeight - v.clientHeight; });
+      check(sc <= 1, 'ALTURA 100 sem barra de rolagem para baixo: ' + re.replace(/[\^\\]/g, '') + ' (' + sc + 'px)');
+    }
     // v377: abriu a tela cheia com a janela mais baixa e depois apertou F11 — as colunas crescem até a nova altura
     await p9.evaluate(() => document.getElementById('btnFullscreenExit').click()); await p9.waitForTimeout(500);
     await p9.setViewportSize({ width: 1366, height: 620 }); await p9.waitForTimeout(500);
